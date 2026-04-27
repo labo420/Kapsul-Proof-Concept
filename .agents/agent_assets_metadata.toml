@@ -1,0 +1,26 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "eVv29MGK93VQaNOeEjLKU"
+uri = "file://artifacts/kapsul/assets/images/icon.png"
+type = "image"
+title = "kapsul app icon"
+
+[[generated]]
+id = "iP35SNwuqJo0l1y02uqJd"
+uri = "file://artifacts/kapsul/assets/images/mock-photo-1.png"
+type = "image"
+title = "mock event photo 1"
+
+[[generated]]
+id = "3DPBfiA6oetW7tMeL-She"
+uri = "file://artifacts/kapsul/assets/images/mock-photo-2.png"
+type = "image"
+title = "mock event photo 2"
+
+[[generated]]
+id = "WoEVPLUfQMYd3yM6U1EkH"
+uri = "file://artifacts/kapsul/assets/images/mock-photo-3.png"
+type = "image"
+title = "mock event photo 3"

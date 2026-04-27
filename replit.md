@@ -16,6 +16,17 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 
+## Artifacts
+
+### Kapsul (artifacts/kapsul) — Mobile App (Expo)
+MVP of Kapsul, a mobile-first event photo collection app.
+- **Theme**: OLED Black (#000000) + Neon Green (#00ff88) + Purple accent (#7c3aed)
+- **Fonts**: Inter (UI) + Space Mono (counters, labels)
+- **Screens**: Host Home, Create Event (2-step wizard), QR Code, Guest Upload Dashboard, Guest Wall (masonry), Scan QR
+- **State**: EventContext + GuestContext (both AsyncStorage-backed, no backend)
+- **Key packages**: react-native-qrcode-svg, expo-clipboard, @expo-google-fonts/space-mono
+- **Next steps**: Supabase integration, real QR scanner, Vault timer
+
 ## Key Commands
 
 - `pnpm run typecheck` — full typecheck across all packages
