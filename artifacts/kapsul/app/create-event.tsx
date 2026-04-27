@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useEvents, type DeliveryMode } from "@/contexts/EventContext";
 import DeliveryModeSelector from "@/components/DeliveryModeSelector";
+import ScreenTransition from "@/components/ScreenTransition";
 
 const STEPS = ["Dettagli", "Modalità"];
 
@@ -64,8 +65,9 @@ export default function CreateEventScreen() {
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="light-content" />
+    <ScreenTransition>
+      <View style={[styles.root, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle="light-content" />
 
       <View style={[styles.topBar, { paddingTop: topPad + 8 }]}>
         <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -233,7 +235,8 @@ export default function CreateEventScreen() {
           </LinearGradient>
         </TouchableOpacity>
       </View>
-    </View>
+      </View>
+    </ScreenTransition>
   );
 }
 

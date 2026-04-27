@@ -18,6 +18,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useEvents } from "@/contexts/EventContext";
+import ScreenTransition from "@/components/ScreenTransition";
 
 const DELIVERY_LABELS: Record<string, string> = {
   party: "⚡️ Party Mode",
@@ -61,8 +62,9 @@ export default function QRScreen() {
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="light-content" />
+    <ScreenTransition>
+      <View style={[styles.root, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle="light-content" />
 
       <LinearGradient
         colors={[colors.gradientStart + "18", "transparent"]}
@@ -183,7 +185,8 @@ export default function QRScreen() {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+      </View>
+    </ScreenTransition>
   );
 }
 

@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  Dimensions,
   Modal,
   Platform,
   Pressable,
@@ -16,6 +17,7 @@ import {
   View,
 } from "react-native";
 import Animated, {
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -29,6 +31,10 @@ import { useGuest } from "@/contexts/GuestContext";
 import { useEvents } from "@/contexts/EventContext";
 import NeonProgressBar from "@/components/NeonProgressBar";
 
+const SCREEN_HEIGHT = Dimensions.get("window").height;
+
+const SHEET_SPRING = { damping: 22, stiffness: 240, mass: 1, overshootClamping: false } as const;
+
 type UploadState = "idle" | "uploading" | "done";
 
 export default function GuestScreen() {
@@ -40,6 +46,7 @@ export default function GuestScreen() {
   const [progress, setProgress] = useState(0);
   const [uploadCount, setUploadCount] = useState(0);
   const [showTerms, setShowTerms] = useState(false);
+  const [termsVisible, setTermsVisible] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
 
   const activeEvent = events[0];
@@ -49,6 +56,9 @@ export default function GuestScreen() {
   const pulseOpacity = useSharedValue(0.6);
   const pressScale = useSharedValue(1);
   const successBounce = useSharedValue(1);
+
+  const sheetTranslateY = useSharedValue(SCREEN_HEIGHT);
+  const sheetOpacity = useSharedValue(0);
 
   useEffect(() => {
     pulseScale.value = withRepeat(
@@ -81,6 +91,33 @@ export default function GuestScreen() {
   const successBounceStyle = useAnimatedStyle(() => ({
     transform: [{ scale: successBounce.value }],
   }));
+
+  const openTerms = () => {
+    setTermsVisible(true);
+    sheetTranslateY.value = SCREEN_HEIGHT;
+    sheetOpacity.value = 0;
+    sheetTranslateY.value = withSpring(0, SHEET_SPRING);
+    sheetOpacity.value = withTiming(1, { duration: 180 });
+  };
+
+  const closeTerms = () => {
+    sheetOpacity.value = withTiming(0, { duration: 160 });
+    sheetTranslateY.value = withSpring(SCREEN_HEIGHT, { ...SHEET_SPRING, damping: 30 }, () => {
+      runOnJS(setTermsVisible)(false);
+      runOnJS(setShowTerms)(false);
+    });
+  };
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: sheetTranslateY.value }],
+    opacity: sheetOpacity.value,
+  }));
+
+  useEffect(() => {
+    if (showTerms) {
+      openTerms();
+    }
+  }, [showTerms]);
 
   useEffect(() => {
     if (!activeEvent) return;
@@ -192,10 +229,10 @@ export default function GuestScreen() {
             onPress={handleCamera}
             disabled={uploadState === "uploading"}
             onPressIn={() => {
-              pressScale.value = withSpring(0.9, { damping: 8, stiffness: 300 });
+              pressScale.value = withSpring(0.88, { damping: 7, stiffness: 350, mass: 0.7 });
             }}
             onPressOut={() => {
-              pressScale.value = withSpring(1, { damping: 6, stiffness: 200 });
+              pressScale.value = withSpring(1, { damping: 5, stiffness: 260, mass: 0.8 });
             }}
             style={styles.cameraBtnWrap}
           >
@@ -276,80 +313,88 @@ export default function GuestScreen() {
       </ScrollView>
 
       <Modal
-        visible={showTerms}
+        visible={termsVisible}
         transparent
-        animationType="slide"
-        onRequestClose={() => setShowTerms(false)}
+        animationType="none"
+        onRequestClose={closeTerms}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 24 }]}>
-            <LinearGradient
-              colors={[colors.gradientStart + "20", colors.gradientEnd + "20"]}
-              style={styles.modalHeader}
-            >
-              <Text style={{ fontSize: 36 }}>📸</Text>
-            </LinearGradient>
-            <Text style={[styles.modalTitle, { color: colors.foreground }]}>
-              Prima di caricare
-            </Text>
-            <Text style={[styles.modalBody, { color: colors.mutedForeground }]}>
-              Le foto caricate su Kapsul saranno visibili agli altri partecipanti. Non caricare contenuti inappropriati.
-            </Text>
-            <TouchableOpacity
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setTermsChecked(v => !v);
-              }}
-              style={styles.checkboxRow}
-              activeOpacity={0.7}
-            >
-              <View
-                style={[
-                  styles.checkbox,
-                  termsChecked
-                    ? { borderWidth: 0, borderRadius: 6 }
-                    : { backgroundColor: "transparent", borderColor: colors.mutedForeground, borderWidth: 2, borderRadius: 6 },
-                ]}
-              >
-                {termsChecked ? (
-                  <LinearGradient
-                    colors={[colors.gradientStart, colors.gradientEnd]}
-                    style={[StyleSheet.absoluteFill, { borderRadius: 6, alignItems: "center", justifyContent: "center" }]}
-                  >
-                    <Ionicons name="checkmark" size={14} color="#fff" />
-                  </LinearGradient>
-                ) : null}
-              </View>
-              <Text style={[styles.checkboxLabel, { color: colors.foreground }]}>
-                Accetto i Termini per caricare le foto
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                if (!termsChecked) return;
-                setAcceptedTerms(true);
-                setShowTerms(false);
-                setTermsChecked(false);
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              }}
-              disabled={!termsChecked}
-              style={{ borderRadius: 999, overflow: "hidden", opacity: termsChecked ? 1 : 0.4 }}
-              activeOpacity={0.8}
-            >
+        <Pressable style={styles.modalOverlay} onPress={closeTerms}>
+          <Animated.View
+            style={[
+              styles.modalCard,
+              sheetStyle,
+              { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 24 },
+            ]}
+          >
+            <Pressable onPress={() => {}}>
               <LinearGradient
-                colors={[colors.gradientStart, colors.gradientEnd]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.acceptBtn}
+                colors={[colors.gradientStart + "20", colors.gradientEnd + "20"]}
+                style={styles.modalHeader}
               >
-                <Text style={styles.acceptBtnText}>Continua</Text>
+                <Text style={{ fontSize: 36 }}>📸</Text>
               </LinearGradient>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowTerms(false)} style={styles.cancelLink}>
-              <Text style={[styles.cancelText, { color: colors.mutedForeground }]}>Annulla</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+              <Text style={[styles.modalTitle, { color: colors.foreground }]}>
+                Prima di caricare
+              </Text>
+              <Text style={[styles.modalBody, { color: colors.mutedForeground }]}>
+                Le foto caricate su Kapsul saranno visibili agli altri partecipanti. Non caricare contenuti inappropriati.
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setTermsChecked(v => !v);
+                }}
+                style={styles.checkboxRow}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    termsChecked
+                      ? { borderWidth: 0, borderRadius: 6 }
+                      : { backgroundColor: "transparent", borderColor: colors.mutedForeground, borderWidth: 2, borderRadius: 6 },
+                  ]}
+                >
+                  {termsChecked ? (
+                    <LinearGradient
+                      colors={[colors.gradientStart, colors.gradientEnd]}
+                      style={[StyleSheet.absoluteFill, { borderRadius: 6, alignItems: "center", justifyContent: "center" }]}
+                    >
+                      <Ionicons name="checkmark" size={14} color="#fff" />
+                    </LinearGradient>
+                  ) : null}
+                </View>
+                <Text style={[styles.checkboxLabel, { color: colors.foreground }]}>
+                  Accetto i Termini per caricare le foto
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  if (!termsChecked) return;
+                  setAcceptedTerms(true);
+                  setTermsChecked(false);
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  closeTerms();
+                }}
+                disabled={!termsChecked}
+                style={{ borderRadius: 999, overflow: "hidden", opacity: termsChecked ? 1 : 0.4 }}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={[colors.gradientStart, colors.gradientEnd]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.acceptBtn}
+                >
+                  <Text style={styles.acceptBtnText}>Continua</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={closeTerms} style={styles.cancelLink}>
+                <Text style={[styles.cancelText, { color: colors.mutedForeground }]}>Annulla</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Animated.View>
+        </Pressable>
       </Modal>
     </View>
   );

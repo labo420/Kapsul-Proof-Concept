@@ -30,17 +30,20 @@ function RootLayoutNav() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: "slide_from_right",
-        animationDuration: 280,
         contentStyle: { backgroundColor: "#0E0E0F" },
+        animation: "fade",
+        animationDuration: 220,
       }}
     >
       <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
-      <Stack.Screen name="create-event" options={{ animation: "slide_from_bottom" }} />
-      <Stack.Screen name="qr/[id]" options={{ animation: "slide_from_right" }} />
-      <Stack.Screen name="event/[id]" options={{ animation: "slide_from_right" }} />
-      <Stack.Screen name="wall" options={{ animation: "slide_from_right" }} />
-      <Stack.Screen name="scan" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+      <Stack.Screen name="create-event" options={{ animation: "fade" }} />
+      <Stack.Screen name="qr/[id]" options={{ animation: "fade" }} />
+      <Stack.Screen name="event/[id]" options={{ animation: "fade" }} />
+      <Stack.Screen name="wall" options={{ animation: "fade" }} />
+      <Stack.Screen
+        name="scan"
+        options={{ presentation: "modal", animation: "slide_from_bottom" }}
+      />
     </Stack>
   );
 }
