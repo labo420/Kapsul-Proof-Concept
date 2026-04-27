@@ -33,7 +33,7 @@ const EventContext = createContext<EventContextType>({
   createEvent: () => ({
     id: "", name: "", date: "", deliveryMode: "party",
     photoCount: 0, guestCount: 0, plan: "free", createdAt: 0,
-    themeGradientStart: "#8B5CF6", themeGradientEnd: "#EC4899", coverImageUri: null,
+    themeGradientStart: "#6366F1", themeGradientEnd: "#EC4899", coverImageUri: null,
   }),
   getEvent: () => undefined,
   incrementPhotoCount: () => {},
@@ -53,7 +53,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           const migrated: KapsulEvent[] = parsed.map((e: unknown) => {
             const ev = e as Record<string, unknown>;
             return {
-              themeGradientStart: "#8B5CF6",
+              themeGradientStart: "#6366F1",
               themeGradientEnd: "#EC4899",
               coverImageUri: null,
               ...ev,

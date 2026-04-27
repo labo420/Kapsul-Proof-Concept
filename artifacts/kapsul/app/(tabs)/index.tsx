@@ -207,7 +207,7 @@ export default function HostScreen() {
                         />
                         <LinearGradient
                           colors={[
-                            event.themeGradientStart ?? "#8B5CF6",
+                            event.themeGradientStart ?? "#6366F1",
                             event.themeGradientEnd ?? "#EC4899",
                           ]}
                           start={{ x: 0, y: 0 }}

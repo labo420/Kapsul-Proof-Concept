@@ -40,7 +40,7 @@ export default function CreateEventScreen() {
   const [vaultHours, setVaultHours] = useState(24);
   const [focusedField, setFocusedField] = useState<"name" | "date" | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<EventPlan>("party");
-  const [gradientStart, setGradientStart] = useState("#8B5CF6");
+  const [gradientStart, setGradientStart] = useState("#6366F1");
   const [gradientEnd, setGradientEnd] = useState("#EC4899");
   const [coverImageUri, setCoverImageUri] = useState<string | null>(null);
 
