@@ -3,7 +3,7 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Platform,
   ScrollView,
@@ -64,13 +64,30 @@ function AnimatedCard({ index, children }: { index: number; children: React.Reac
   return <Animated.View style={style}>{children}</Animated.View>;
 }
 
+type SortBy = "createdAt" | "eventDate";
+
 export default function HostScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { events } = useEvents();
+  const [sortBy, setSortBy] = useState<SortBy>("createdAt");
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
+
+  const sortedEvents = [...events].sort((a, b) => {
+    if (sortBy === "createdAt") {
+      return b.createdAt - a.createdAt;
+    }
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
+    const aValid = !isNaN(dateA);
+    const bValid = !isNaN(dateB);
+    if (aValid && bValid) return dateB - dateA;
+    if (aValid) return -1;
+    if (bValid) return 1;
+    return b.createdAt - a.createdAt;
+  });
 
   const logoStyle = useFadeSlideIn(0);
   const createBtnStyle = useFadeSlideIn(110);
@@ -146,8 +163,53 @@ export default function HostScreen() {
             />
           </Animated.View>
         ) : (
+          <>
+            <View style={styles.sortRow}>
+              {(["createdAt", "eventDate"] as SortBy[]).map((opt) => {
+                const active = sortBy === opt;
+                const label = opt === "createdAt" ? "Data creazione" : "Data evento";
+                return active ? (
+                  <TouchableOpacity
+                    key={opt}
+                    activeOpacity={0.85}
+                    style={{ borderRadius: 999, overflow: "hidden" }}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setSortBy(opt);
+                    }}
+                  >
+                    <LinearGradient
+                      colors={[colors.gradientStart, colors.gradientEnd]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.sortPill}
+                    >
+                      <Text style={styles.sortPillTextActive}>{label}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    key={opt}
+                    activeOpacity={0.7}
+                    style={[
+                      styles.sortPill,
+                      styles.sortPillInactive,
+                      { backgroundColor: colors.muted, borderColor: colors.border },
+                    ]}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setSortBy(opt);
+                    }}
+                  >
+                    <Text style={[styles.sortPillTextInactive, { color: colors.mutedForeground }]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           <View style={styles.eventList}>
-            {events.map((event, index) => (
+            {sortedEvents.map((event, index) => (
               <AnimatedCard key={event.id} index={index}>
                 <TouchableOpacity
                   onPress={() => {
@@ -246,6 +308,7 @@ export default function HostScreen() {
               </AnimatedCard>
             ))}
           </View>
+          </>
         )}
       </ScrollView>
     </View>
@@ -314,6 +377,28 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 22,
     paddingHorizontal: 16,
+  },
+  sortRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 16,
+  },
+  sortPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  sortPillInactive: {
+    borderWidth: 1,
+  },
+  sortPillTextActive: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  sortPillTextInactive: {
+    fontSize: 13,
+    fontWeight: "600",
   },
   eventList: {
     gap: 14,
