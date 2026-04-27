@@ -247,12 +247,13 @@ export default function GuestScreen() {
           setUploadBatchTotal(0);
         }, 1400);
       }
-    } catch {
+    } catch (err) {
       setUploadState("idle");
       setProgress(0);
       setUploadBatchCurrent(0);
       setUploadBatchTotal(0);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      throw err;
     }
   };
 
@@ -284,7 +285,11 @@ export default function GuestScreen() {
       const total = result.assets.length;
       for (let i = 0; i < total; i++) {
         const asset = result.assets[i];
-        await doUpload(asset.uri, asset.mimeType ?? "image/jpeg", i + 1, total);
+        try {
+          await doUpload(asset.uri, asset.mimeType ?? "image/jpeg", i + 1, total);
+        } catch {
+          // continue with next photo on failure
+        }
       }
     }
   };
