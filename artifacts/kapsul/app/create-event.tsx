@@ -289,7 +289,7 @@ export default function CreateEventScreen() {
           ) : step === 1 ? (
             <View style={styles.form}>
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                Scegli il look{"\n"}dell'evento 🎨
+                Scegli il look{"\n"}dell'evento
               </Text>
               <Text
                 style={[
@@ -365,7 +365,7 @@ export default function CreateEventScreen() {
           ) : step === 2 ? (
             <View style={styles.form}>
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                Quando sbloccare{"\n"}le foto? 🔓
+                Quando sbloccare{"\n"}le foto?
               </Text>
               <Text
                 style={[
@@ -385,7 +385,7 @@ export default function CreateEventScreen() {
           ) : (
             <View style={styles.form}>
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                Scegli il piano{"\n"}per questo evento 🚀
+                Scegli il piano{"\n"}per questo evento
               </Text>
               <Text
                 style={[

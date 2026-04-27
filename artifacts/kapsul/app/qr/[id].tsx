@@ -192,13 +192,13 @@ export default function QRScreen() {
 
         <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
           <View style={styles.infoRow}>
-            <Text style={{ fontSize: 18 }}>🚀</Text>
+            <Ionicons name="rocket-outline" size={18} color={colors.mutedForeground} />
             <Text style={[styles.infoText, { color: colors.mutedForeground }]}>
               Nessun download richiesto — solo scansione e via
             </Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={{ fontSize: 18 }}>🎭</Text>
+            <Ionicons name="people-outline" size={18} color={colors.mutedForeground} />
             <Text style={[styles.infoText, { color: colors.mutedForeground }]}>
               Anonimo automatico — zero attrito per gli ospiti
             </Text>
