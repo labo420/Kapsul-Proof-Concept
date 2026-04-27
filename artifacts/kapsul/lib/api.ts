@@ -81,9 +81,9 @@ export async function apiJoinEvent(
   return res.json() as Promise<{ event: ApiEvent }>;
 }
 
-export async function apiGetGuests(eventId: string): Promise<ApiGuest[]> {
+export async function apiGetGuests(eventId: string, hostToken: string): Promise<ApiGuest[]> {
   const res = await fetch(
-    `${API_BASE}/events/${encodeURIComponent(eventId)}/guests`
+    `${API_BASE}/events/${encodeURIComponent(eventId)}/guests?hostToken=${encodeURIComponent(hostToken)}`
   );
   if (!res.ok) throw new Error(`Get guests failed: ${res.status}`);
   return res.json() as Promise<ApiGuest[]>;

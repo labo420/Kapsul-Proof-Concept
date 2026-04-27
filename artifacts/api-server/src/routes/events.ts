@@ -258,6 +258,18 @@ router.get("/events/:id/photos", async (req, res): Promise<void> => {
 router.get("/events/:id/guests", async (req, res): Promise<void> => {
   try {
     const id = param(req.params.id);
+    const { hostToken } = req.query as { hostToken?: string };
+
+    const [event] = await db
+      .select()
+      .from(eventsTable)
+      .where(eq(eventsTable.id, id));
+
+    if (!event || !event.hostToken || event.hostToken !== hostToken) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
     const guests = await db
       .select()
       .from(guestsTable)
@@ -295,19 +307,19 @@ router.delete("/events/:id/guests/:guestId", async (req, res): Promise<void> => 
       .object({ requesterId: z.string() })
       .parse(req.body);
 
-    const isSelf = requesterId === guestId;
-    const isHost = event.hostToken != null && requesterId === event.hostToken;
-    if (!isSelf && !isHost) {
-      res.status(403).json({ error: "Forbidden" });
-      return;
-    }
-
     const [event] = await db
       .select()
       .from(eventsTable)
       .where(eq(eventsTable.id, eventId));
     if (!event) {
       res.status(404).json({ error: "Event not found" });
+      return;
+    }
+
+    const isSelf = requesterId === guestId;
+    const isHost = event.hostToken != null && requesterId === event.hostToken;
+    if (!isSelf && !isHost) {
+      res.status(403).json({ error: "Forbidden" });
       return;
     }
 

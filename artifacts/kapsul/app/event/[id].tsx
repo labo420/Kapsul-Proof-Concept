@@ -36,14 +36,14 @@ export default function EventDetailScreen() {
   const [removingGuest, setRemovingGuest] = useState<string | null>(null);
 
   const loadGuests = useCallback(async () => {
-    if (!id) return;
+    if (!id || !event?.hostToken) return;
     try {
-      const list = await apiGetGuests(id);
+      const list = await apiGetGuests(id, event.hostToken);
       setGuests(list);
     } catch {
       setGuests([]);
     }
-  }, [id]);
+  }, [id, event?.hostToken]);
 
   useEffect(() => {
     loadGuests();

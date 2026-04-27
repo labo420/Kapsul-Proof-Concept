@@ -36,7 +36,7 @@ import { useGuest } from "@/contexts/GuestContext";
 import { useEvents } from "@/contexts/EventContext";
 import { PLAN_LIMITS } from "@/contexts/PlanContext";
 import NeonProgressBar from "@/components/NeonProgressBar";
-import { apiUploadPhoto, apiRemoveGuest, apiGetGuests } from "@/lib/api";
+import { apiUploadPhoto, apiRemoveGuest, apiGetPhotos } from "@/lib/api";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
@@ -300,9 +300,8 @@ export default function GuestScreen() {
 
     let myPhotoCount = 0;
     try {
-      const guests = await apiGetGuests(activeEvent.id);
-      const me = guests.find((g) => g.guestId === guestId);
-      myPhotoCount = me?.photoCount ?? 0;
+      const photos = await apiGetPhotos(activeEvent.id);
+      myPhotoCount = photos.filter((p) => p.guestId === guestId).length;
     } catch {
     }
 
