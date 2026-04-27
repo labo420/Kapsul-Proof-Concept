@@ -59,6 +59,8 @@
     "@expo-google-fonts/space-mono": "^0.4.2",
     "expo-camera": "~17.0.10",
     "expo-clipboard": "^8.0.8",
-    "react-native-qrcode-svg": "^6.3.21"
+    "react-native-image-filter-kit": "^0.8.0",
+    "react-native-qrcode-svg": "^6.3.21",
+    "react-native-reanimated-color-picker": "^0.0.11"
   }
 }

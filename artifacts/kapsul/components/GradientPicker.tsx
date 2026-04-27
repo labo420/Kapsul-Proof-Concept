@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { HueSaturationValuePicker } from "react-native-reanimated-color-picker";
 import { useColors } from "@/hooks/useColors";
 
 type TwoOrMoreColors = [string, string, ...string[]];
@@ -75,6 +76,17 @@ function clamp(v: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, v));
 }
 
+interface ErrorBoundaryState { hasError: boolean }
+interface ErrorBoundaryProps { children: React.ReactNode; fallback: React.ReactNode }
+
+class ColorWheelErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false };
+  static getDerivedStateFromError(): ErrorBoundaryState { return { hasError: true }; }
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
+
 interface SliderProps {
   value: number;
   onValueChange: (v: number) => void;
@@ -90,9 +102,8 @@ function HsvSlider({ value, onValueChange, gradientColors, thumbColor }: SliderP
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (e) => {
-        const width = e.nativeEvent.target ? trackWidth : 1;
         const x = e.nativeEvent.locationX;
-        onValueChange(clamp(x / (width || 1), 0, 1));
+        onValueChange(clamp(x / (trackWidth || 1), 0, 1));
       },
       onPanResponderMove: (e) => {
         const x = e.nativeEvent.locationX;
@@ -137,25 +148,57 @@ interface PickerSheetProps {
   colorEnd: string;
 }
 
-function ColorPickerSheet({ initialColor, onConfirm, onCancel, colorStart, colorEnd }: PickerSheetProps) {
-  const colors = useColors();
-  const [hue, setHueState] = useState(() => {
-    const [h] = hexToHsv(initialColor);
-    return h / 360;
-  });
-  const [sat, setSat] = useState(() => {
-    const [, s] = hexToHsv(initialColor);
-    return s;
-  });
-  const [val, setVal] = useState(() => {
-    const [, , v] = hexToHsv(initialColor);
-    return v;
-  });
+function SliderPicker({ initialColor, onColorChange }: { initialColor: string; onColorChange: (hex: string) => void }) {
+  const [hue, setHue] = useState(() => hexToHsv(initialColor)[0] / 360);
+  const [sat, setSat] = useState(() => hexToHsv(initialColor)[1]);
+  const [val, setVal] = useState(() => hexToHsv(initialColor)[2]);
 
   const currentHex = hsvToHex(hue * 360, sat, val);
   const hueColor = hueToColor(hue * 360);
   const satGradient: TwoOrMoreColors = ["#808080", hueColor];
   const valGradient: TwoOrMoreColors = ["#000000", hsvToHex(hue * 360, sat, 1)];
+
+  const setHueAndNotify = (v: number) => { setHue(v); onColorChange(hsvToHex(v * 360, sat, val)); Haptics.selectionAsync(); };
+  const setSatAndNotify = (v: number) => { setSat(v); onColorChange(hsvToHex(hue * 360, v, val)); };
+  const setValAndNotify = (v: number) => { setVal(v); onColorChange(hsvToHex(hue * 360, sat, v)); };
+
+  return (
+    <>
+      <View style={styles.sliderGroup}>
+        <Text style={styles.sliderLabelDynamic}>TONALITÀ</Text>
+        <HsvSlider value={hue} onValueChange={setHueAndNotify} gradientColors={HUE_STOPS} thumbColor={hueColor} />
+      </View>
+      <View style={styles.sliderGroup}>
+        <Text style={styles.sliderLabelDynamic}>SATURAZIONE</Text>
+        <HsvSlider value={sat} onValueChange={setSatAndNotify} gradientColors={satGradient} thumbColor={currentHex} />
+      </View>
+      <View style={styles.sliderGroup}>
+        <Text style={styles.sliderLabelDynamic}>LUMINOSITÀ</Text>
+        <HsvSlider value={val} onValueChange={setValAndNotify} gradientColors={valGradient} thumbColor={currentHex} />
+      </View>
+    </>
+  );
+}
+
+function WheelPicker({ initialColor, onColorChange }: { initialColor: string; onColorChange: (hex: string) => void }) {
+  const [h0, s0, v0] = hexToHsv(initialColor);
+  return (
+    <HueSaturationValuePicker
+      wheelStyle={styles.colorWheel}
+      sliderStyle={styles.colorWheelSlider}
+      initialHue={h0}
+      initialSaturation={s0}
+      initialValue={v0}
+      onColorChange={(hsv) => {
+        onColorChange(hsvToHex(hsv.h, hsv.s, hsv.v));
+      }}
+    />
+  );
+}
+
+function ColorPickerSheet({ initialColor, onConfirm, onCancel, colorStart, colorEnd }: PickerSheetProps) {
+  const colors = useColors();
+  const [currentHex, setCurrentHex] = useState(initialColor);
 
   return (
     <View style={[styles.pickerSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -173,35 +216,13 @@ function ColorPickerSheet({ initialColor, onConfirm, onCancel, colorStart, color
         </View>
       </View>
 
-      <View style={styles.sliderGroup}>
-        <Text style={[styles.sliderLabel, { color: colors.mutedForeground }]}>TONALITÀ</Text>
-        <HsvSlider
-          value={hue}
-          onValueChange={(v) => { setHueState(v); Haptics.selectionAsync(); }}
-          gradientColors={HUE_STOPS}
-          thumbColor={hueColor}
-        />
-      </View>
-
-      <View style={styles.sliderGroup}>
-        <Text style={[styles.sliderLabel, { color: colors.mutedForeground }]}>SATURAZIONE</Text>
-        <HsvSlider
-          value={sat}
-          onValueChange={(v) => { setSat(v); }}
-          gradientColors={satGradient}
-          thumbColor={hsvToHex(hue * 360, sat, val)}
-        />
-      </View>
-
-      <View style={styles.sliderGroup}>
-        <Text style={[styles.sliderLabel, { color: colors.mutedForeground }]}>LUMINOSITÀ</Text>
-        <HsvSlider
-          value={val}
-          onValueChange={(v) => { setVal(v); }}
-          gradientColors={valGradient}
-          thumbColor={currentHex}
-        />
-      </View>
+      <ColorWheelErrorBoundary
+        fallback={
+          <SliderPicker initialColor={initialColor} onColorChange={setCurrentHex} />
+        }
+      >
+        <WheelPicker initialColor={initialColor} onColorChange={setCurrentHex} />
+      </ColorWheelErrorBoundary>
 
       <View style={styles.pickerButtons}>
         <TouchableOpacity
@@ -499,13 +520,23 @@ const styles = StyleSheet.create({
     fontFamily: "SpaceMono_400Regular",
     letterSpacing: 1,
   },
+  colorWheel: {
+    width: "100%",
+    aspectRatio: 1,
+  },
+  colorWheelSlider: {
+    width: "100%",
+    height: 36,
+    marginTop: 12,
+  },
   sliderGroup: {
     gap: 10,
   },
-  sliderLabel: {
+  sliderLabelDynamic: {
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 2,
+    color: "#9CA3AF",
   },
   sliderTrack: {
     height: 36,
