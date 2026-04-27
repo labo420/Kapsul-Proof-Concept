@@ -52,8 +52,8 @@ export default function HostScreen() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={[styles.logo, { color: colors.primary, fontFamily: "SpaceMono_400Regular" }]}>
-              KAPSUL
+            <Text style={[styles.logo, { color: colors.foreground }]}>
+              Kapsul
             </Text>
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
               I tuoi eventi
@@ -169,8 +169,8 @@ export default function HostScreen() {
                 <View style={[styles.eventCardBottom, { borderTopColor: colors.border }]}>
                   <View style={styles.statItem}>
                     <Ionicons name="images-outline" size={14} color={colors.mutedForeground} />
-                    <Text style={[styles.statText, { color: colors.mutedForeground, fontFamily: "SpaceMono_400Regular" }]}>
-                      {String(event.photoCount).padStart(4, "0")}
+                    <Text style={[styles.statText, { color: colors.mutedForeground }]}>
+                      {event.photoCount} foto
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -204,8 +204,8 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   logo: {
-    fontSize: 24,
-    letterSpacing: 6,
+    fontSize: 26,
+    letterSpacing: 0.5,
     fontWeight: "700",
   },
   subtitle: {

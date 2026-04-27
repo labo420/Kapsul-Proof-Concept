@@ -72,13 +72,8 @@ export default function EventDetailScreen() {
           </Text>
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <Text style={[styles.label, { color: colors.mutedForeground }]}>FOTO</Text>
-          <Text
-            style={[
-              styles.counter,
-              { color: colors.primary, fontFamily: "SpaceMono_400Regular" },
-            ]}
-          >
-            {String(event.photoCount).padStart(6, "0")}
+          <Text style={[styles.counter, { color: colors.primary }]}>
+            {event.photoCount}
           </Text>
         </View>
 

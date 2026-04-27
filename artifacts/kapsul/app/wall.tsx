@@ -60,8 +60,8 @@ export default function WallScreen() {
           <View style={[styles.liveDot, { backgroundColor: colors.primary }]} />
         </View>
         <View style={[styles.countBadge, { backgroundColor: colors.muted, borderRadius: 999 }]}>
-          <Text style={[styles.countText, { color: colors.mutedForeground, fontFamily: "SpaceMono_400Regular" }]}>
-            {String(MOCK_PHOTOS.length).padStart(4, "0")}
+          <Text style={[styles.countText, { color: colors.mutedForeground }]}>
+            {MOCK_PHOTOS.length} foto
           </Text>
         </View>
       </View>

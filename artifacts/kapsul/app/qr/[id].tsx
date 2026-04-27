@@ -123,7 +123,7 @@ export default function QRScreen() {
           />
         </View>
 
-        <Text style={[styles.orLabel, { color: colors.mutedForeground, fontFamily: "SpaceMono_400Regular" }]}>
+        <Text style={[styles.orLabel, { color: colors.mutedForeground }]}>
           — oppure condividi il link —
         </Text>
 

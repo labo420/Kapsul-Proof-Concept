@@ -16,19 +16,25 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/contexts/GuestContext";
+import { useEvents } from "@/contexts/EventContext";
 import NeonProgressBar from "@/components/NeonProgressBar";
 
 type UploadState = "idle" | "uploading" | "done";
+
+const ACTIVE_EVENT_ID = "demo";
 
 export default function GuestScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { guestId, acceptedTerms, setAcceptedTerms } = useGuest();
+  const { events, incrementPhotoCount } = useEvents();
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
   const [uploadCount, setUploadCount] = useState(0);
   const [showTerms, setShowTerms] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
+
+  const activeEvent = events[0];
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
@@ -46,6 +52,7 @@ export default function GuestScreen() {
         setTimeout(() => {
           setUploadState("done");
           setUploadCount(c => c + 1);
+          if (activeEvent) incrementPhotoCount(activeEvent.id);
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           setTimeout(() => {
             setUploadState("idle");
@@ -111,10 +118,10 @@ export default function GuestScreen() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={[styles.logo, { color: colors.primary, fontFamily: "SpaceMono_400Regular" }]}>
-              KAPSUL
+            <Text style={[styles.logo, { color: colors.foreground }]}>
+              Kapsul
             </Text>
-            <Text style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "SpaceMono_400Regular" }]}>
+            <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
               {guestId ?? "---"}
             </Text>
           </View>
@@ -136,13 +143,13 @@ export default function GuestScreen() {
         </View>
 
         <View style={styles.counterSection}>
-          <Text style={[styles.counterLabel, { color: colors.mutedForeground, fontFamily: "SpaceMono_400Regular" }]}>
-            FOTO NEL VAULT
+          <Text style={[styles.counterLabel, { color: colors.mutedForeground }]}>
+            Foto caricate
           </Text>
-          <Text style={[styles.counterValue, { color: colors.primary, fontFamily: "SpaceMono_400Regular" }]}>
-            {String(uploadCount).padStart(6, "0")}
+          <Text style={[styles.counterValue, { color: colors.primary }]}>
+            {uploadCount}
           </Text>
-          <View style={[styles.counterDivider, { backgroundColor: colors.primary + "40" }]} />
+          <View style={[styles.counterDivider, { backgroundColor: colors.border }]} />
         </View>
 
         <View style={styles.buttonsSection}>
@@ -201,13 +208,13 @@ export default function GuestScreen() {
           >
             <NeonProgressBar
               progress={progress}
-              label={uploadState === "done" ? "UPLOAD COMPLETATO" : "CARICAMENTO..."}
+              label={uploadState === "done" ? "Completato" : "Caricamento in corso"}
             />
             {uploadState === "done" && (
               <View style={styles.doneRow}>
                 <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
-                <Text style={[styles.doneText, { color: colors.primary, fontFamily: "SpaceMono_400Regular" }]}>
-                  FOTO NEL VAULT
+                <Text style={[styles.doneText, { color: colors.primary }]}>
+                  Foto salvata
                 </Text>
               </View>
             )}
@@ -332,14 +339,14 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logo: {
-    fontSize: 24,
-    letterSpacing: 6,
+    fontSize: 26,
+    letterSpacing: 0.5,
     fontWeight: "700",
   },
   subtitle: {
-    fontSize: 11,
+    fontSize: 12,
     marginTop: 4,
-    letterSpacing: 2,
+    letterSpacing: 0,
   },
   scanBtn: {
     flexDirection: "row",
