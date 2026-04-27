@@ -2,7 +2,6 @@ import { BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
-import { SymbolView } from "expo-symbols";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
@@ -68,36 +67,27 @@ function ClassicTabLayout() {
         name="index"
         options={{
           title: "Crea",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="house" tintColor={color} size={22} />
-            ) : (
-              <Feather name="calendar" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color }) => (
+            <Feather name="calendar" size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="guest"
         options={{
           title: "Guest",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="camera" tintColor={color} size={22} />
-            ) : (
-              <Ionicons name="camera-outline" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="camera-outline" size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profilo",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="person" tintColor={color} size={22} />
-            ) : (
-              <Ionicons name="person-outline" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="person-outline" size={22} color={color} />
+          ),
         }}
       />
     </Tabs>
