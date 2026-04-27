@@ -246,42 +246,14 @@ export default function GuestScreen() {
     }
   };
 
-  const simulateUploadWeb = () => {
-    setUploadState("uploading");
-    setProgress(0);
-    let p = 0;
-    const interval = setInterval(() => {
-      p += Math.random() * 18 + 4;
-      if (p >= 100) {
-        p = 100;
-        setProgress(100);
-        clearInterval(interval);
-        setTimeout(() => {
-          setUploadState("done");
-          setUploadCount((c) => c + 1);
-          if (activeEvent) incrementPhotoCount(activeEvent.id);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          successBounce.value = withSpring(1.18, { damping: 5, stiffness: 280 }, () => {
-            successBounce.value = withSpring(1, { damping: 10, stiffness: 200 });
-          });
-          setTimeout(() => {
-            setUploadState("idle");
-            setProgress(0);
-          }, 1400);
-        }, 400);
-      } else {
-        setProgress(p);
-      }
-    }, 120);
-  };
-
   const handleCamera = async () => {
     if (isLimitReached) { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); return; }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (!acceptedTerms) { setShowTerms(true); return; }
-    if (Platform.OS === "web") { simulateUploadWeb(); return; }
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") return;
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") return;
+    }
     const result = await ImagePicker.launchCameraAsync({ quality: 0.85 });
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
@@ -293,7 +265,6 @@ export default function GuestScreen() {
     if (isLimitReached) { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); return; }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (!acceptedTerms) { setShowTerms(true); return; }
-    if (Platform.OS === "web") { simulateUploadWeb(); return; }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: false,

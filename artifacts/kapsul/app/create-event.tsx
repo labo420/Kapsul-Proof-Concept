@@ -6,8 +6,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActionSheetIOS,
   Keyboard,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -43,6 +46,7 @@ export default function CreateEventScreen() {
   const [gradientStart, setGradientStart] = useState("#6366F1");
   const [gradientEnd, setGradientEnd] = useState("#EC4899");
   const [coverImageUri, setCoverImageUri] = useState<string | null>(null);
+  const [showCoverSheet, setShowCoverSheet] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -86,10 +90,11 @@ export default function CreateEventScreen() {
     }
   };
 
-  const handlePickCover = async () => {
-    if (Platform.OS === "web") return;
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") return;
+  const pickCoverFromGallery = async () => {
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -99,6 +104,40 @@ export default function CreateEventScreen() {
     if (!result.canceled && result.assets[0]) {
       setCoverImageUri(result.assets[0].uri);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const pickCoverFromCamera = async () => {
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.85,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setCoverImageUri(result.assets[0].uri);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const handlePickCover = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ["Annulla", "Fotocamera", "Scegli dalla galleria"],
+          cancelButtonIndex: 0,
+        },
+        (index) => {
+          if (index === 1) pickCoverFromCamera();
+          else if (index === 2) pickCoverFromGallery();
+        }
+      );
+    } else {
+      setShowCoverSheet(true);
     }
   };
 
@@ -476,6 +515,71 @@ export default function CreateEventScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <Modal
+        visible={showCoverSheet}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowCoverSheet(false)}
+      >
+        <Pressable
+          style={styles.sheetBackdrop}
+          onPress={() => setShowCoverSheet(false)}
+        />
+        <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
+          <Text style={[styles.sheetTitle, { color: colors.foreground }]}>
+            Foto copertina
+          </Text>
+          <TouchableOpacity
+            style={[styles.sheetOption, { borderColor: colors.border }]}
+            activeOpacity={0.7}
+            onPress={() => {
+              setShowCoverSheet(false);
+              pickCoverFromCamera();
+            }}
+          >
+            <LinearGradient
+              colors={[colors.gradientStart + "30", colors.gradientEnd + "30"]}
+              style={styles.sheetOptionIcon}
+            >
+              <Ionicons name="camera-outline" size={22} color={colors.primary} />
+            </LinearGradient>
+            <Text style={[styles.sheetOptionText, { color: colors.foreground }]}>
+              Fotocamera
+            </Text>
+            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sheetOption, { borderColor: colors.border }]}
+            activeOpacity={0.7}
+            onPress={() => {
+              setShowCoverSheet(false);
+              pickCoverFromGallery();
+            }}
+          >
+            <LinearGradient
+              colors={[colors.gradientStart + "30", colors.gradientEnd + "30"]}
+              style={styles.sheetOptionIcon}
+            >
+              <Ionicons name="images-outline" size={22} color={colors.primary} />
+            </LinearGradient>
+            <Text style={[styles.sheetOptionText, { color: colors.foreground }]}>
+              Scegli dalla galleria
+            </Text>
+            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sheetCancel, { backgroundColor: colors.muted }]}
+            activeOpacity={0.7}
+            onPress={() => setShowCoverSheet(false)}
+          >
+            <Text style={[styles.sheetCancelText, { color: colors.mutedForeground }]}>
+              Annulla
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </ScreenTransition>
   );
 }
@@ -636,5 +740,61 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#fff",
     letterSpacing: 0.2,
+  },
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  sheet: {
+    paddingHorizontal: 20,
+    paddingBottom: 36,
+    paddingTop: 14,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderWidth: 1,
+    gap: 12,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 4,
+  },
+  sheetTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  sheetOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  sheetOptionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sheetOptionText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  sheetCancel: {
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  sheetCancelText: {
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

@@ -1,4 +1,5 @@
 import Constants from "expo-constants";
+import { Platform } from "react-native";
 
 const domain =
   Constants.expoConfig?.extra?.apiDomain ??
@@ -82,6 +83,24 @@ export async function apiUploadPhoto(
   mimeType: string,
   onProgress?: (pct: number) => void
 ): Promise<ApiPhoto> {
+  const ext = mimeType.includes("png") ? "png" : "jpg";
+  const fileName = `photo.${ext}`;
+
+  const form = new FormData();
+  form.append("guestId", guestId);
+
+  if (Platform.OS === "web") {
+    const response = await fetch(fileUri);
+    const blob = await response.blob();
+    form.append("photo", blob, fileName);
+  } else {
+    form.append("photo", {
+      uri: fileUri,
+      name: fileName,
+      type: mimeType,
+    } as unknown as Blob);
+  }
+
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const url = `${API_BASE}/events/${encodeURIComponent(eventId)}/photos`;
@@ -107,14 +126,6 @@ export async function apiUploadPhoto(
       }
     };
     xhr.onerror = () => reject(new Error("Network error during upload"));
-
-    const form = new FormData();
-    form.append("guestId", guestId);
-    form.append("photo", {
-      uri: fileUri,
-      name: `photo.${mimeType.includes("png") ? "png" : "jpg"}`,
-      type: mimeType,
-    } as unknown as Blob);
 
     xhr.send(form);
   });
