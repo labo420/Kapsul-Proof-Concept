@@ -67,7 +67,7 @@ export default function EventDetailScreen() {
           onPress: async () => {
             setRemovingGuest(guest.guestId);
             try {
-              await apiRemoveGuest(id, guest.guestId, event.id);
+              await apiRemoveGuest(id, guest.guestId, event.hostToken ?? "");
               await refreshEvent(id);
               await loadGuests();
             } catch {

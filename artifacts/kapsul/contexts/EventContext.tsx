@@ -18,9 +18,10 @@ export interface KapsulEvent {
   themeGradientStart: string;
   themeGradientEnd: string;
   coverImageUri: string | null;
+  hostToken?: string | null;
 }
 
-function apiEventToLocal(e: ApiEvent): KapsulEvent {
+function apiEventToLocal(e: ApiEvent, existingLocal?: KapsulEvent): KapsulEvent {
   return {
     id: e.id,
     name: e.name,
@@ -33,7 +34,8 @@ function apiEventToLocal(e: ApiEvent): KapsulEvent {
     createdAt: new Date(e.createdAt).getTime(),
     themeGradientStart: e.themeGradientStart,
     themeGradientEnd: e.themeGradientEnd,
-    coverImageUri: null,
+    coverImageUri: existingLocal?.coverImageUri ?? null,
+    hostToken: e.hostToken ?? existingLocal?.hostToken ?? null,
   };
 }
 
@@ -138,7 +140,8 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   const refreshEvent = async (id: string): Promise<KapsulEvent | null> => {
     try {
       const apiEvent = await apiGetEvent(id);
-      const local = apiEventToLocal(apiEvent);
+      const existingLocal = events.find((e) => e.id === id);
+      const local = apiEventToLocal(apiEvent, existingLocal);
       const updated = events.map((e) => (e.id === id ? local : e));
       if (!events.find((e) => e.id === id)) updated.unshift(local);
       await saveLocal(updated);

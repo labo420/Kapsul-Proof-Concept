@@ -21,6 +21,7 @@ export interface ApiEvent {
   photoCount: number;
   guestCount: number;
   isActive: boolean;
+  hostToken?: string | null;
   createdAt: string;
 }
 

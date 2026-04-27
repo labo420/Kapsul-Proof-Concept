@@ -8,6 +8,22 @@ import { objectStorageClient } from "../lib/objectStorage.js";
 
 const PLAN_MAX_GUESTS: Record<string, number> = { free: 15, party: 50, pro: 9999 };
 
+const publicEventFields = {
+  id: eventsTable.id,
+  name: eventsTable.name,
+  date: eventsTable.date,
+  deliveryMode: eventsTable.deliveryMode,
+  vaultHours: eventsTable.vaultHours,
+  plan: eventsTable.plan,
+  themeGradientStart: eventsTable.themeGradientStart,
+  themeGradientEnd: eventsTable.themeGradientEnd,
+  coverImagePath: eventsTable.coverImagePath,
+  photoCount: eventsTable.photoCount,
+  guestCount: eventsTable.guestCount,
+  isActive: eventsTable.isActive,
+  createdAt: eventsTable.createdAt,
+} as const;
+
 const router = Router();
 
 const upload = multer({
@@ -40,6 +56,7 @@ router.post("/events", async (req, res) => {
   try {
     const body = CreateEventBody.parse(req.body);
     const id = body.id ?? randomUUID();
+    const hostToken = randomUUID();
     const [event] = await db
       .insert(eventsTable)
       .values({
@@ -51,6 +68,7 @@ router.post("/events", async (req, res) => {
         plan: body.plan,
         themeGradientStart: body.themeGradientStart,
         themeGradientEnd: body.themeGradientEnd,
+        hostToken,
       })
       .onConflictDoUpdate({
         target: eventsTable.id,
@@ -75,7 +93,7 @@ router.post("/events", async (req, res) => {
 router.get("/events", async (_req, res) => {
   try {
     const events = await db
-      .select()
+      .select(publicEventFields)
       .from(eventsTable)
       .orderBy(eventsTable.createdAt);
     res.json(events);
@@ -88,7 +106,7 @@ router.get("/events/:id", async (req, res): Promise<void> => {
   try {
     const id = param(req.params.id);
     const [event] = await db
-      .select()
+      .select(publicEventFields)
       .from(eventsTable)
       .where(eq(eventsTable.id, id));
     if (!event) {
@@ -278,7 +296,7 @@ router.delete("/events/:id/guests/:guestId", async (req, res): Promise<void> => 
       .parse(req.body);
 
     const isSelf = requesterId === guestId;
-    const isHost = requesterId === eventId;
+    const isHost = event.hostToken != null && requesterId === event.hostToken;
     if (!isSelf && !isHost) {
       res.status(403).json({ error: "Forbidden" });
       return;

@@ -323,6 +323,7 @@ export default function GuestScreen() {
             try {
               await apiRemoveGuest(activeEvent.id, guestId, guestId);
               setCurrentEventId(null);
+              router.push("/scan");
             } catch {
               Alert.alert("Errore", "Impossibile lasciare l'evento. Riprova.");
             }

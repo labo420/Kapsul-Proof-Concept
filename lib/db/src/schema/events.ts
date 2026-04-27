@@ -15,6 +15,7 @@ export const eventsTable = pgTable("events", {
   photoCount: integer("photo_count").notNull().default(0),
   guestCount: integer("guest_count").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
+  hostToken: text("host_token"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
