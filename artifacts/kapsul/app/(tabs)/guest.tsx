@@ -1,7 +1,7 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   Modal,
@@ -28,6 +28,7 @@ export default function GuestScreen() {
   const [progress, setProgress] = useState(0);
   const [uploadCount, setUploadCount] = useState(0);
   const [showTerms, setShowTerms] = useState(false);
+  const [termsChecked, setTermsChecked] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
@@ -257,18 +258,54 @@ export default function GuestScreen() {
             </Text>
             <TouchableOpacity
               onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setTermsChecked(v => !v);
+              }}
+              style={styles.checkboxRow}
+              activeOpacity={0.7}
+            >
+              <View
+                style={[
+                  styles.checkbox,
+                  {
+                    backgroundColor: termsChecked ? colors.primary : "transparent",
+                    borderColor: termsChecked ? colors.primary : colors.mutedForeground,
+                    borderRadius: 4,
+                  },
+                ]}
+              >
+                {termsChecked && (
+                  <Ionicons name="checkmark" size={14} color={colors.primaryForeground} />
+                )}
+              </View>
+              <Text style={[styles.checkboxLabel, { color: colors.foreground }]}>
+                Accetto i Termini per caricare le foto
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                if (!termsChecked) return;
                 setAcceptedTerms(true);
                 setShowTerms(false);
+                setTermsChecked(false);
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               }}
               style={[
                 styles.acceptBtn,
-                { backgroundColor: colors.primary, borderRadius: colors.radius },
+                {
+                  backgroundColor: termsChecked ? colors.primary : colors.muted,
+                  borderRadius: colors.radius,
+                },
               ]}
               activeOpacity={0.8}
             >
-              <Text style={[styles.acceptBtnText, { color: colors.primaryForeground }]}>
-                Accetto i Termini
+              <Text
+                style={[
+                  styles.acceptBtnText,
+                  { color: termsChecked ? colors.primaryForeground : colors.mutedForeground },
+                ]}
+              >
+                Continua
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -415,5 +452,23 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     fontSize: 14,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    flex: 1,
+    lineHeight: 20,
   },
 });

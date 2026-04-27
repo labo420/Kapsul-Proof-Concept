@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -43,7 +43,7 @@ export default function NeonProgressBar({ progress, label }: NeonProgressBarProp
   }, [progress]);
 
   const barStyle = useAnimatedStyle(() => ({
-    width: `${width.value}%` as any,
+    width: `${width.value}%`,
   }));
 
   return (

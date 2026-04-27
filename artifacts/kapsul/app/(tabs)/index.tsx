@@ -1,9 +1,8 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
-  Image,
   Platform,
   ScrollView,
   StatusBar,
@@ -12,9 +11,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useEvents } from "@/contexts/EventContext";
+
+type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
 const DELIVERY_LABELS: Record<string, string> = {
   party: "Party Mode",
@@ -22,7 +24,7 @@ const DELIVERY_LABELS: Record<string, string> = {
   vault: "Vault Mode",
 };
 
-const DELIVERY_ICONS: Record<string, string> = {
+const DELIVERY_ICONS: Record<string, IoniconsName> = {
   party: "flash",
   morning_after: "sunny",
   vault: "lock-closed",
@@ -155,7 +157,7 @@ export default function HostScreen() {
                     ]}
                   >
                     <Ionicons
-                      name={DELIVERY_ICONS[event.deliveryMode] as any}
+                      name={DELIVERY_ICONS[event.deliveryMode] ?? "help-circle"}
                       size={12}
                       color={colors.primary}
                     />

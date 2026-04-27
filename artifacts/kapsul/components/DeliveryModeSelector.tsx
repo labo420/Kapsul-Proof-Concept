@@ -5,6 +5,8 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import type { DeliveryMode } from "@/contexts/EventContext";
 
+type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
+
 interface DeliveryModeSelectorProps {
   selected: DeliveryMode;
   onSelect: (mode: DeliveryMode) => void;
@@ -12,7 +14,7 @@ interface DeliveryModeSelectorProps {
   onVaultHoursChange: (h: number) => void;
 }
 
-const MODES: { id: DeliveryMode; icon: string; title: string; subtitle: string }[] = [
+const MODES: { id: DeliveryMode; icon: IoniconsName; title: string; subtitle: string }[] = [
   {
     id: "party",
     icon: "flash",
@@ -72,7 +74,7 @@ export default function DeliveryModeSelector({
                 ]}
               >
                 <Ionicons
-                  name={mode.icon as any}
+                  name={mode.icon}
                   size={20}
                   color={isSelected ? colors.primary : colors.mutedForeground}
                 />
