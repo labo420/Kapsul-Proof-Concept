@@ -3,8 +3,8 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
   Modal,
@@ -57,17 +57,19 @@ export default function GuestScreen() {
 
   const activeEvent = currentEventId ? getEvent(currentEventId) : events[0];
 
-  useEffect(() => {
-    if (activeEvent?.themeGradientStart && activeEvent?.themeGradientEnd) {
-      setActiveGradient({
-        start: activeEvent.themeGradientStart,
-        end: activeEvent.themeGradientEnd,
-      });
-    }
-    return () => {
-      setActiveGradient(null);
-    };
-  }, [activeEvent?.id, activeEvent?.themeGradientStart, activeEvent?.themeGradientEnd]);
+  useFocusEffect(
+    useCallback(() => {
+      if (activeEvent?.themeGradientStart && activeEvent?.themeGradientEnd) {
+        setActiveGradient({
+          start: activeEvent.themeGradientStart,
+          end: activeEvent.themeGradientEnd,
+        });
+      }
+      return () => {
+        setActiveGradient(null);
+      };
+    }, [activeEvent?.id, activeEvent?.themeGradientStart, activeEvent?.themeGradientEnd, setActiveGradient])
+  );
 
   const liveCount = activeEvent?.photoCount ?? uploadCount;
   const activePlan = activeEvent?.plan ?? "party";

@@ -3,9 +3,9 @@ import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import QRCode from "react-native-qrcode-svg";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Platform,
   ScrollView,
@@ -42,17 +42,19 @@ export default function QRScreen() {
   const event = getEvent(id ?? "");
   const eventLink = `https://kapsul.app/join/${id}`;
 
-  useEffect(() => {
-    if (event?.themeGradientStart && event?.themeGradientEnd) {
-      setActiveGradient({
-        start: event.themeGradientStart,
-        end: event.themeGradientEnd,
-      });
-    }
-    return () => {
-      setActiveGradient(null);
-    };
-  }, [event?.id, event?.themeGradientStart, event?.themeGradientEnd]);
+  useFocusEffect(
+    useCallback(() => {
+      if (event?.themeGradientStart && event?.themeGradientEnd) {
+        setActiveGradient({
+          start: event.themeGradientStart,
+          end: event.themeGradientEnd,
+        });
+      }
+      return () => {
+        setActiveGradient(null);
+      };
+    }, [event?.id, event?.themeGradientStart, event?.themeGradientEnd, setActiveGradient])
+  );
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(eventLink);
