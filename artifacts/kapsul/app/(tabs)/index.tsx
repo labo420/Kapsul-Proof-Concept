@@ -191,6 +191,15 @@ export default function HostScreen() {
                         <GradientBadge
                           label={`${PLAN_LIMITS[event.plan ?? "party"].emoji} ${PLAN_LIMITS[event.plan ?? "party"].label}`}
                         />
+                        <LinearGradient
+                          colors={[
+                            event.themeGradientStart ?? "#8B5CF6",
+                            event.themeGradientEnd ?? "#EC4899",
+                          ]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.themeDot}
+                        />
                       </View>
                     </View>
                     <View style={[styles.eventCardBottom, { borderTopColor: colors.border }]}>
@@ -352,5 +361,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     color: "#fff",
+  },
+  themeDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
   },
 });

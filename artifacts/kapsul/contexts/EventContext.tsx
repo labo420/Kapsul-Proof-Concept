@@ -14,6 +14,9 @@ export interface KapsulEvent {
   guestCount: number;
   plan: EventPlan;
   createdAt: number;
+  themeGradientStart: string;
+  themeGradientEnd: string;
+  coverImageUri: string | null;
 }
 
 interface EventContextType {
@@ -27,7 +30,11 @@ interface EventContextType {
 
 const EventContext = createContext<EventContextType>({
   events: [],
-  createEvent: () => ({ id: "", name: "", date: "", deliveryMode: "party", photoCount: 0, guestCount: 0, plan: "free", createdAt: 0 }),
+  createEvent: () => ({
+    id: "", name: "", date: "", deliveryMode: "party",
+    photoCount: 0, guestCount: 0, plan: "free", createdAt: 0,
+    themeGradientStart: "#8B5CF6", themeGradientEnd: "#EC4899", coverImageUri: null,
+  }),
   getEvent: () => undefined,
   incrementPhotoCount: () => {},
   incrementGuestCount: () => {},
@@ -41,7 +48,16 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     async function load() {
       const raw = await AsyncStorage.getItem("kapsul_events");
       if (raw) {
-        try { setEvents(JSON.parse(raw)); } catch {}
+        try {
+          const parsed: KapsulEvent[] = JSON.parse(raw);
+          const migrated = parsed.map(e => ({
+            themeGradientStart: "#8B5CF6",
+            themeGradientEnd: "#EC4899",
+            coverImageUri: null,
+            ...e,
+          }));
+          setEvents(migrated);
+        } catch {}
       }
     }
     load();

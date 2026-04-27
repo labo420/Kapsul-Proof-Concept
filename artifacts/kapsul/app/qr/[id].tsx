@@ -1,10 +1,11 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import QRCode from "react-native-qrcode-svg";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Platform,
   ScrollView,
@@ -17,6 +18,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useEvents } from "@/contexts/EventContext";
 import ScreenTransition from "@/components/ScreenTransition";
 
@@ -30,6 +32,7 @@ export default function QRScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { setActiveGradient } = useTheme();
   const { getEvent } = useEvents();
   const [copied, setCopied] = useState(false);
 
@@ -38,6 +41,18 @@ export default function QRScreen() {
 
   const event = getEvent(id ?? "");
   const eventLink = `https://kapsul.app/join/${id}`;
+
+  useEffect(() => {
+    if (event?.themeGradientStart && event?.themeGradientEnd) {
+      setActiveGradient({
+        start: event.themeGradientStart,
+        end: event.themeGradientEnd,
+      });
+    }
+    return () => {
+      setActiveGradient(null);
+    };
+  }, [event?.id, event?.themeGradientStart, event?.themeGradientEnd]);
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(eventLink);
@@ -66,9 +81,23 @@ export default function QRScreen() {
       <View style={[styles.root, { backgroundColor: colors.background }]}>
         <StatusBar barStyle="light-content" />
 
+      {event.coverImageUri ? (
+        <View style={[styles.coverHero, { height: topPad + 180 }]}>
+          <Image
+            source={{ uri: event.coverImageUri }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+          />
+          <LinearGradient
+            colors={["transparent", colors.background]}
+            style={styles.coverFade}
+          />
+        </View>
+      ) : null}
+
       <LinearGradient
-        colors={[colors.gradientStart + "18", "transparent"]}
-        style={[styles.topGradient, { paddingTop: topPad + 8 }]}
+        colors={event.coverImageUri ? ["transparent", "transparent"] : [colors.gradientStart + "18", "transparent"]}
+        style={[styles.topGradient, { paddingTop: event.coverImageUri ? topPad + 140 : topPad + 8 }]}
       >
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.replace("/")} style={styles.navBtn}>
@@ -192,6 +221,20 @@ export default function QRScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  coverHero: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 0,
+  },
+  coverFade: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+  },
   topGradient: {
     paddingBottom: 12,
   },

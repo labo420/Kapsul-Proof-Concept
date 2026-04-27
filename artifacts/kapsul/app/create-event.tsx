@@ -1,5 +1,7 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -21,8 +23,9 @@ import { usePlan, PLAN_LIMITS, type EventPlan } from "@/contexts/PlanContext";
 import DeliveryModeSelector from "@/components/DeliveryModeSelector";
 import ScreenTransition from "@/components/ScreenTransition";
 import PlanCard from "@/components/PlanCard";
+import GradientPicker from "@/components/GradientPicker";
 
-const STEPS = ["Dettagli", "Modalità", "Piano"];
+const STEPS = ["Dettagli", "Tema", "Modalità", "Piano"];
 
 export default function CreateEventScreen() {
   const colors = useColors();
@@ -37,9 +40,13 @@ export default function CreateEventScreen() {
   const [vaultHours, setVaultHours] = useState(24);
   const [focusedField, setFocusedField] = useState<"name" | "date" | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<EventPlan>("party");
+  const [gradientStart, setGradientStart] = useState("#8B5CF6");
+  const [gradientEnd, setGradientEnd] = useState("#EC4899");
+  const [coverImageUri, setCoverImageUri] = useState<string | null>(null);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
+  const LAST_STEP = STEPS.length - 1;
 
   const canProceed =
     step === 0
@@ -48,7 +55,7 @@ export default function CreateEventScreen() {
 
   const handleNext = async () => {
     Keyboard.dismiss();
-    if (step < 2) {
+    if (step < LAST_STEP) {
       setStep(step + 1);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } else {
@@ -61,6 +68,9 @@ export default function CreateEventScreen() {
         deliveryMode,
         vaultHours: deliveryMode === "vault" ? vaultHours : undefined,
         plan: selectedPlan,
+        themeGradientStart: gradientStart,
+        themeGradientEnd: gradientEnd,
+        coverImageUri,
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace(`/qr/${event.id}`);
@@ -72,6 +82,22 @@ export default function CreateEventScreen() {
       router.back();
     } else {
       setStep(step - 1);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const handlePickCover = async () => {
+    if (Platform.OS === "web") return;
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.85,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setCoverImageUri(result.assets[0].uri);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
@@ -263,6 +289,82 @@ export default function CreateEventScreen() {
           ) : step === 1 ? (
             <View style={styles.form}>
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                Scegli il look{"\n"}dell'evento 🎨
+              </Text>
+              <Text
+                style={[
+                  styles.sectionSubtitle,
+                  { color: colors.mutedForeground },
+                ]}
+              >
+                I colori e la foto che vedranno i tuoi ospiti
+              </Text>
+
+              <View style={styles.inputGroup}>
+                <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>
+                  FOTO COPERTINA (opzionale)
+                </Text>
+                {coverImageUri ? (
+                  <View style={styles.coverPreviewWrap}>
+                    <Image
+                      source={{ uri: coverImageUri }}
+                      style={[styles.coverPreview, { borderRadius: colors.radius }]}
+                      contentFit="cover"
+                    />
+                    <TouchableOpacity
+                      onPress={() => setCoverImageUri(null)}
+                      style={[styles.coverRemoveBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+                    >
+                      <Ionicons name="close" size={16} color={colors.foreground} />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={handlePickCover}
+                    style={[
+                      styles.coverPickerBtn,
+                      {
+                        backgroundColor: colors.input,
+                        borderColor: colors.border,
+                        borderRadius: colors.radius,
+                      },
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    <LinearGradient
+                      colors={[colors.gradientStart + "30", colors.gradientEnd + "30"]}
+                      style={styles.coverPickerIcon}
+                    >
+                      <Ionicons name="image" size={22} color={colors.primary} />
+                    </LinearGradient>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.coverPickerTitle, { color: colors.foreground }]}>
+                        Aggiungi foto copertina
+                      </Text>
+                      <Text style={[styles.coverPickerSub, { color: colors.mutedForeground }]}>
+                        Visibile agli ospiti quando entrano
+                      </Text>
+                    </View>
+                    <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>
+                  GRADIENTE COLORI
+                </Text>
+                <GradientPicker
+                  colorStart={gradientStart}
+                  colorEnd={gradientEnd}
+                  onChangeStart={setGradientStart}
+                  onChangeEnd={setGradientEnd}
+                />
+              </View>
+            </View>
+          ) : step === 2 ? (
+            <View style={styles.form}>
+              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
                 Quando sbloccare{"\n"}le foto? 🔓
               </Text>
               <Text
@@ -359,16 +461,14 @@ export default function CreateEventScreen() {
               style={styles.nextBtn}
             >
               <Text style={styles.nextBtnText}>
-                {step === 2
+                {step === LAST_STEP
                   ? selectedPlan === "free"
                     ? "Inizia gratis 🎁"
                     : `Paga ${PLAN_LIMITS[selectedPlan].price} e crea evento`
-                  : step === 1
-                  ? "Avanti"
                   : "Avanti"}
               </Text>
               <Feather
-                name={step === 2 ? "check" : "arrow-right"}
+                name={step === LAST_STEP ? "check" : "arrow-right"}
                 size={18}
                 color="#fff"
               />
@@ -396,13 +496,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 16,
-    paddingHorizontal: 32,
+    paddingHorizontal: 16,
     gap: 0,
   },
   progressItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
   stepDot: {
     width: 26,
@@ -411,11 +511,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   stepNum: { fontSize: 12, fontWeight: "800", color: "#fff" },
-  stepLabel: { fontSize: 13, fontWeight: "600" },
+  stepLabel: { fontSize: 11, fontWeight: "600" },
   stepLineWrap: {
-    width: 40,
+    width: 28,
     height: 3,
-    marginHorizontal: 6,
+    marginHorizontal: 4,
     overflow: "hidden",
     borderRadius: 999,
     position: "relative",
@@ -449,7 +549,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     marginTop: -8,
   },
-  inputGroup: { gap: 8 },
+  inputGroup: { gap: 10 },
   inputLabel: {
     fontSize: 11,
     letterSpacing: 2,
@@ -462,6 +562,48 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     fontSize: 16,
     fontWeight: "500",
+  },
+  coverPickerBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    padding: 16,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+  },
+  coverPickerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  coverPickerTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  coverPickerSub: {
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 2,
+  },
+  coverPreviewWrap: {
+    position: "relative",
+  },
+  coverPreview: {
+    width: "100%",
+    height: 160,
+  },
+  coverRemoveBtn: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   infoBox: {
     flexDirection: "row",

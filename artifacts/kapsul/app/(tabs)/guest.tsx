@@ -1,6 +1,7 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -29,6 +30,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useGuest } from "@/contexts/GuestContext";
 import { useEvents } from "@/contexts/EventContext";
 import { PLAN_LIMITS } from "@/contexts/PlanContext";
@@ -43,6 +45,7 @@ type UploadState = "idle" | "uploading" | "done";
 export default function GuestScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { setActiveGradient } = useTheme();
   const { guestId, acceptedTerms, setAcceptedTerms, currentEventId } = useGuest();
   const { events, getEvent, incrementPhotoCount } = useEvents();
   const [uploadState, setUploadState] = useState<UploadState>("idle");
@@ -53,6 +56,19 @@ export default function GuestScreen() {
   const [termsChecked, setTermsChecked] = useState(false);
 
   const activeEvent = currentEventId ? getEvent(currentEventId) : events[0];
+
+  useEffect(() => {
+    if (activeEvent?.themeGradientStart && activeEvent?.themeGradientEnd) {
+      setActiveGradient({
+        start: activeEvent.themeGradientStart,
+        end: activeEvent.themeGradientEnd,
+      });
+    }
+    return () => {
+      setActiveGradient(null);
+    };
+  }, [activeEvent?.id, activeEvent?.themeGradientStart, activeEvent?.themeGradientEnd]);
+
   const liveCount = activeEvent?.photoCount ?? uploadCount;
   const activePlan = activeEvent?.plan ?? "party";
   const planLimits = PLAN_LIMITS[activePlan];
@@ -254,14 +270,32 @@ export default function GuestScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+
+      {activeEvent?.coverImageUri ? (
+        <View style={styles.coverHero}>
+          <Image
+            source={{ uri: activeEvent.coverImageUri }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+          />
+          <LinearGradient
+            colors={["transparent", colors.background]}
+            style={styles.coverFade}
+          />
+        </View>
+      ) : null}
+
       <ScrollView
         contentContainerStyle={{
-          paddingTop: topPad + 20,
+          paddingTop: activeEvent?.coverImageUri ? 8 : topPad + 20,
           paddingBottom: bottomPad + 120,
           paddingHorizontal: 24,
         }}
         showsVerticalScrollIndicator={false}
       >
+        {activeEvent?.coverImageUri ? (
+          <View style={{ height: 170 }} />
+        ) : null}
         <Animated.View style={[styles.header, enterStyle0]}>
           <View>
             <Text style={[styles.logo, { color: colors.foreground }]}>Kapsul</Text>
@@ -504,6 +538,21 @@ export default function GuestScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  coverHero: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 240,
+    zIndex: 0,
+  },
+  coverFade: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",

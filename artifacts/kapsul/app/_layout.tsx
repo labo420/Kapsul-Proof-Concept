@@ -21,6 +21,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GuestProvider } from "@/contexts/GuestContext";
 import { EventProvider } from "@/contexts/EventContext";
 import { PlanProvider } from "@/contexts/PlanContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -77,13 +78,15 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
-              <PlanProvider>
-                <EventProvider>
-                  <GuestProvider>
-                    <RootLayoutNav />
-                  </GuestProvider>
-                </EventProvider>
-              </PlanProvider>
+              <ThemeProvider>
+                <PlanProvider>
+                  <EventProvider>
+                    <GuestProvider>
+                      <RootLayoutNav />
+                    </GuestProvider>
+                  </EventProvider>
+                </PlanProvider>
+              </ThemeProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>
         </QueryClientProvider>
