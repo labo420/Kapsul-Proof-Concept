@@ -273,6 +273,17 @@ router.delete("/events/:id/guests/:guestId", async (req, res): Promise<void> => 
     const eventId = param(req.params.id);
     const guestId = param(req.params.guestId);
 
+    const { requesterId } = z
+      .object({ requesterId: z.string() })
+      .parse(req.body);
+
+    const isSelf = requesterId === guestId;
+    const isHost = requesterId === eventId;
+    if (!isSelf && !isHost) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
     const [event] = await db
       .select()
       .from(eventsTable)
@@ -301,19 +312,22 @@ router.delete("/events/:id/guests/:guestId", async (req, res): Promise<void> => 
         .where(and(eq(photosTable.eventId, eventId), eq(photosTable.guestId, guestId)));
     }
 
-    await db
+    const deletedGuests = await db
       .delete(guestsTable)
-      .where(and(eq(guestsTable.eventId, eventId), eq(guestsTable.guestId, guestId)));
+      .where(and(eq(guestsTable.eventId, eventId), eq(guestsTable.guestId, guestId)))
+      .returning();
 
-    await db
-      .update(eventsTable)
-      .set({
-        guestCount: Math.max(0, event.guestCount - 1),
-        photoCount: Math.max(0, event.photoCount - photos.length),
-      })
-      .where(eq(eventsTable.id, eventId));
+    if (deletedGuests.length > 0) {
+      await db
+        .update(eventsTable)
+        .set({
+          guestCount: Math.max(0, event.guestCount - 1),
+          photoCount: Math.max(0, event.photoCount - photos.length),
+        })
+        .where(eq(eventsTable.id, eventId));
+    }
 
-    res.json({ removed: true, photosDeleted: photos.length });
+    res.json({ removed: deletedGuests.length > 0, photosDeleted: photos.length });
   } catch (err) {
     req.log.error(err, "remove guest error");
     res.status(500).json({ error: "Server error" });

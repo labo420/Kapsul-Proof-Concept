@@ -4,6 +4,7 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Platform,
   StatusBar,
   StyleSheet,
@@ -144,7 +145,13 @@ export default function ScanScreen() {
     } catch (err) {
       const code = (err as Error & { code?: string }).code;
       if (code === "guest_limit_reached") {
-        triggerError("full");
+        scanLock.current = false;
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Alert.alert(
+          "Evento al completo",
+          "Questo evento ha raggiunto il limite massimo di ospiti. Contatta l'organizzatore per ulteriori informazioni.",
+          [{ text: "OK" }]
+        );
       } else {
         triggerError("unknown");
       }

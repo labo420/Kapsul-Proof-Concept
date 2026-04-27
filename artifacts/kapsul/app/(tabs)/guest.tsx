@@ -36,7 +36,7 @@ import { useGuest } from "@/contexts/GuestContext";
 import { useEvents } from "@/contexts/EventContext";
 import { PLAN_LIMITS } from "@/contexts/PlanContext";
 import NeonProgressBar from "@/components/NeonProgressBar";
-import { apiUploadPhoto, apiRemoveGuest } from "@/lib/api";
+import { apiUploadPhoto, apiRemoveGuest, apiGetGuests } from "@/lib/api";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
@@ -295,11 +295,25 @@ export default function GuestScreen() {
     }
   };
 
-  function handleLeaveEvent() {
+  async function handleLeaveEvent() {
     if (!activeEvent || !guestId) return;
+
+    let myPhotoCount = 0;
+    try {
+      const guests = await apiGetGuests(activeEvent.id);
+      const me = guests.find((g) => g.guestId === guestId);
+      myPhotoCount = me?.photoCount ?? 0;
+    } catch {
+    }
+
+    const photoLabel =
+      myPhotoCount === 0
+        ? "Non hai ancora caricato foto in questo evento."
+        : `Verranno eliminate anche le tue ${myPhotoCount} foto caricate. Questa azione è irreversibile.`;
+
     Alert.alert(
       "Lascia evento",
-      "Vuoi lasciare questo evento? Le foto che hai caricato verranno eliminate.",
+      `Vuoi lasciare questo evento? ${photoLabel}`,
       [
         { text: "Annulla", style: "cancel" },
         {
@@ -307,10 +321,11 @@ export default function GuestScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await apiRemoveGuest(activeEvent.id, guestId);
+              await apiRemoveGuest(activeEvent.id, guestId, guestId);
+              setCurrentEventId(null);
             } catch {
+              Alert.alert("Errore", "Impossibile lasciare l'evento. Riprova.");
             }
-            setCurrentEventId(null);
           },
         },
       ]

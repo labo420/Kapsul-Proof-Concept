@@ -90,11 +90,16 @@ export async function apiGetGuests(eventId: string): Promise<ApiGuest[]> {
 
 export async function apiRemoveGuest(
   eventId: string,
-  guestId: string
+  guestId: string,
+  requesterId: string
 ): Promise<{ removed: boolean; photosDeleted: number }> {
   const res = await fetch(
     `${API_BASE}/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}`,
-    { method: "DELETE" }
+    {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requesterId }),
+    }
   );
   if (!res.ok) throw new Error(`Remove guest failed: ${res.status}`);
   return res.json() as Promise<{ removed: boolean; photosDeleted: number }>;

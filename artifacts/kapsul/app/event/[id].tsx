@@ -50,12 +50,11 @@ export default function EventDetailScreen() {
   }, [loadGuests]);
 
   function handleRemoveGuest(guest: ApiGuest) {
+    if (!id || !event) return;
     const photoLabel =
       guest.photoCount === 0
         ? "Questo ospite non ha caricato foto."
-        : guest.photoCount === 1
-        ? "Verranno eliminate anche le 1 foto caricate da questo ospite."
-        : `Verranno eliminate anche le ${guest.photoCount} foto caricate da questo ospite.`;
+        : `Verranno eliminate anche le ${guest.photoCount} foto caricate da questo ospite. Questa azione è irreversibile.`;
 
     Alert.alert(
       "Rimuovi ospite",
@@ -66,10 +65,9 @@ export default function EventDetailScreen() {
           text: "Rimuovi",
           style: "destructive",
           onPress: async () => {
-            if (!id) return;
             setRemovingGuest(guest.guestId);
             try {
-              await apiRemoveGuest(id, guest.guestId);
+              await apiRemoveGuest(id, guest.guestId, event.id);
               await refreshEvent(id);
               await loadGuests();
             } catch {
@@ -198,7 +196,7 @@ export default function EventDetailScreen() {
                           {guest.guestId}
                         </Text>
                         <Text style={[styles.guestPhotoCount, { color: colors.mutedForeground }]}>
-                          {guest.photoCount} {guest.photoCount === 1 ? "foto" : "foto"}
+                          {guest.photoCount} foto · {new Date(guest.joinedAt).toLocaleDateString("it-IT", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                         </Text>
                       </View>
                       <TouchableOpacity
