@@ -17,8 +17,8 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
   free: {
-    maxPhotos: 10,
-    maxGuests: 20,
+    maxPhotos: 100,
+    maxGuests: 15,
     hasWatermark: true,
     hasAiRecap: false,
     hasHdDownload: false,
@@ -27,7 +27,7 @@ export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
     icon: "gift-outline",
   },
   party: {
-    maxPhotos: 150,
+    maxPhotos: 500,
     maxGuests: 50,
     hasWatermark: false,
     hasAiRecap: false,
@@ -37,7 +37,7 @@ export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
     icon: "flash-outline",
   },
   pro: {
-    maxPhotos: 9999,
+    maxPhotos: 5000,
     maxGuests: 9999,
     hasWatermark: false,
     hasAiRecap: true,

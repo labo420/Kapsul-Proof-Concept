@@ -11,22 +11,23 @@ interface Feature {
 }
 
 function planFeatures(plan: EventPlan, limits: PlanLimits): Feature[] {
+  const photoLabel =
+    plan === "free"
+      ? "100 Foto · Il tuo primo Vault, gratis"
+      : plan === "party"
+      ? "Vault da 500 Foto · Abbastanza per 50 ospiti tutta la notte"
+      : "Vault da 5.000 Foto · Nessun limite, nessun pensiero";
+
   return [
+    { label: photoLabel, included: true },
     {
       label:
-        limits.maxPhotos >= 9999
-          ? "Foto illimitate"
-          : `Fino a ${limits.maxPhotos} foto`,
-      included: true,
-    },
-    {
-      label:
-        limits.maxGuests >= 9999
+        limits.maxGuests >= 99999
           ? "Ospiti illimitati"
           : `Fino a ${limits.maxGuests} ospiti`,
       included: true,
     },
-    { label: "Watermark Kapsul", included: limits.hasWatermark },
+    { label: "Senza Watermark", included: !limits.hasWatermark },
     { label: "Download in alta risoluzione", included: limits.hasHdDownload },
     { label: "AI Video Recap (TikTok/IG)", included: limits.hasAiRecap },
   ];
