@@ -18,19 +18,19 @@ interface DeliveryModeSelectorProps {
 const MODES: { id: DeliveryMode; icon: IoniconsName; title: string; subtitle: string }[] = [
   {
     id: "party",
-    icon: "flash",
+    icon: "flash-outline",
     title: "Party Mode",
     subtitle: "Foto visibili in tempo reale",
   },
   {
     id: "morning_after",
-    icon: "sunny",
+    icon: "sunny-outline",
     title: "Morning After",
     subtitle: "Sbloccate alle 06:00 del mattino",
   },
   {
     id: "vault",
-    icon: "lock-closed",
+    icon: "lock-closed-outline",
     title: "Vault Mode",
     subtitle: "Sbloccate dopo X ore",
   },
