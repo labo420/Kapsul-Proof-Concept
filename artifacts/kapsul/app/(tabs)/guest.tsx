@@ -2,7 +2,7 @@ import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Platform,
@@ -35,6 +35,16 @@ export default function GuestScreen() {
   const [termsChecked, setTermsChecked] = useState(false);
 
   const activeEvent = events[0];
+  const liveCount = activeEvent?.photoCount ?? uploadCount;
+
+  useEffect(() => {
+    if (!activeEvent) return;
+    const timer = setInterval(() => {
+      const rand = Math.random();
+      if (rand < 0.3) incrementPhotoCount(activeEvent.id);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [activeEvent?.id]);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
@@ -144,10 +154,10 @@ export default function GuestScreen() {
 
         <View style={styles.counterSection}>
           <Text style={[styles.counterLabel, { color: colors.mutedForeground }]}>
-            Foto caricate
+            {activeEvent ? activeEvent.name : "Foto caricate"}
           </Text>
-          <Text style={[styles.counterValue, { color: colors.primary }]}>
-            {uploadCount}
+          <Text style={[styles.counterValue, { color: colors.primary, fontFamily: "SpaceMono_400Regular" }]}>
+            {String(liveCount).padStart(6, "0")}
           </Text>
           <View style={[styles.counterDivider, { backgroundColor: colors.border }]} />
         </View>
