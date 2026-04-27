@@ -1,5 +1,6 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
@@ -174,6 +175,19 @@ export default function HostScreen() {
                       },
                     ]}
                   >
+                    {event.coverImageUri ? (
+                      <View style={[styles.cardCoverWrap, { borderTopLeftRadius: colors.radius, borderTopRightRadius: colors.radius }]}>
+                        <Image
+                          source={{ uri: event.coverImageUri }}
+                          style={styles.cardCover}
+                          contentFit="cover"
+                        />
+                        <LinearGradient
+                          colors={["transparent", colors.card]}
+                          style={styles.cardCoverFade}
+                        />
+                      </View>
+                    ) : null}
                     <View style={styles.eventCardTop}>
                       <View style={styles.eventInfo}>
                         <Text style={[styles.eventName, { color: colors.foreground }]} numberOfLines={1}>
@@ -366,5 +380,21 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
+  },
+  cardCoverWrap: {
+    height: 100,
+    overflow: "hidden",
+    position: "relative",
+  },
+  cardCover: {
+    width: "100%",
+    height: "100%",
+  },
+  cardCoverFade: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 50,
   },
 });

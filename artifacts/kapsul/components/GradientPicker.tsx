@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Modal,
   PanResponder,
@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 
+type TwoOrMoreColors = [string, string, ...string[]];
+
 const QUICK_PRESETS = [
   { emoji: "🖤", name: "Kapsul", start: "#8B5CF6", end: "#EC4899" },
   { emoji: "✨", name: "Oro & Rosa", start: "#D4AF37", end: "#F4A0B5" },
@@ -25,7 +27,7 @@ const QUICK_PRESETS = [
   { emoji: "❄️", name: "Ghiaccio", start: "#BAE6FD", end: "#E0E7FF" },
 ];
 
-const HUE_STOPS: string[] = [
+const HUE_STOPS: TwoOrMoreColors = [
   "#FF0000", "#FF8000", "#FFFF00", "#00FF00",
   "#00FFFF", "#0000FF", "#FF00FF", "#FF0000",
 ];
@@ -76,34 +78,35 @@ function clamp(v: number, min: number, max: number): number {
 interface SliderProps {
   value: number;
   onValueChange: (v: number) => void;
-  gradientColors: string[];
+  gradientColors: TwoOrMoreColors;
   thumbColor: string;
 }
 
 function HsvSlider({ value, onValueChange, gradientColors, thumbColor }: SliderProps) {
-  const widthRef = useRef(0);
+  const [trackWidth, setTrackWidth] = useState(0);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (e) => {
+        const width = e.nativeEvent.target ? trackWidth : 1;
         const x = e.nativeEvent.locationX;
-        const ratio = clamp(x / (widthRef.current || 1), 0, 1);
-        onValueChange(ratio);
+        onValueChange(clamp(x / (width || 1), 0, 1));
       },
       onPanResponderMove: (e) => {
         const x = e.nativeEvent.locationX;
-        const ratio = clamp(x / (widthRef.current || 1), 0, 1);
-        onValueChange(ratio);
+        onValueChange(clamp(x / (trackWidth || 1), 0, 1));
       },
     })
   ).current;
 
+  const thumbLeft = value * trackWidth;
+
   return (
     <View
       style={styles.sliderTrack}
-      onLayout={(e) => { widthRef.current = e.nativeEvent.layout.width; }}
+      onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
       {...panResponder.panHandlers}
     >
       <LinearGradient
@@ -116,7 +119,7 @@ function HsvSlider({ value, onValueChange, gradientColors, thumbColor }: SliderP
         style={[
           styles.sliderThumb,
           {
-            left: `${value * 100}%` as any,
+            left: thumbLeft,
             backgroundColor: thumbColor,
             transform: [{ translateX: -12 }],
           },
@@ -151,8 +154,8 @@ function ColorPickerSheet({ initialColor, onConfirm, onCancel, colorStart, color
 
   const currentHex = hsvToHex(hue * 360, sat, val);
   const hueColor = hueToColor(hue * 360);
-  const satGradient = ["#808080", hueColor];
-  const valGradient = ["#000000", hsvToHex(hue * 360, sat, 1)];
+  const satGradient: TwoOrMoreColors = ["#808080", hueColor];
+  const valGradient: TwoOrMoreColors = ["#000000", hsvToHex(hue * 360, sat, 1)];
 
   return (
     <View style={[styles.pickerSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>

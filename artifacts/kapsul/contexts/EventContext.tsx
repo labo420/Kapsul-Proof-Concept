@@ -49,13 +49,16 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       const raw = await AsyncStorage.getItem("kapsul_events");
       if (raw) {
         try {
-          const parsed: KapsulEvent[] = JSON.parse(raw);
-          const migrated = parsed.map(e => ({
-            themeGradientStart: "#8B5CF6",
-            themeGradientEnd: "#EC4899",
-            coverImageUri: null,
-            ...e,
-          }));
+          const parsed: unknown[] = JSON.parse(raw);
+          const migrated: KapsulEvent[] = parsed.map((e: unknown) => {
+            const ev = e as Record<string, unknown>;
+            return {
+              themeGradientStart: "#8B5CF6",
+              themeGradientEnd: "#EC4899",
+              coverImageUri: null,
+              ...ev,
+            } as KapsulEvent;
+          });
           setEvents(migrated);
         } catch {}
       }
