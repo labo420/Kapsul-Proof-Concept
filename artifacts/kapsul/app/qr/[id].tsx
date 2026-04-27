@@ -86,6 +86,13 @@ export default function QRScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.decoContainer} pointerEvents="none">
+          <View style={[styles.decoDot, { width: 80, height: 80, top: 20, right: -20, backgroundColor: colors.gradientStart + "18" }]} />
+          <View style={[styles.decoDot, { width: 50, height: 50, top: 60, left: -10, backgroundColor: colors.gradientEnd + "18" }]} />
+          <View style={[styles.decoDot, { width: 30, height: 30, top: 160, right: 20, backgroundColor: colors.gradientStart + "22" }]} />
+          <View style={[styles.decoDot, { width: 18, height: 18, top: 40, left: 60, backgroundColor: colors.gradientEnd + "30" }]} />
+        </View>
+
         <Text style={[styles.eventName, { color: colors.foreground }]}>{event.name}</Text>
         <Text style={[styles.eventDate, { color: colors.mutedForeground }]}>{event.date}</Text>
 
@@ -267,6 +274,18 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 19,
     fontWeight: "500",
+  },
+  decoContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 200,
+    overflow: "hidden",
+  },
+  decoDot: {
+    position: "absolute",
+    borderRadius: 999,
   },
   shareBtn: {
     flexDirection: "row",

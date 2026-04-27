@@ -116,14 +116,22 @@ export default function HostScreen() {
                   router.push(`/event/${event.id}`);
                 }}
                 activeOpacity={0.8}
-                style={{ borderRadius: colors.radius, overflow: "hidden" }}
+                style={{
+                  borderRadius: colors.radius,
+                  overflow: "hidden",
+                  shadowColor: colors.gradientStart,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 12,
+                  elevation: 6,
+                }}
               >
                 <LinearGradient
                   colors={[colors.card, colors.muted]}
                   style={[
                     styles.eventCard,
                     {
-                      borderColor: colors.border,
+                      borderColor: colors.gradientStart + "50",
                       borderRadius: colors.radius,
                     },
                   ]}

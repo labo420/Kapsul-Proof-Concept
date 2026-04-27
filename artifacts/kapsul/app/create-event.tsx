@@ -2,7 +2,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Keyboard,
   Platform,
@@ -30,6 +30,7 @@ export default function CreateEventScreen() {
   const [eventDate, setEventDate] = useState("");
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("party");
   const [vaultHours, setVaultHours] = useState(24);
+  const [focusedField, setFocusedField] = useState<"name" | "date" | null>(null);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -137,13 +138,24 @@ export default function CreateEventScreen() {
                 onChangeText={setEventName}
                 placeholder="es. Matrimonio Luca & Sara"
                 placeholderTextColor={colors.mutedForeground}
+                onFocus={() => setFocusedField("name")}
+                onBlur={() => setFocusedField(null)}
                 style={[
                   styles.input,
                   {
                     color: colors.foreground,
                     backgroundColor: colors.input,
-                    borderColor: eventName.trim() ? colors.primary + "70" : colors.border,
+                    borderColor:
+                      focusedField === "name"
+                        ? colors.gradientStart
+                        : eventName.trim()
+                        ? colors.primary + "70"
+                        : colors.border,
                     borderRadius: colors.radius,
+                    shadowColor: focusedField === "name" ? colors.gradientStart : "transparent",
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: focusedField === "name" ? 0.45 : 0,
+                    shadowRadius: 8,
                   },
                 ]}
                 returnKeyType="next"
@@ -158,13 +170,24 @@ export default function CreateEventScreen() {
                 onChangeText={setEventDate}
                 placeholder="es. 28 Aprile 2026"
                 placeholderTextColor={colors.mutedForeground}
+                onFocus={() => setFocusedField("date")}
+                onBlur={() => setFocusedField(null)}
                 style={[
                   styles.input,
                   {
                     color: colors.foreground,
                     backgroundColor: colors.input,
-                    borderColor: eventDate.trim() ? colors.primary + "70" : colors.border,
+                    borderColor:
+                      focusedField === "date"
+                        ? colors.gradientEnd
+                        : eventDate.trim()
+                        ? colors.primary + "70"
+                        : colors.border,
                     borderRadius: colors.radius,
+                    shadowColor: focusedField === "date" ? colors.gradientEnd : "transparent",
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: focusedField === "date" ? 0.45 : 0,
+                    shadowRadius: 8,
                   },
                 ]}
                 returnKeyType="done"
