@@ -52,6 +52,8 @@ export default function GuestScreen() {
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
   const [uploadCount, setUploadCount] = useState(0);
+  const [uploadBatchCurrent, setUploadBatchCurrent] = useState(0);
+  const [uploadBatchTotal, setUploadBatchTotal] = useState(0);
   const [showTerms, setShowTerms] = useState(false);
   const [termsVisible, setTermsVisible] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
@@ -213,9 +215,11 @@ export default function GuestScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
 
-  const doUpload = async (fileUri: string, mimeType: string) => {
+  const doUpload = async (fileUri: string, mimeType: string, batchCurrent = 1, batchTotal = 1) => {
     if (!guestId) return;
     setUploadState("uploading");
+    setUploadBatchCurrent(batchCurrent);
+    setUploadBatchTotal(batchTotal);
     setProgress(0);
     try {
       if (activeEvent) {
@@ -229,19 +233,25 @@ export default function GuestScreen() {
         incrementPhotoCount(activeEvent.id);
       }
       setProgress(100);
-      setUploadState("done");
       setUploadCount((c) => c + 1);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       successBounce.value = withSpring(1.18, { damping: 5, stiffness: 280 }, () => {
         successBounce.value = withSpring(1, { damping: 10, stiffness: 200 });
       });
-      setTimeout(() => {
-        setUploadState("idle");
-        setProgress(0);
-      }, 1400);
+      if (batchCurrent === batchTotal) {
+        setUploadState("done");
+        setTimeout(() => {
+          setUploadState("idle");
+          setProgress(0);
+          setUploadBatchCurrent(0);
+          setUploadBatchTotal(0);
+        }, 1400);
+      }
     } catch {
       setUploadState("idle");
       setProgress(0);
+      setUploadBatchCurrent(0);
+      setUploadBatchTotal(0);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
   };
@@ -267,12 +277,15 @@ export default function GuestScreen() {
     if (!acceptedTerms) { setShowTerms(true); return; }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: false,
+      allowsMultipleSelection: true,
       quality: 0.85,
     });
-    if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-      await doUpload(asset.uri, asset.mimeType ?? "image/jpeg");
+    if (!result.canceled && result.assets.length > 0) {
+      const total = result.assets.length;
+      for (let i = 0; i < total; i++) {
+        const asset = result.assets[i];
+        await doUpload(asset.uri, asset.mimeType ?? "image/jpeg", i + 1, total);
+      }
     }
   };
 
@@ -419,7 +432,13 @@ export default function GuestScreen() {
           >
             <NeonProgressBar
               progress={progress}
-              label={uploadState === "done" ? "Completato!" : "Caricamento..."}
+              label={
+                uploadState === "done"
+                  ? "Completato!"
+                  : uploadBatchTotal > 1
+                  ? `foto ${uploadBatchCurrent} di ${uploadBatchTotal}`
+                  : "Caricamento..."
+              }
             />
             {uploadState === "done" && (
               <Animated.View style={[styles.doneRow, successBounceStyle]}>
