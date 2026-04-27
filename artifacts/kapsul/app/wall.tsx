@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useMemo } from "react";
 import {
@@ -34,7 +35,7 @@ export default function WallScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
 
-  const PADDING = 20;
+  const PADDING = 16;
   const GAP = 10;
   const colWidth = (width - PADDING * 2 - GAP) / 2;
 
@@ -51,27 +52,35 @@ export default function WallScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" />
-      <View style={[styles.topBar, { paddingTop: topPad + 8, borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
-        </TouchableOpacity>
-        <View style={styles.titleWrap}>
-          <Text style={[styles.title, { color: colors.foreground }]}>Guest Wall</Text>
-          <View style={[styles.liveDot, { backgroundColor: colors.primary }]} />
+      <LinearGradient
+        colors={[colors.gradientStart + "18", "transparent"]}
+        style={[styles.headerGradient, { paddingTop: topPad + 8 }]}
+      >
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+          </TouchableOpacity>
+          <View style={styles.titleWrap}>
+            <Text style={[styles.title, { color: colors.foreground }]}>Guest Wall</Text>
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              style={styles.liveDot}
+            />
+          </View>
+          <View style={[styles.countBadge, { backgroundColor: colors.primary + "18", borderRadius: 999, borderWidth: 1, borderColor: colors.primary + "40" }]}>
+            <Text style={[styles.countText, { color: colors.primary }]}>
+              {MOCK_PHOTOS.length} foto
+            </Text>
+          </View>
         </View>
-        <View style={[styles.countBadge, { backgroundColor: colors.muted, borderRadius: 999 }]}>
-          <Text style={[styles.countText, { color: colors.mutedForeground }]}>
-            {MOCK_PHOTOS.length} foto
-          </Text>
-        </View>
-      </View>
+      </LinearGradient>
 
       <FlatList
         data={[{ key: "masonry" }]}
         keyExtractor={item => item.key}
         contentContainerStyle={{
           paddingHorizontal: PADDING,
-          paddingTop: 16,
+          paddingTop: 14,
           paddingBottom: bottomPad + 80,
         }}
         showsVerticalScrollIndicator={false}
@@ -79,22 +88,12 @@ export default function WallScreen() {
           <View style={[styles.masonryRow, { gap: GAP }]}>
             <View style={[styles.col, { width: colWidth, gap: GAP }]}>
               {leftCol.map(photo => (
-                <PhotoCard
-                  key={photo.id}
-                  uri={photo.uri}
-                  height={photo.h}
-                  width={colWidth}
-                />
+                <PhotoCard key={photo.id} uri={photo.uri} height={photo.h} width={colWidth} />
               ))}
             </View>
             <View style={[styles.col, { width: colWidth, gap: GAP }]}>
               {rightCol.map(photo => (
-                <PhotoCard
-                  key={photo.id}
-                  uri={photo.uri}
-                  height={photo.h}
-                  width={colWidth}
-                />
+                <PhotoCard key={photo.id} uri={photo.uri} height={photo.h} width={colWidth} />
               ))}
             </View>
           </View>
@@ -107,33 +106,35 @@ export default function WallScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  headerGradient: {
+    paddingBottom: 14,
+  },
   topBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
+    paddingBottom: 4,
   },
-  backBtn: { width: 40 },
+  backBtn: { width: 36 },
   titleWrap: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  title: { fontSize: 16, fontWeight: "600" },
+  title: { fontSize: 17, fontWeight: "700" },
   liveDot: {
-    width: 7,
-    height: 7,
+    width: 8,
+    height: 8,
     borderRadius: 4,
   },
   countBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
   },
   countText: {
     fontSize: 12,
-    letterSpacing: 1,
+    fontWeight: "700",
   },
   masonryRow: {
     flexDirection: "row",

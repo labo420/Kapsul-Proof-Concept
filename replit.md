@@ -20,11 +20,12 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ### Kapsul (artifacts/kapsul) — Mobile App (Expo)
 MVP of Kapsul, a mobile-first event photo collection app.
-- **Theme**: OLED Black (#000000) + Neon Green (#00ff88) + Purple accent (#7c3aed)
-- **Fonts**: Inter (UI) + Space Mono (counters, labels)
-- **Screens**: Host Home, Create Event (2-step wizard), QR Code, Guest Upload Dashboard, Guest Wall (masonry), Scan QR
+- **Theme**: Social/Viral — Deep violet-black (#08060F) + Violet→Pink gradient (#8B5CF6→#EC4899), glassmorphic cards
+- **Fonts**: Inter (UI) + Space Mono (counters only)
+- **Screens**: Host Home, Create Event (2-step wizard), QR Code, Guest Upload Dashboard, Guest Wall (masonry), Scan QR, Event Detail
+- **Components**: GradientButton, GradientBadge, NeonProgressBar (gradient fill), PhotoCard (gradient overlay + reactions), DeliveryModeSelector (gradient chips)
 - **State**: EventContext + GuestContext (both AsyncStorage-backed, no backend)
-- **Key packages**: react-native-qrcode-svg, expo-clipboard, @expo-google-fonts/space-mono
+- **Key packages**: expo-linear-gradient, react-native-qrcode-svg, expo-clipboard, @expo-google-fonts/space-mono, react-native-reanimated
 - **Next steps**: Supabase integration, real QR scanner, Vault timer
 
 ## Key Commands

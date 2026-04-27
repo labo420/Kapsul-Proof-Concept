@@ -1,6 +1,7 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import QRCode from "react-native-qrcode-svg";
 import React, { useState } from "react";
@@ -18,15 +19,9 @@ import { useColors } from "@/hooks/useColors";
 import { useEvents } from "@/contexts/EventContext";
 
 const DELIVERY_LABELS: Record<string, string> = {
-  party: "Party Mode",
-  morning_after: "Morning After",
-  vault: "Vault Mode",
-};
-
-const DELIVERY_DESCS: Record<string, string> = {
-  party: "Foto visibili in tempo reale",
-  morning_after: "Sbloccate alle 06:00 del mattino",
-  vault: "Sbloccate dopo X ore",
+  party: "⚡️ Party Mode",
+  morning_after: "🌅 Morning After",
+  vault: "🔒 Vault Mode",
 };
 
 export default function QRScreen() {
@@ -52,9 +47,7 @@ export default function QRScreen() {
   if (!event) {
     return (
       <View style={[styles.root, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.mutedForeground }]}>
-          Evento non trovato
-        </Text>
+        <Text style={[styles.errorText, { color: colors.mutedForeground }]}>Evento non trovato</Text>
       </View>
     );
   }
@@ -62,130 +55,98 @@ export default function QRScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" />
-      <View style={[styles.topBar, { paddingTop: topPad + 8, borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => router.replace("/")} style={styles.backBtn}>
-          <Ionicons name="checkmark-done" size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.topTitle, { color: colors.foreground }]}>QR Code</Text>
-        <View style={styles.backBtn} />
-      </View>
+
+      <LinearGradient
+        colors={[colors.gradientStart + "18", "transparent"]}
+        style={[styles.topGradient, { paddingTop: topPad + 8 }]}
+      >
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => router.replace("/")} style={styles.navBtn}>
+            <Ionicons name="checkmark-done" size={22} color={colors.primary} />
+          </TouchableOpacity>
+          <Text style={[styles.topTitle, { color: colors.foreground }]}>QR Code</Text>
+          <View style={styles.navBtn} />
+        </View>
+      </LinearGradient>
 
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 24,
-          paddingTop: 28,
+          paddingTop: 16,
           paddingBottom: bottomPad + 40,
           alignItems: "center",
         }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.eventName, { color: colors.foreground }]}>
-          {event.name}
-        </Text>
-        <Text style={[styles.eventDate, { color: colors.mutedForeground }]}>
-          {event.date}
-        </Text>
+        <Text style={[styles.eventName, { color: colors.foreground }]}>{event.name}</Text>
+        <Text style={[styles.eventDate, { color: colors.mutedForeground }]}>{event.date}</Text>
 
-        <View
-          style={[
-            styles.modeBadge,
-            {
-              backgroundColor: colors.primary + "20",
-              borderRadius: 999,
-              marginBottom: 32,
-            },
-          ]}
-        >
+        <View style={[styles.modeBadge, { backgroundColor: colors.primary + "18", borderRadius: 999, borderWidth: 1, borderColor: colors.primary + "40" }]}>
           <Text style={[styles.modeBadgeText, { color: colors.primary }]}>
             {DELIVERY_LABELS[event.deliveryMode]}
           </Text>
-          <Text style={[styles.modeDesc, { color: colors.mutedForeground }]}>
-            {" • "}{DELIVERY_DESCS[event.deliveryMode]}
-          </Text>
         </View>
 
-        <View
-          style={[
-            styles.qrContainer,
-            {
-              backgroundColor: "#ffffff",
-              borderRadius: colors.radius * 2,
-              borderColor: colors.primary + "40",
-              shadowColor: colors.primary,
-            },
-          ]}
-        >
-          <QRCode
-            value={eventLink}
-            size={220}
-            backgroundColor="#ffffff"
-            color="#000000"
-          />
+        <View style={styles.qrWrapper}>
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            style={styles.qrGradientBorder}
+          >
+            <View style={styles.qrInner}>
+              <QRCode value={eventLink} size={200} backgroundColor="#fff" color="#08060F" />
+            </View>
+          </LinearGradient>
         </View>
 
-        <Text style={[styles.orLabel, { color: colors.mutedForeground }]}>
-          — oppure condividi il link —
+        <Text style={[styles.qrHint, { color: colors.mutedForeground }]}>
+          Gli ospiti inquadrano questo QR
         </Text>
 
-        <View
-          style={[
-            styles.linkRow,
-            {
-              backgroundColor: colors.card,
-              borderColor: colors.border,
-              borderRadius: colors.radius,
-            },
-          ]}
-        >
-          <Text
-            style={[styles.linkText, { color: colors.mutedForeground }]}
-            numberOfLines={1}
-          >
+        <View style={[styles.linkRow, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
+          <Text style={[styles.linkText, { color: colors.mutedForeground }]} numberOfLines={1}>
             {eventLink}
           </Text>
           <TouchableOpacity
             onPress={handleCopy}
-            style={[
-              styles.copyBtn,
-              {
-                backgroundColor: copied ? colors.primary : colors.muted,
-                borderRadius: colors.radius / 2,
-              },
-            ]}
+            style={{ borderRadius: 999, overflow: "hidden" }}
             activeOpacity={0.7}
           >
             {copied ? (
-              <Ionicons name="checkmark" size={16} color={colors.primaryForeground} />
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                style={styles.copyBtn}
+              >
+                <Ionicons name="checkmark" size={16} color="#fff" />
+              </LinearGradient>
             ) : (
-              <Feather name="copy" size={16} color={colors.foreground} />
+              <View style={[styles.copyBtn, { backgroundColor: colors.muted }]}>
+                <Feather name="copy" size={15} color={colors.foreground} />
+              </View>
             )}
           </TouchableOpacity>
         </View>
 
         <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
           <View style={styles.infoRow}>
-            <Ionicons name="people-outline" size={16} color={colors.mutedForeground} />
+            <Text style={{ fontSize: 18 }}>🚀</Text>
             <Text style={[styles.infoText, { color: colors.mutedForeground }]}>
-              Gli invitati inquadrano il QR — nessun download richiesto
+              Nessun download richiesto — solo scansione e via
             </Text>
           </View>
           <View style={styles.infoRow}>
-            <Ionicons name="shield-checkmark-outline" size={16} color={colors.mutedForeground} />
+            <Text style={{ fontSize: 18 }}>🎭</Text>
             <Text style={[styles.infoText, { color: colors.mutedForeground }]}>
-              Login anonimo automatico — zero attrito
+              Anonimo automatico — zero attrito per gli ospiti
             </Text>
           </View>
         </View>
 
         <TouchableOpacity
           onPress={() => router.push("/create-event")}
-          style={[
-            styles.newEventBtn,
-            { borderColor: colors.border, borderRadius: colors.radius },
-          ]}
+          style={[styles.newEventBtn, { borderColor: colors.border, borderRadius: 999 }]}
           activeOpacity={0.7}
         >
-          <Feather name="plus" size={16} color={colors.mutedForeground} />
+          <Feather name="plus" size={15} color={colors.mutedForeground} />
           <Text style={[styles.newEventText, { color: colors.mutedForeground }]}>
             Crea un altro evento
           </Text>
@@ -197,73 +158,91 @@ export default function QRScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  topGradient: {
+    paddingBottom: 12,
+  },
   topBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
+    paddingBottom: 4,
   },
-  backBtn: { width: 40, alignItems: "center" },
-  topTitle: { fontSize: 16, fontWeight: "600" },
+  navBtn: { width: 40, alignItems: "center" },
+  topTitle: { fontSize: 16, fontWeight: "700" },
   errorText: { textAlign: "center", marginTop: 100, fontSize: 16 },
-  eventName: { fontSize: 26, fontWeight: "700", textAlign: "center", marginBottom: 4 },
-  eventDate: { fontSize: 14, marginBottom: 16 },
+  eventName: {
+    fontSize: 28,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 6,
+    letterSpacing: -0.5,
+  },
+  eventDate: {
+    fontSize: 14,
+    fontWeight: "500",
+    marginBottom: 14,
+  },
   modeBadge: {
-    flexDirection: "row",
-    alignItems: "center",
     paddingHorizontal: 14,
     paddingVertical: 6,
+    marginBottom: 32,
   },
-  modeBadgeText: { fontSize: 13, fontWeight: "700" },
-  modeDesc: { fontSize: 12 },
-  qrContainer: {
-    padding: 20,
-    borderWidth: 1,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 8,
-    marginBottom: 28,
+  modeBadgeText: {
+    fontSize: 13,
+    fontWeight: "700",
   },
-  orLabel: {
-    fontSize: 11,
-    letterSpacing: 2,
+  qrWrapper: {
     marginBottom: 16,
+  },
+  qrGradientBorder: {
+    padding: 3,
+    borderRadius: 22,
+  },
+  qrInner: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 18,
+  },
+  qrHint: {
+    fontSize: 13,
+    fontWeight: "500",
+    marginBottom: 28,
   },
   linkRow: {
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
+    padding: 14,
     borderWidth: 1,
     gap: 10,
-    marginBottom: 20,
+    marginBottom: 18,
   },
-  linkText: { flex: 1, fontSize: 12 },
+  linkText: { flex: 1, fontSize: 12, fontWeight: "500" },
   copyBtn: {
     width: 36,
     height: 36,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: 999,
   },
   infoCard: {
     width: "100%",
-    padding: 16,
+    padding: 18,
     borderWidth: 1,
-    gap: 12,
+    gap: 14,
     marginBottom: 20,
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 10,
+    gap: 12,
   },
   infoText: {
     fontSize: 13,
     flex: 1,
-    lineHeight: 18,
+    lineHeight: 19,
+    fontWeight: "500",
   },
   newEventBtn: {
     flexDirection: "row",
@@ -273,5 +252,5 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderWidth: 1,
   },
-  newEventText: { fontSize: 14 },
+  newEventText: { fontSize: 14, fontWeight: "600" },
 });

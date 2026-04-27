@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -19,8 +20,8 @@ export default function NeonProgressBar({ progress, label }: ProgressBarProps) {
 
   useEffect(() => {
     width.value = withTiming(progress, {
-      duration: 400,
-      easing: Easing.out(Easing.quad),
+      duration: 500,
+      easing: Easing.out(Easing.cubic),
     });
   }, [progress]);
 
@@ -39,13 +40,14 @@ export default function NeonProgressBar({ progress, label }: ProgressBarProps) {
         </Text>
       </View>
       <View style={[styles.track, { backgroundColor: colors.muted }]}>
-        <Animated.View
-          style={[
-            styles.fill,
-            barStyle,
-            { backgroundColor: colors.primary },
-          ]}
-        />
+        <Animated.View style={[styles.fillWrapper, barStyle]}>
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
       </View>
     </View>
   );
@@ -66,15 +68,16 @@ const styles = StyleSheet.create({
   },
   pct: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   track: {
-    height: 4,
-    borderRadius: 2,
+    height: 5,
+    borderRadius: 999,
     overflow: "hidden",
   },
-  fill: {
+  fillWrapper: {
     height: "100%",
-    borderRadius: 2,
+    borderRadius: 999,
+    overflow: "hidden",
   },
 });

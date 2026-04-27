@@ -1,5 +1,6 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
 import {
@@ -11,17 +12,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useEvents } from "@/contexts/EventContext";
+import GradientButton from "@/components/GradientButton";
+import GradientBadge from "@/components/GradientBadge";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
 const DELIVERY_LABELS: Record<string, string> = {
-  party: "Party Mode",
-  morning_after: "Morning After",
-  vault: "Vault Mode",
+  party: "⚡️ Party",
+  morning_after: "🌅 Morning After",
+  vault: "🔒 Vault",
 };
 
 const DELIVERY_ICONS: Record<string, IoniconsName> = {
@@ -44,7 +46,7 @@ export default function HostScreen() {
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingTop: topPad + 16,
+          paddingTop: topPad + 20,
           paddingBottom: bottomPad + 100,
           paddingHorizontal: 20,
         }}
@@ -52,9 +54,14 @@ export default function HostScreen() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={[styles.logo, { color: colors.foreground }]}>
-              Kapsul
-            </Text>
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.logoGradient}
+            >
+              <Text style={styles.logoText}>Kapsul</Text>
+            </LinearGradient>
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
               I tuoi eventi
             </Text>
@@ -64,60 +71,40 @@ export default function HostScreen() {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               router.push("/create-event");
             }}
-            style={[
-              styles.createBtn,
-              {
-                backgroundColor: colors.primary,
-                borderRadius: colors.radius,
-              },
-            ]}
+            style={{ borderRadius: 999, overflow: "hidden" }}
             activeOpacity={0.8}
           >
-            <Feather name="plus" size={20} color={colors.primaryForeground} />
-            <Text style={[styles.createBtnText, { color: colors.primaryForeground }]}>
-              Nuovo
-            </Text>
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.createBtn}
+            >
+              <Feather name="plus" size={18} color="#fff" />
+              <Text style={styles.createBtnText}>Nuovo</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
 
         {events.length === 0 ? (
           <View style={styles.emptyState}>
-            <View
-              style={[
-                styles.emptyIcon,
-                {
-                  backgroundColor: colors.muted,
-                  borderRadius: colors.radius * 2,
-                  borderColor: colors.border,
-                },
-              ]}
+            <LinearGradient
+              colors={[colors.gradientStart + "30", colors.gradientEnd + "30"]}
+              style={[styles.emptyIcon, { borderRadius: 28 }]}
             >
-              <Ionicons name="camera-outline" size={40} color={colors.mutedForeground} />
-            </View>
+              <Text style={{ fontSize: 44 }}>📸</Text>
+            </LinearGradient>
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
-              Nessun evento ancora
+              Crea il tuo primo{"\n"}evento
             </Text>
             <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-              Crea il tuo primo evento e genera un QR code per raccogliere le foto dei tuoi ospiti
+              Genera un QR code e lascia che gli ospiti carichino le foto automaticamente
             </Text>
-            <TouchableOpacity
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                router.push("/create-event");
-              }}
-              style={[
-                styles.emptyBtn,
-                {
-                  borderColor: colors.primary,
-                  borderRadius: colors.radius,
-                },
-              ]}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.emptyBtnText, { color: colors.primary }]}>
-                Crea evento
-              </Text>
-            </TouchableOpacity>
+            <GradientButton
+              label="Crea evento"
+              onPress={() => router.push("/create-event")}
+              size="lg"
+            />
           </View>
         ) : (
           <View style={styles.eventList}>
@@ -128,62 +115,59 @@ export default function HostScreen() {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   router.push(`/event/${event.id}`);
                 }}
-                style={[
-                  styles.eventCard,
-                  {
-                    backgroundColor: colors.card,
-                    borderColor: colors.border,
-                    borderRadius: colors.radius,
-                  },
-                ]}
                 activeOpacity={0.8}
+                style={{ borderRadius: colors.radius, overflow: "hidden" }}
               >
-                <View style={styles.eventCardTop}>
-                  <View style={styles.eventInfo}>
-                    <Text style={[styles.eventName, { color: colors.foreground }]} numberOfLines={1}>
-                      {event.name}
-                    </Text>
-                    <Text style={[styles.eventDate, { color: colors.mutedForeground }]}>
-                      {event.date}
-                    </Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.modeBadge,
-                      {
-                        backgroundColor: colors.primary + "20",
-                        borderRadius: 999,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name={DELIVERY_ICONS[event.deliveryMode] ?? "help-circle"}
-                      size={12}
-                      color={colors.primary}
+                <LinearGradient
+                  colors={[colors.card, colors.muted]}
+                  style={[
+                    styles.eventCard,
+                    {
+                      borderColor: colors.border,
+                      borderRadius: colors.radius,
+                    },
+                  ]}
+                >
+                  <View style={styles.eventCardTop}>
+                    <View style={styles.eventInfo}>
+                      <Text style={[styles.eventName, { color: colors.foreground }]} numberOfLines={1}>
+                        {event.name}
+                      </Text>
+                      <Text style={[styles.eventDate, { color: colors.mutedForeground }]}>
+                        {event.date}
+                      </Text>
+                    </View>
+                    <GradientBadge
+                      label={DELIVERY_LABELS[event.deliveryMode] ?? event.deliveryMode}
+                      variant="soft"
                     />
-                    <Text style={[styles.modeBadgeText, { color: colors.primary }]}>
-                      {DELIVERY_LABELS[event.deliveryMode]}
-                    </Text>
                   </View>
-                </View>
-                <View style={[styles.eventCardBottom, { borderTopColor: colors.border }]}>
-                  <View style={styles.statItem}>
-                    <Ionicons name="images-outline" size={14} color={colors.mutedForeground} />
-                    <Text style={[styles.statText, { color: colors.mutedForeground }]}>
-                      {event.photoCount} foto
-                    </Text>
+                  <View style={[styles.eventCardBottom, { borderTopColor: colors.border }]}>
+                    <View style={styles.statItem}>
+                      <Text style={[styles.photoCount, { color: colors.primary }]}>
+                        {event.photoCount}
+                      </Text>
+                      <Text style={[styles.photoLabel, { color: colors.mutedForeground }]}>foto</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        router.push(`/qr/${event.id}`);
+                      }}
+                      style={{ borderRadius: 999, overflow: "hidden" }}
+                    >
+                      <LinearGradient
+                        colors={[colors.gradientStart, colors.gradientEnd]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.qrBtn}
+                      >
+                        <Ionicons name="qr-code-outline" size={14} color="#fff" />
+                        <Text style={styles.qrBtnText}>QR</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      router.push(`/qr/${event.id}`);
-                    }}
-                    style={[styles.qrBtn, { borderColor: colors.border, borderRadius: colors.radius / 2 }]}
-                  >
-                    <Ionicons name="qr-code-outline" size={14} color={colors.foreground} />
-                    <Text style={[styles.qrBtnText, { color: colors.foreground }]}>QR</Text>
-                  </TouchableOpacity>
-                </View>
+                </LinearGradient>
               </TouchableOpacity>
             ))}
           </View>
@@ -194,70 +178,70 @@ export default function HostScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
+  root: { flex: 1 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-end",
-    marginBottom: 28,
+    alignItems: "center",
+    marginBottom: 32,
   },
-  logo: {
-    fontSize: 26,
-    letterSpacing: 0.5,
-    fontWeight: "700",
+  logoGradient: {
+    borderRadius: 8,
+    paddingHorizontal: 2,
+    paddingVertical: 1,
+    alignSelf: "flex-start",
+    backgroundColor: "transparent",
+  },
+  logoText: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#fff",
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 13,
-    marginTop: 2,
+    marginTop: 3,
+    fontWeight: "500",
   },
   createBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
   },
   createBtnText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
+    color: "#fff",
   },
   emptyState: {
     alignItems: "center",
-    paddingTop: 60,
-    gap: 16,
+    paddingTop: 52,
+    gap: 18,
   },
   emptyIcon: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
     marginBottom: 8,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 26,
+    fontWeight: "800",
+    textAlign: "center",
+    lineHeight: 32,
+    letterSpacing: -0.5,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: 15,
     textAlign: "center",
     lineHeight: 22,
-    paddingHorizontal: 20,
-  },
-  emptyBtn: {
-    marginTop: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderWidth: 1,
-  },
-  emptyBtnText: {
-    fontSize: 15,
-    fontWeight: "600",
+    paddingHorizontal: 16,
   },
   eventList: {
-    gap: 12,
+    gap: 14,
   },
   eventCard: {
     borderWidth: 1,
@@ -267,7 +251,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
+    padding: 18,
     gap: 12,
   },
   eventInfo: {
@@ -275,51 +259,46 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   eventName: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 17,
+    fontWeight: "700",
+    letterSpacing: -0.2,
   },
   eventDate: {
-    fontSize: 12,
-  },
-  modeBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  modeBadgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.3,
+    fontSize: 13,
+    fontWeight: "500",
   },
   eventCardBottom: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
     borderTopWidth: 1,
   },
   statItem: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+    alignItems: "baseline",
+    gap: 4,
   },
-  statText: {
-    fontSize: 12,
-    letterSpacing: 1,
+  photoCount: {
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+  photoLabel: {
+    fontSize: 13,
+    fontWeight: "500",
   },
   qrBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderWidth: 1,
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
   qrBtnText: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#fff",
   },
 });

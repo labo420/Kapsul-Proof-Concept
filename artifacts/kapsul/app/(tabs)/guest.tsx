@@ -1,9 +1,11 @@
-import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated as RNAnimated,
   Modal,
   Platform,
   ScrollView,
@@ -13,6 +15,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/contexts/GuestContext";
@@ -20,8 +30,6 @@ import { useEvents } from "@/contexts/EventContext";
 import NeonProgressBar from "@/components/NeonProgressBar";
 
 type UploadState = "idle" | "uploading" | "done";
-
-const ACTIVE_EVENT_ID = "demo";
 
 export default function GuestScreen() {
   const colors = useColors();
@@ -37,11 +45,37 @@ export default function GuestScreen() {
   const activeEvent = events[0];
   const liveCount = activeEvent?.photoCount ?? uploadCount;
 
+  const pulseScale = useSharedValue(1);
+  const pulseOpacity = useSharedValue(0.6);
+
+  useEffect(() => {
+    pulseScale.value = withRepeat(
+      withSequence(
+        withTiming(1.12, { duration: 900 }),
+        withTiming(1, { duration: 900 })
+      ),
+      -1,
+      false
+    );
+    pulseOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.25, { duration: 900 }),
+        withTiming(0.6, { duration: 900 })
+      ),
+      -1,
+      false
+    );
+  }, []);
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+    opacity: pulseOpacity.value,
+  }));
+
   useEffect(() => {
     if (!activeEvent) return;
     const timer = setInterval(() => {
-      const rand = Math.random();
-      if (rand < 0.3) incrementPhotoCount(activeEvent.id);
+      if (Math.random() < 0.3) incrementPhotoCount(activeEvent.id);
     }, 4000);
     return () => clearInterval(timer);
   }, [activeEvent?.id]);
@@ -67,7 +101,7 @@ export default function GuestScreen() {
           setTimeout(() => {
             setUploadState("idle");
             setProgress(0);
-          }, 1200);
+          }, 1400);
         }, 400);
       } else {
         setProgress(p);
@@ -77,40 +111,24 @@ export default function GuestScreen() {
 
   const handleCamera = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (!acceptedTerms) {
-      setShowTerms(true);
-      return;
-    }
-    if (Platform.OS === "web") {
-      simulateUpload();
-      return;
-    }
+    if (!acceptedTerms) { setShowTerms(true); return; }
+    if (Platform.OS === "web") { simulateUpload(); return; }
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") return;
     const result = await ImagePicker.launchCameraAsync({ quality: 0.85 });
-    if (!result.canceled) {
-      simulateUpload();
-    }
+    if (!result.canceled) simulateUpload();
   };
 
   const handleGallery = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (!acceptedTerms) {
-      setShowTerms(true);
-      return;
-    }
-    if (Platform.OS === "web") {
-      simulateUpload();
-      return;
-    }
+    if (!acceptedTerms) { setShowTerms(true); return; }
+    if (Platform.OS === "web") { simulateUpload(); return; }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
       quality: 0.85,
     });
-    if (!result.canceled && result.assets.length > 0) {
-      simulateUpload();
-    }
+    if (!result.canceled && result.assets.length > 0) simulateUpload();
   };
 
   return (
@@ -118,33 +136,22 @@ export default function GuestScreen() {
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
       <ScrollView
         contentContainerStyle={{
-          paddingTop: topPad + 16,
-          paddingBottom: bottomPad + 100,
-          paddingHorizontal: 20,
-          flex: 1,
+          paddingTop: topPad + 20,
+          paddingBottom: bottomPad + 120,
+          paddingHorizontal: 24,
         }}
-        scrollEnabled={false}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <View>
-            <Text style={[styles.logo, { color: colors.foreground }]}>
-              Kapsul
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+            <Text style={[styles.logo, { color: colors.foreground }]}>Kapsul</Text>
+            <Text style={[styles.guestId, { color: colors.mutedForeground }]}>
               {guestId ?? "---"}
             </Text>
           </View>
           <TouchableOpacity
             onPress={() => router.push("/scan")}
-            style={[
-              styles.scanBtn,
-              {
-                backgroundColor: colors.muted,
-                borderColor: colors.border,
-                borderRadius: colors.radius,
-              },
-            ]}
+            style={[styles.scanBtn, { backgroundColor: colors.muted, borderRadius: 999, borderWidth: 1, borderColor: colors.border }]}
             activeOpacity={0.7}
           >
             <Ionicons name="qr-code-outline" size={18} color={colors.foreground} />
@@ -156,75 +163,79 @@ export default function GuestScreen() {
           <Text style={[styles.counterLabel, { color: colors.mutedForeground }]}>
             {activeEvent ? activeEvent.name : "Foto caricate"}
           </Text>
-          <Text style={[styles.counterValue, { color: colors.primary, fontFamily: "SpaceMono_400Regular" }]}>
-            {String(liveCount).padStart(6, "0")}
+          <Text style={[styles.counterValue, { color: colors.foreground, fontFamily: "SpaceMono_400Regular" }]}>
+            {String(liveCount).padStart(4, "0")}
           </Text>
-          <View style={[styles.counterDivider, { backgroundColor: colors.border }]} />
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.counterBar}
+          />
         </View>
 
-        <View style={styles.buttonsSection}>
+        <View style={styles.cameraSection}>
           <TouchableOpacity
             onPress={handleCamera}
             disabled={uploadState === "uploading"}
-            style={[
-              styles.bigBtn,
-              styles.primaryBtn,
-              {
-                backgroundColor: colors.primary,
-                borderRadius: colors.radius,
-                opacity: uploadState === "uploading" ? 0.6 : 1,
-              },
-            ]}
             activeOpacity={0.85}
+            style={styles.cameraBtnWrap}
           >
-            <Ionicons name="camera" size={32} color={colors.primaryForeground} />
-            <Text style={[styles.bigBtnText, { color: colors.primaryForeground }]}>
-              Scatta Ora
-            </Text>
+            <Animated.View style={[styles.cameraPulse, pulseStyle]}>
+              <LinearGradient
+                colors={[colors.gradientStart + "50", colors.gradientEnd + "50"]}
+                style={StyleSheet.absoluteFill}
+              />
+            </Animated.View>
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              style={styles.cameraBtn}
+            >
+              <Ionicons name="camera" size={42} color="#fff" />
+            </LinearGradient>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleGallery}
-            disabled={uploadState === "uploading"}
-            style={[
-              styles.bigBtn,
-              styles.secondaryBtn,
-              {
-                backgroundColor: colors.secondary,
-                borderColor: colors.border,
-                borderRadius: colors.radius,
-                opacity: uploadState === "uploading" ? 0.6 : 1,
-              },
-            ]}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="images" size={32} color={colors.foreground} />
-            <Text style={[styles.bigBtnText, { color: colors.foreground }]}>
-              Carica dal Rullino
-            </Text>
-          </TouchableOpacity>
+          <Text style={[styles.cameraBtnLabel, { color: colors.foreground }]}>
+            Scatta una foto
+          </Text>
+          <Text style={[styles.cameraHint, { color: colors.mutedForeground }]}>
+            Tocca per aprire la fotocamera
+          </Text>
         </View>
+
+        <TouchableOpacity
+          onPress={handleGallery}
+          disabled={uploadState === "uploading"}
+          style={[styles.galleryBtn, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="images" size={22} color={colors.primary} />
+          <Text style={[styles.galleryBtnText, { color: colors.foreground }]}>
+            Carica dal rullino
+          </Text>
+          <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+        </TouchableOpacity>
 
         {uploadState !== "idle" && (
           <View
             style={[
               styles.progressSection,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.primary + "33",
-                borderRadius: colors.radius,
-              },
+              { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius },
             ]}
           >
             <NeonProgressBar
               progress={progress}
-              label={uploadState === "done" ? "Completato" : "Caricamento in corso"}
+              label={uploadState === "done" ? "Completato! 🎉" : "Caricamento..."}
             />
             {uploadState === "done" && (
               <View style={styles.doneRow}>
-                <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
-                <Text style={[styles.doneText, { color: colors.primary }]}>
-                  Foto salvata
+                <LinearGradient
+                  colors={[colors.gradientStart, colors.gradientEnd]}
+                  style={styles.doneIcon}
+                >
+                  <Ionicons name="checkmark" size={14} color="#fff" />
+                </LinearGradient>
+                <Text style={[styles.doneText, { color: colors.foreground }]}>
+                  Foto aggiunta al vault
                 </Text>
               </View>
             )}
@@ -233,20 +244,14 @@ export default function GuestScreen() {
 
         <TouchableOpacity
           onPress={() => router.push("/wall")}
-          style={[
-            styles.wallLink,
-            {
-              borderColor: colors.border,
-              borderRadius: colors.radius,
-            },
-          ]}
+          style={[styles.wallLink, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="view-grid" size={16} color={colors.mutedForeground} />
-          <Text style={[styles.wallLinkText, { color: colors.mutedForeground }]}>
-            Vedi le foto dell'evento
+          <Text style={{ fontSize: 20 }}>🎞️</Text>
+          <Text style={[styles.wallLinkText, { color: colors.foreground }]}>
+            Guarda il Guest Wall
           </Text>
-          <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
+          <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
         </TouchableOpacity>
       </ScrollView>
 
@@ -257,21 +262,18 @@ export default function GuestScreen() {
         onRequestClose={() => setShowTerms(false)}
       >
         <View style={styles.modalOverlay}>
-          <View
-            style={[
-              styles.modalCard,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-                borderRadius: colors.radius * 2,
-              },
-            ]}
-          >
+          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 24 }]}>
+            <LinearGradient
+              colors={[colors.gradientStart + "20", colors.gradientEnd + "20"]}
+              style={styles.modalHeader}
+            >
+              <Text style={{ fontSize: 36 }}>📸</Text>
+            </LinearGradient>
             <Text style={[styles.modalTitle, { color: colors.foreground }]}>
               Prima di caricare
             </Text>
             <Text style={[styles.modalBody, { color: colors.mutedForeground }]}>
-              Caricando foto su Kapsul accetti che le immagini siano condivise con gli altri partecipanti all'evento. Non caricare contenuti inappropriati.
+              Le foto caricate su Kapsul saranno visibili agli altri partecipanti. Non caricare contenuti inappropriati.
             </Text>
             <TouchableOpacity
               onPress={() => {
@@ -284,16 +286,19 @@ export default function GuestScreen() {
               <View
                 style={[
                   styles.checkbox,
-                  {
-                    backgroundColor: termsChecked ? colors.primary : "transparent",
-                    borderColor: termsChecked ? colors.primary : colors.mutedForeground,
-                    borderRadius: 4,
-                  },
+                  termsChecked
+                    ? { borderWidth: 0, borderRadius: 6 }
+                    : { backgroundColor: "transparent", borderColor: colors.mutedForeground, borderWidth: 2, borderRadius: 6 },
                 ]}
               >
-                {termsChecked && (
-                  <Ionicons name="checkmark" size={14} color={colors.primaryForeground} />
-                )}
+                {termsChecked ? (
+                  <LinearGradient
+                    colors={[colors.gradientStart, colors.gradientEnd]}
+                    style={[StyleSheet.absoluteFill, { borderRadius: 6, alignItems: "center", justifyContent: "center" }]}
+                  >
+                    <Ionicons name="checkmark" size={14} color="#fff" />
+                  </LinearGradient>
+                ) : null}
               </View>
               <Text style={[styles.checkboxLabel, { color: colors.foreground }]}>
                 Accetto i Termini per caricare le foto
@@ -307,31 +312,21 @@ export default function GuestScreen() {
                 setTermsChecked(false);
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               }}
-              style={[
-                styles.acceptBtn,
-                {
-                  backgroundColor: termsChecked ? colors.primary : colors.muted,
-                  borderRadius: colors.radius,
-                },
-              ]}
+              disabled={!termsChecked}
+              style={{ borderRadius: 999, overflow: "hidden", opacity: termsChecked ? 1 : 0.4 }}
               activeOpacity={0.8}
             >
-              <Text
-                style={[
-                  styles.acceptBtnText,
-                  { color: termsChecked ? colors.primaryForeground : colors.mutedForeground },
-                ]}
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.acceptBtn}
               >
-                Continua
-              </Text>
+                <Text style={styles.acceptBtnText}>Continua</Text>
+              </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setShowTerms(false)}
-              style={styles.cancelLink}
-            >
-              <Text style={[styles.cancelText, { color: colors.mutedForeground }]}>
-                Annulla
-              </Text>
+            <TouchableOpacity onPress={() => setShowTerms(false)} style={styles.cancelLink}>
+              <Text style={[styles.cancelText, { color: colors.mutedForeground }]}>Annulla</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -345,130 +340,164 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-end",
-    marginBottom: 32,
+    alignItems: "center",
+    marginBottom: 36,
   },
   logo: {
-    fontSize: 26,
-    letterSpacing: 0.5,
-    fontWeight: "700",
+    fontSize: 28,
+    fontWeight: "800",
+    letterSpacing: -0.5,
   },
-  subtitle: {
+  guestId: {
     fontSize: 12,
-    marginTop: 4,
-    letterSpacing: 0,
+    marginTop: 3,
+    fontWeight: "500",
   },
   scanBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderWidth: 1,
+    paddingVertical: 9,
   },
   scanBtnText: {
     fontSize: 13,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   counterSection: {
     alignItems: "center",
-    marginBottom: 36,
-    gap: 8,
+    marginBottom: 44,
+    gap: 6,
   },
   counterLabel: {
-    fontSize: 10,
-    letterSpacing: 3,
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 2,
+    textTransform: "uppercase",
   },
   counterValue: {
-    fontSize: 52,
-    letterSpacing: 8,
-    lineHeight: 60,
+    fontSize: 64,
+    letterSpacing: 6,
+    lineHeight: 72,
+    fontWeight: "400",
   },
-  counterDivider: {
-    height: 1,
-    width: 120,
-    marginTop: 8,
+  counterBar: {
+    height: 3,
+    width: 80,
+    borderRadius: 999,
+    marginTop: 6,
   },
-  buttonsSection: {
+  cameraSection: {
+    alignItems: "center",
+    marginBottom: 28,
     gap: 14,
-    marginBottom: 24,
   },
-  bigBtn: {
+  cameraBtnWrap: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
-    paddingVertical: 28,
+    width: 140,
+    height: 140,
   },
-  primaryBtn: {},
-  secondaryBtn: {
-    borderWidth: 1,
+  cameraPulse: {
+    position: "absolute",
+    width: 140,
+    height: 140,
+    borderRadius: 70,
   },
-  bigBtnText: {
-    fontSize: 17,
+  cameraBtn: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cameraBtnLabel: {
+    fontSize: 18,
     fontWeight: "700",
-    letterSpacing: 0.5,
+    letterSpacing: -0.3,
+  },
+  cameraHint: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  galleryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  galleryBtnText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
   },
   progressSection: {
-    padding: 16,
-    gap: 10,
+    padding: 18,
+    gap: 12,
     borderWidth: 1,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   doneRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 10,
+  },
+  doneIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
   doneText: {
-    fontSize: 11,
-    letterSpacing: 2,
+    fontSize: 14,
+    fontWeight: "600",
   },
   wallLink: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    gap: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
     borderWidth: 1,
-    justifyContent: "space-between",
   },
   wallLinkText: {
-    fontSize: 13,
     flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.85)",
+    backgroundColor: "rgba(0,0,0,0.88)",
     justifyContent: "flex-end",
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 36,
   },
   modalCard: {
     borderWidth: 1,
     padding: 24,
     gap: 16,
+    overflow: "hidden",
+  },
+  modalHeader: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "flex-start",
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.3,
   },
   modalBody: {
     fontSize: 14,
     lineHeight: 22,
-  },
-  acceptBtn: {
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  acceptBtnText: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  cancelLink: {
-    alignItems: "center",
-  },
-  cancelText: {
-    fontSize: 14,
   },
   checkboxRow: {
     flexDirection: "row",
@@ -478,14 +507,33 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 22,
     height: 22,
-    borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
+    overflow: "hidden",
   },
   checkboxLabel: {
     fontSize: 14,
     flex: 1,
     lineHeight: 20,
+    fontWeight: "500",
+  },
+  acceptBtn: {
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  acceptBtnText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#fff",
+    letterSpacing: 0.2,
+  },
+  cancelLink: {
+    alignItems: "center",
+    paddingTop: 4,
+  },
+  cancelText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

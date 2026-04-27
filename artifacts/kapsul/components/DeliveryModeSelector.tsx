@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
@@ -14,22 +15,25 @@ interface DeliveryModeSelectorProps {
   onVaultHoursChange: (h: number) => void;
 }
 
-const MODES: { id: DeliveryMode; icon: IoniconsName; title: string; subtitle: string }[] = [
+const MODES: { id: DeliveryMode; icon: IoniconsName; title: string; subtitle: string; emoji: string }[] = [
   {
     id: "party",
     icon: "flash",
+    emoji: "⚡️",
     title: "Party Mode",
     subtitle: "Foto visibili in tempo reale",
   },
   {
     id: "morning_after",
     icon: "sunny",
+    emoji: "🌅",
     title: "Morning After",
     subtitle: "Sbloccate alle 06:00 del mattino",
   },
   {
     id: "vault",
     icon: "lock-closed",
+    emoji: "🔒",
     title: "Vault Mode",
     subtitle: "Sbloccate dopo X ore",
   },
@@ -56,51 +60,36 @@ export default function DeliveryModeSelector({
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               onSelect(mode.id);
             }}
-            style={[
-              styles.modeCard,
-              {
-                backgroundColor: isSelected ? colors.primary + "15" : colors.card,
-                borderColor: isSelected ? colors.primary : colors.border,
-                borderRadius: colors.radius,
-              },
-            ]}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
+            style={{ borderRadius: colors.radius, overflow: "hidden", marginBottom: 10 }}
           >
-            <View style={styles.modeLeft}>
-              <View
+            {isSelected ? (
+              <LinearGradient
+                colors={[colors.gradientStart + "20", colors.gradientEnd + "20"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
                 style={[
-                  styles.iconWrap,
-                  { backgroundColor: isSelected ? colors.primary + "25" : colors.muted },
+                  styles.modeCard,
+                  {
+                    borderColor: colors.gradientStart + "80",
+                    borderRadius: colors.radius,
+                  },
                 ]}
               >
-                <Ionicons
-                  name={mode.icon}
-                  size={20}
-                  color={isSelected ? colors.primary : colors.mutedForeground}
-                />
-              </View>
-              <View style={styles.modeText}>
-                <Text
-                  style={[
-                    styles.modeTitle,
-                    { color: isSelected ? colors.primary : colors.foreground },
-                  ]}
-                >
-                  {mode.title}
-                </Text>
-                <Text style={[styles.modeSubtitle, { color: colors.mutedForeground }]}>
-                  {mode.subtitle}
-                </Text>
-              </View>
-            </View>
-            {isSelected && (
+                <ModeCardContent mode={mode} isSelected colors={colors} />
+              </LinearGradient>
+            ) : (
               <View
                 style={[
-                  styles.checkCircle,
-                  { backgroundColor: colors.primary },
+                  styles.modeCard,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: colors.border,
+                    borderRadius: colors.radius,
+                  },
                 ]}
               >
-                <Ionicons name="checkmark" size={12} color={colors.primaryForeground} />
+                <ModeCardContent mode={mode} isSelected={false} colors={colors} />
               </View>
             )}
           </TouchableOpacity>
@@ -118,23 +107,22 @@ export default function DeliveryModeSelector({
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   onVaultHoursChange(h);
                 }}
-                style={[
-                  styles.chip,
-                  {
-                    backgroundColor: vaultHours === h ? colors.primary : colors.muted,
-                    borderColor: vaultHours === h ? colors.primary : colors.border,
-                    borderRadius: 999,
-                  },
-                ]}
+                style={{ borderRadius: 999, overflow: "hidden" }}
               >
-                <Text
-                  style={[
-                    styles.chipText,
-                    { color: vaultHours === h ? colors.primaryForeground : colors.mutedForeground },
-                  ]}
-                >
-                  {h}h
-                </Text>
+                {vaultHours === h ? (
+                  <LinearGradient
+                    colors={[colors.gradientStart, colors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.chip}
+                  >
+                    <Text style={[styles.chipText, { color: "#fff" }]}>{h}h</Text>
+                  </LinearGradient>
+                ) : (
+                  <View style={[styles.chip, { backgroundColor: colors.muted, borderWidth: 1, borderColor: colors.border }]}>
+                    <Text style={[styles.chipText, { color: colors.mutedForeground }]}>{h}h</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             ))}
           </View>
@@ -144,16 +132,63 @@ export default function DeliveryModeSelector({
   );
 }
 
+function ModeCardContent({
+  mode,
+  isSelected,
+  colors,
+}: {
+  mode: (typeof MODES)[number];
+  isSelected: boolean;
+  colors: ReturnType<typeof import("@/hooks/useColors").useColors>;
+}) {
+  return (
+    <View style={styles.modeInner}>
+      <View style={styles.modeLeft}>
+        {isSelected ? (
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            style={styles.iconWrap}
+          >
+            <Text style={{ fontSize: 18 }}>{mode.emoji}</Text>
+          </LinearGradient>
+        ) : (
+          <View style={[styles.iconWrap, { backgroundColor: colors.muted }]}>
+            <Text style={{ fontSize: 18 }}>{mode.emoji}</Text>
+          </View>
+        )}
+        <View style={styles.modeText}>
+          <Text style={[styles.modeTitle, { color: isSelected ? "#fff" : colors.foreground }]}>
+            {mode.title}
+          </Text>
+          <Text style={[styles.modeSubtitle, { color: colors.mutedForeground }]}>
+            {mode.subtitle}
+          </Text>
+        </View>
+      </View>
+      {isSelected && (
+        <LinearGradient
+          colors={[colors.gradientStart, colors.gradientEnd]}
+          style={styles.checkCircle}
+        >
+          <Ionicons name="checkmark" size={12} color="#fff" />
+        </LinearGradient>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
-    gap: 10,
+    gap: 0,
   },
   modeCard: {
+    borderWidth: 1,
+  },
+  modeInner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     padding: 14,
-    borderWidth: 1,
   },
   modeLeft: {
     flexDirection: "row",
@@ -162,41 +197,42 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
   modeText: {
     flex: 1,
-    gap: 2,
+    gap: 3,
   },
   modeTitle: {
     fontSize: 15,
-    fontWeight: "600",
-    letterSpacing: 0.2,
+    fontWeight: "700",
   },
   modeSubtitle: {
     fontSize: 12,
     lineHeight: 16,
   },
   checkCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
   hoursRow: {
     borderTopWidth: 1,
-    paddingTop: 14,
+    paddingTop: 16,
     gap: 10,
+    marginTop: 4,
   },
   hoursLabel: {
     fontSize: 12,
     letterSpacing: 1,
     textTransform: "uppercase",
+    fontWeight: "600",
   },
   hoursChips: {
     flexDirection: "row",
@@ -205,11 +241,10 @@ const styles = StyleSheet.create({
   },
   chip: {
     paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderWidth: 1,
+    paddingVertical: 7,
   },
   chipText: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "700",
   },
 });

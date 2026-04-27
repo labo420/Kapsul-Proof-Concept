@@ -1,5 +1,6 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, {
@@ -26,8 +27,8 @@ export default function PhotoCard({ uri, height, width }: PhotoCardProps) {
   const handleReaction = (emoji: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setReactions(prev => ({ ...prev, [emoji]: (prev[emoji] ?? 0) + 1 }));
-    scale.value = withSpring(1.03, {}, () => {
-      scale.value = withSpring(1);
+    scale.value = withSpring(1.05, { damping: 8, stiffness: 200 }, () => {
+      scale.value = withSpring(1, { damping: 10, stiffness: 180 });
     });
   };
 
@@ -46,65 +47,58 @@ export default function PhotoCard({ uri, height, width }: PhotoCardProps) {
         styles.card,
         cardStyle,
         {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
           width,
           borderRadius: colors.radius,
           overflow: "hidden",
         },
       ]}
     >
-      <Image
-        source={{ uri }}
-        style={{ width, height }}
-        resizeMode="cover"
-      />
+      <Image source={{ uri }} style={{ width, height }} resizeMode="cover" />
 
-      {reported ? (
-        <View
-          style={[
-            styles.reportedOverlay,
-            { height, backgroundColor: "rgba(14,14,15,0.92)" },
-          ]}
-        >
-          <Ionicons name="flag" size={22} color={colors.mutedForeground} />
-          <Text style={[styles.reportedText, { color: colors.mutedForeground }]}>
-            Segnalata
-          </Text>
+      {reported && (
+        <View style={[styles.reportedOverlay, { height, backgroundColor: "rgba(8,6,15,0.92)" }]}>
+          <Ionicons name="flag" size={24} color={colors.mutedForeground} />
+          <Text style={[styles.reportedText, { color: colors.mutedForeground }]}>Segnalata</Text>
         </View>
-      ) : null}
+      )}
 
-      <View style={[styles.footer, { borderTopColor: colors.border }]}>
-        <View style={styles.reactions}>
-          {REACTIONS.map(emoji => (
-            <TouchableOpacity
-              key={emoji}
-              onPress={() => handleReaction(emoji)}
-              style={styles.reactionBtn}
-            >
-              <Text style={styles.emoji}>{emoji}</Text>
-              {(reactions[emoji] ?? 0) > 0 && (
-                <Text style={[styles.reactionCount, { color: colors.mutedForeground }]}>
-                  {reactions[emoji]}
-                </Text>
-              )}
+      <LinearGradient
+        colors={["transparent", "rgba(8,6,15,0.82)"]}
+        style={styles.gradientOverlay}
+      >
+        <View style={styles.reactionRow}>
+          <View style={styles.reactions}>
+            {REACTIONS.map(emoji => (
+              <TouchableOpacity
+                key={emoji}
+                onPress={() => handleReaction(emoji)}
+                style={styles.reactionBtn}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.emoji}>{emoji}</Text>
+                {(reactions[emoji] ?? 0) > 0 && (
+                  <Text style={[styles.reactionCount, { color: "#fff" }]}>
+                    {reactions[emoji]}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+          {!reported && (
+            <TouchableOpacity onPress={handleReport} style={styles.reportBtn} activeOpacity={0.7}>
+              <Feather name="flag" size={13} color="rgba(255,255,255,0.5)" />
             </TouchableOpacity>
-          ))}
+          )}
         </View>
-        {!reported && (
-          <TouchableOpacity onPress={handleReport} style={styles.reportBtn}>
-            <Feather name="flag" size={14} color={colors.mutedForeground} />
-          </TouchableOpacity>
-        )}
-      </View>
+      </LinearGradient>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
     marginBottom: 10,
+    backgroundColor: "#130F1C",
   },
   reportedOverlay: {
     position: "absolute",
@@ -114,36 +108,44 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+    zIndex: 2,
   },
   reportedText: {
     fontSize: 12,
     fontWeight: "500",
-    letterSpacing: 0.5,
   },
-  footer: {
+  gradientOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingTop: 28,
+    paddingBottom: 10,
+    paddingHorizontal: 10,
+  },
+  reactionRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderTopWidth: 1,
   },
   reactions: {
     flexDirection: "row",
-    gap: 8,
+    gap: 6,
     alignItems: "center",
   },
   reactionBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
   },
   emoji: {
-    fontSize: 16,
+    fontSize: 15,
   },
   reactionCount: {
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   reportBtn: {
     padding: 4,

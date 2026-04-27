@@ -1,5 +1,6 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -65,46 +66,50 @@ export default function CreateEventScreen() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" />
 
-      <View style={[styles.topBar, { paddingTop: topPad + 8, borderBottomColor: colors.border }]}>
+      <View style={[styles.topBar, { paddingTop: topPad + 8 }]}>
         <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.topTitle, { color: colors.foreground }]}>
-          Nuovo evento
-        </Text>
+        <Text style={[styles.topTitle, { color: colors.foreground }]}>Nuovo evento</Text>
         <View style={styles.backBtn} />
       </View>
 
-      <View style={[styles.stepsRow, { borderBottomColor: colors.border }]}>
+      <View style={styles.progressStrip}>
         {STEPS.map((s, i) => (
-          <View key={s} style={styles.stepItem}>
-            <View
-              style={[
-                styles.stepDot,
-                {
-                  backgroundColor: i <= step ? colors.primary : colors.muted,
-                  borderColor: i <= step ? colors.primary : colors.border,
-                },
-              ]}
-            >
-              {i < step ? (
-                <Ionicons name="checkmark" size={11} color={colors.primaryForeground} />
-              ) : (
-                <Text style={[styles.stepNum, { color: i === step ? colors.primaryForeground : colors.mutedForeground }]}>
-                  {i + 1}
-                </Text>
-              )}
-            </View>
-            <Text
-              style={[
-                styles.stepLabel,
-                { color: i <= step ? colors.foreground : colors.mutedForeground },
-              ]}
-            >
+          <View key={s} style={styles.progressItem}>
+            {i <= step ? (
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.stepDot, { borderRadius: 999 }]}
+              >
+                {i < step ? (
+                  <Ionicons name="checkmark" size={11} color="#fff" />
+                ) : (
+                  <Text style={styles.stepNum}>{i + 1}</Text>
+                )}
+              </LinearGradient>
+            ) : (
+              <View style={[styles.stepDot, { backgroundColor: colors.muted, borderRadius: 999 }]}>
+                <Text style={[styles.stepNum, { color: colors.mutedForeground }]}>{i + 1}</Text>
+              </View>
+            )}
+            <Text style={[styles.stepLabel, { color: i <= step ? colors.foreground : colors.mutedForeground }]}>
               {s}
             </Text>
             {i < STEPS.length - 1 && (
-              <View style={[styles.stepLine, { backgroundColor: i < step ? colors.primary : colors.border }]} />
+              <View style={styles.stepLineWrap}>
+                <View style={[styles.stepLineBg, { backgroundColor: colors.border }]} />
+                {i < step && (
+                  <LinearGradient
+                    colors={[colors.gradientStart, colors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.stepLineFill}
+                  />
+                )}
+              </View>
             )}
           </View>
         ))}
@@ -112,26 +117,21 @@ export default function CreateEventScreen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{
-          padding: 24,
-          paddingBottom: bottomPad + 100,
-        }}
+        contentContainerStyle={{ padding: 24, paddingBottom: bottomPad + 110 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {step === 0 ? (
           <View style={styles.form}>
             <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-              Di che evento si tratta?
+              Di che evento{"\n"}si tratta? 🎉
             </Text>
             <Text style={[styles.sectionSubtitle, { color: colors.mutedForeground }]}>
-              Dai un nome al tuo evento e scegli la data
+              Dai un nome all'evento e scegli la data
             </Text>
 
             <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>
-                NOME EVENTO
-              </Text>
+              <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>NOME EVENTO</Text>
               <TextInput
                 value={eventName}
                 onChangeText={setEventName}
@@ -142,7 +142,7 @@ export default function CreateEventScreen() {
                   {
                     color: colors.foreground,
                     backgroundColor: colors.input,
-                    borderColor: eventName.trim() ? colors.primary + "66" : colors.border,
+                    borderColor: eventName.trim() ? colors.primary + "70" : colors.border,
                     borderRadius: colors.radius,
                   },
                 ]}
@@ -152,9 +152,7 @@ export default function CreateEventScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>
-                DATA
-              </Text>
+              <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>DATA</Text>
               <TextInput
                 value={eventDate}
                 onChangeText={setEventDate}
@@ -165,7 +163,7 @@ export default function CreateEventScreen() {
                   {
                     color: colors.foreground,
                     backgroundColor: colors.input,
-                    borderColor: eventDate.trim() ? colors.primary + "66" : colors.border,
+                    borderColor: eventDate.trim() ? colors.primary + "70" : colors.border,
                     borderRadius: colors.radius,
                   },
                 ]}
@@ -177,10 +175,10 @@ export default function CreateEventScreen() {
         ) : (
           <View style={styles.form}>
             <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-              Quando sbloccare le foto?
+              Quando sbloccare{"\n"}le foto? 🔓
             </Text>
             <Text style={[styles.sectionSubtitle, { color: colors.mutedForeground }]}>
-              Scegli quando i tuoi ospiti potranno vedere le foto caricate
+              Scegli quando gli ospiti potranno vedere le foto
             </Text>
             <DeliveryModeSelector
               selected={deliveryMode}
@@ -192,41 +190,24 @@ export default function CreateEventScreen() {
         )}
       </ScrollView>
 
-      <View
-        style={[
-          styles.footer,
-          {
-            paddingBottom: bottomPad + 24,
-            borderTopColor: colors.border,
-            backgroundColor: colors.background,
-          },
-        ]}
-      >
+      <View style={[styles.footer, { paddingBottom: bottomPad + 24, borderTopColor: colors.border, backgroundColor: colors.background }]}>
         <TouchableOpacity
           onPress={handleNext}
           disabled={!canProceed}
-          style={[
-            styles.nextBtn,
-            {
-              backgroundColor: canProceed ? colors.primary : colors.muted,
-              borderRadius: colors.radius,
-            },
-          ]}
+          style={{ borderRadius: 999, overflow: "hidden", opacity: canProceed ? 1 : 0.35 }}
           activeOpacity={0.8}
         >
-          <Text
-            style={[
-              styles.nextBtnText,
-              { color: canProceed ? colors.primaryForeground : colors.mutedForeground },
-            ]}
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.nextBtn}
           >
-            {step === 0 ? "Avanti" : "Crea evento"}
-          </Text>
-          <Feather
-            name={step === 0 ? "arrow-right" : "check"}
-            size={18}
-            color={canProceed ? colors.primaryForeground : colors.mutedForeground}
-          />
+            <Text style={styles.nextBtnText}>
+              {step === 0 ? "Avanti" : "Crea evento 🎉"}
+            </Text>
+            <Feather name={step === 0 ? "arrow-right" : "check"} size={18} color="#fff" />
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </View>
@@ -240,78 +221,85 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
+    paddingBottom: 14,
   },
   backBtn: { width: 40 },
-  topTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  stepsRow: {
+  topTitle: { fontSize: 17, fontWeight: "700" },
+  progressStrip: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 16,
     paddingHorizontal: 32,
-    borderBottomWidth: 1,
     gap: 0,
   },
-  stepItem: {
+  progressItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
   stepDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 26,
+    height: 26,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
   },
-  stepNum: {
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  stepLabel: {
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  stepLine: {
-    width: 40,
-    height: 1,
+  stepNum: { fontSize: 12, fontWeight: "800", color: "#fff" },
+  stepLabel: { fontSize: 13, fontWeight: "600" },
+  stepLineWrap: {
+    width: 48,
+    height: 3,
     marginHorizontal: 8,
+    overflow: "hidden",
+    borderRadius: 999,
+    position: "relative",
   },
-  form: {
-    gap: 20,
+  stepLineBg: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: 999,
   },
+  stepLineFill: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: 999,
+  },
+  form: { gap: 24 },
   sectionTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    lineHeight: 28,
+    fontSize: 26,
+    fontWeight: "800",
+    lineHeight: 32,
+    letterSpacing: -0.5,
   },
   sectionSubtitle: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "500",
+    marginTop: -8,
   },
-  inputGroup: {
-    gap: 8,
-  },
+  inputGroup: { gap: 8 },
   inputLabel: {
     fontSize: 11,
     letterSpacing: 2,
     textTransform: "uppercase",
+    fontWeight: "600",
   },
   input: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 15,
     fontSize: 16,
+    fontWeight: "500",
   },
   footer: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 14,
     borderTopWidth: 1,
   },
   nextBtn: {
@@ -319,10 +307,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    paddingVertical: 16,
+    paddingVertical: 18,
   },
   nextBtnText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "800",
+    color: "#fff",
+    letterSpacing: 0.2,
   },
 });
