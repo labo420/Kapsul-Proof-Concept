@@ -2,7 +2,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Platform,
   ScrollView,
@@ -12,6 +12,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useEvents } from "@/contexts/EventContext";
@@ -32,6 +39,29 @@ const DELIVERY_ICONS: Record<string, IoniconsName> = {
   vault: "lock-closed",
 };
 
+const SPRING = { damping: 20, stiffness: 200, mass: 0.9 } as const;
+
+function useFadeSlideIn(delay: number) {
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(22);
+
+  useEffect(() => {
+    opacity.value = withDelay(delay, withTiming(1, { duration: 340 }));
+    translateY.value = withDelay(delay, withSpring(0, SPRING));
+  }, []);
+
+  return useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+}
+
+function AnimatedCard({ index, children }: { index: number; children: React.ReactNode }) {
+  const delay = 220 + index * 80;
+  const style = useFadeSlideIn(delay);
+  return <Animated.View style={style}>{children}</Animated.View>;
+}
+
 export default function HostScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -39,6 +69,10 @@ export default function HostScreen() {
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
+
+  const logoStyle = useFadeSlideIn(0);
+  const createBtnStyle = useFadeSlideIn(110);
+  const emptyStateStyle = useFadeSlideIn(220);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -53,7 +87,7 @@ export default function HostScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <View>
+          <Animated.View style={logoStyle}>
             <LinearGradient
               colors={[colors.gradientStart, colors.gradientEnd]}
               start={{ x: 0, y: 0 }}
@@ -65,29 +99,32 @@ export default function HostScreen() {
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
               I tuoi eventi
             </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              router.push("/create-event");
-            }}
-            style={{ borderRadius: 999, overflow: "hidden" }}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={[colors.gradientStart, colors.gradientEnd]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.createBtn}
+          </Animated.View>
+
+          <Animated.View style={createBtnStyle}>
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                router.push("/create-event");
+              }}
+              style={{ borderRadius: 999, overflow: "hidden" }}
+              activeOpacity={0.8}
             >
-              <Feather name="plus" size={18} color="#fff" />
-              <Text style={styles.createBtnText}>Nuovo</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.createBtn}
+              >
+                <Feather name="plus" size={18} color="#fff" />
+                <Text style={styles.createBtnText}>Nuovo</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
         </View>
 
         {events.length === 0 ? (
-          <View style={styles.emptyState}>
+          <Animated.View style={[styles.emptyState, emptyStateStyle]}>
             <LinearGradient
               colors={[colors.gradientStart + "30", colors.gradientEnd + "30"]}
               style={[styles.emptyIcon, { borderRadius: 28 }]}
@@ -105,78 +142,79 @@ export default function HostScreen() {
               onPress={() => router.push("/create-event")}
               size="lg"
             />
-          </View>
+          </Animated.View>
         ) : (
           <View style={styles.eventList}>
-            {events.map(event => (
-              <TouchableOpacity
-                key={event.id}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push(`/event/${event.id}`);
-                }}
-                activeOpacity={0.8}
-                style={{
-                  borderRadius: colors.radius,
-                  overflow: "hidden",
-                  shadowColor: colors.gradientStart,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 12,
-                  elevation: 6,
-                }}
-              >
-                <LinearGradient
-                  colors={[colors.card, colors.muted]}
-                  style={[
-                    styles.eventCard,
-                    {
-                      borderColor: colors.gradientStart + "50",
-                      borderRadius: colors.radius,
-                    },
-                  ]}
+            {events.map((event, index) => (
+              <AnimatedCard key={event.id} index={index}>
+                <TouchableOpacity
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push(`/event/${event.id}`);
+                  }}
+                  activeOpacity={0.8}
+                  style={{
+                    borderRadius: colors.radius,
+                    overflow: "hidden",
+                    shadowColor: colors.gradientStart,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 12,
+                    elevation: 6,
+                  }}
                 >
-                  <View style={styles.eventCardTop}>
-                    <View style={styles.eventInfo}>
-                      <Text style={[styles.eventName, { color: colors.foreground }]} numberOfLines={1}>
-                        {event.name}
-                      </Text>
-                      <Text style={[styles.eventDate, { color: colors.mutedForeground }]}>
-                        {event.date}
-                      </Text>
+                  <LinearGradient
+                    colors={[colors.card, colors.muted]}
+                    style={[
+                      styles.eventCard,
+                      {
+                        borderColor: colors.gradientStart + "50",
+                        borderRadius: colors.radius,
+                      },
+                    ]}
+                  >
+                    <View style={styles.eventCardTop}>
+                      <View style={styles.eventInfo}>
+                        <Text style={[styles.eventName, { color: colors.foreground }]} numberOfLines={1}>
+                          {event.name}
+                        </Text>
+                        <Text style={[styles.eventDate, { color: colors.mutedForeground }]}>
+                          {event.date}
+                        </Text>
+                      </View>
+                      <GradientBadge
+                        label={DELIVERY_LABELS[event.deliveryMode] ?? event.deliveryMode}
+                        variant="soft"
+                      />
                     </View>
-                    <GradientBadge
-                      label={DELIVERY_LABELS[event.deliveryMode] ?? event.deliveryMode}
-                      variant="soft"
-                    />
-                  </View>
-                  <View style={[styles.eventCardBottom, { borderTopColor: colors.border }]}>
-                    <View style={styles.statItem}>
-                      <Text style={[styles.photoCount, { color: colors.primary }]}>
-                        {event.photoCount}
-                      </Text>
-                      <Text style={[styles.photoLabel, { color: colors.mutedForeground }]}>foto</Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        router.push(`/qr/${event.id}`);
-                      }}
-                      style={{ borderRadius: 999, overflow: "hidden" }}
-                    >
-                      <LinearGradient
-                        colors={[colors.gradientStart, colors.gradientEnd]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.qrBtn}
+                    <View style={[styles.eventCardBottom, { borderTopColor: colors.border }]}>
+                      <View style={styles.statItem}>
+                        <Text style={[styles.photoCount, { color: colors.primary }]}>
+                          {event.photoCount}
+                        </Text>
+                        <Text style={[styles.photoLabel, { color: colors.mutedForeground }]}>foto</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          router.push(`/qr/${event.id}`);
+                        }}
+                        style={{ borderRadius: 999, overflow: "hidden" }}
                       >
-                        <Ionicons name="qr-code-outline" size={14} color="#fff" />
-                        <Text style={styles.qrBtnText}>QR</Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
+                        <LinearGradient
+                          colors={[colors.gradientStart, colors.gradientEnd]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.qrBtn}
+                        >
+                          <Ionicons name="qr-code-outline" size={14} color="#fff" />
+                          <Text style={styles.qrBtnText}>QR</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </AnimatedCard>
             ))}
           </View>
         )}

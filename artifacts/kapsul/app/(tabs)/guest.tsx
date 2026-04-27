@@ -21,6 +21,7 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withRepeat,
   withSequence,
   withSpring,
@@ -57,6 +58,17 @@ export default function GuestScreen() {
   const pulseOpacity = useSharedValue(0.6);
   const pressScale = useSharedValue(1);
   const successBounce = useSharedValue(1);
+
+  const enterOpacity0 = useSharedValue(0);
+  const enterY0 = useSharedValue(22);
+  const enterOpacity1 = useSharedValue(0);
+  const enterY1 = useSharedValue(22);
+  const enterOpacity2 = useSharedValue(0);
+  const enterY2 = useSharedValue(22);
+  const enterOpacity3 = useSharedValue(0);
+  const enterY3 = useSharedValue(22);
+
+  const ENTER_SPRING = { damping: 20, stiffness: 200, mass: 0.9 } as const;
 
   const sheetTranslateY = useSharedValue(SCREEN_HEIGHT);
   const sheetOpacity = useSharedValue(0);
@@ -104,7 +116,32 @@ export default function GuestScreen() {
       -1,
       false
     );
+
+    const delays = [0, 100, 200, 300];
+    const opacities = [enterOpacity0, enterOpacity1, enterOpacity2, enterOpacity3];
+    const ys = [enterY0, enterY1, enterY2, enterY3];
+    delays.forEach((d, i) => {
+      opacities[i].value = withDelay(d, withTiming(1, { duration: 340 }));
+      ys[i].value = withDelay(d, withSpring(0, ENTER_SPRING));
+    });
   }, []);
+
+  const enterStyle0 = useAnimatedStyle(() => ({
+    opacity: enterOpacity0.value,
+    transform: [{ translateY: enterY0.value }],
+  }));
+  const enterStyle1 = useAnimatedStyle(() => ({
+    opacity: enterOpacity1.value,
+    transform: [{ translateY: enterY1.value }],
+  }));
+  const enterStyle2 = useAnimatedStyle(() => ({
+    opacity: enterOpacity2.value,
+    transform: [{ translateY: enterY2.value }],
+  }));
+  const enterStyle3 = useAnimatedStyle(() => ({
+    opacity: enterOpacity3.value,
+    transform: [{ translateY: enterY3.value }],
+  }));
 
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }],
@@ -219,7 +256,7 @@ export default function GuestScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, enterStyle0]}>
           <View>
             <Text style={[styles.logo, { color: colors.foreground }]}>Kapsul</Text>
             <Text style={[styles.guestId, { color: colors.mutedForeground }]}>
@@ -234,9 +271,9 @@ export default function GuestScreen() {
             <Ionicons name="qr-code-outline" size={18} color={colors.foreground} />
             <Text style={[styles.scanBtnText, { color: colors.foreground }]}>Partecipa</Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
 
-        <View style={styles.counterSection}>
+        <Animated.View style={[styles.counterSection, enterStyle1]}>
           <Text style={[styles.counterLabel, { color: colors.mutedForeground }]}>
             {activeEvent ? activeEvent.name : "Foto caricate"}
           </Text>
@@ -249,9 +286,9 @@ export default function GuestScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.counterBar}
           />
-        </View>
+        </Animated.View>
 
-        <View style={styles.cameraSection}>
+        <Animated.View style={[styles.cameraSection, enterStyle2]}>
           <Pressable
             onPress={handleCamera}
             disabled={uploadState === "uploading"}
@@ -284,20 +321,22 @@ export default function GuestScreen() {
           <Text style={[styles.cameraHint, { color: colors.mutedForeground }]}>
             Tocca per aprire la fotocamera
           </Text>
-        </View>
+        </Animated.View>
 
-        <TouchableOpacity
-          onPress={handleGallery}
-          disabled={uploadState === "uploading"}
-          style={[styles.galleryBtn, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="images" size={22} color={colors.primary} />
-          <Text style={[styles.galleryBtnText, { color: colors.foreground }]}>
-            Carica dal rullino
-          </Text>
-          <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
-        </TouchableOpacity>
+        <Animated.View style={enterStyle3}>
+          <TouchableOpacity
+            onPress={handleGallery}
+            disabled={uploadState === "uploading"}
+            style={[styles.galleryBtn, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="images" size={22} color={colors.primary} />
+            <Text style={[styles.galleryBtnText, { color: colors.foreground }]}>
+              Carica dal rullino
+            </Text>
+            <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        </Animated.View>
 
         {uploadState !== "idle" && (
           <View
@@ -326,17 +365,19 @@ export default function GuestScreen() {
           </View>
         )}
 
-        <TouchableOpacity
-          onPress={() => router.push("/wall")}
-          style={[styles.wallLink, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}
-          activeOpacity={0.7}
-        >
-          <Text style={{ fontSize: 20 }}>🎞️</Text>
-          <Text style={[styles.wallLinkText, { color: colors.foreground }]}>
-            Guarda il Guest Wall
-          </Text>
-          <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
-        </TouchableOpacity>
+        <Animated.View style={enterStyle3}>
+          <TouchableOpacity
+            onPress={() => router.push("/wall")}
+            style={[styles.wallLink, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}
+            activeOpacity={0.7}
+          >
+            <Text style={{ fontSize: 20 }}>🎞️</Text>
+            <Text style={[styles.wallLinkText, { color: colors.foreground }]}>
+              Guarda il Guest Wall
+            </Text>
+            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
 
       <Modal
