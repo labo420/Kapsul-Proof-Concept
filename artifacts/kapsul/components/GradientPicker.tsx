@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Modal,
   PanResponder,
@@ -80,16 +80,24 @@ interface SliderProps {
 
 function HsvSlider({ value, onValueChange, gradientColors, thumbColor }: SliderProps) {
   const [trackWidth, setTrackWidth] = useState(0);
+  const trackWidthRef = useRef(0);
+  const onValueChangeRef = useRef(onValueChange);
+  const startValueRef = useRef(0);
+
+  useEffect(() => { onValueChangeRef.current = onValueChange; });
 
   const pan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (e) => {
-        onValueChange(clamp(e.nativeEvent.locationX / (trackWidth || 1), 0, 1));
+        const v = clamp(e.nativeEvent.locationX / (trackWidthRef.current || 1), 0, 1);
+        startValueRef.current = v;
+        onValueChangeRef.current(v);
       },
-      onPanResponderMove: (e) => {
-        onValueChange(clamp(e.nativeEvent.locationX / (trackWidth || 1), 0, 1));
+      onPanResponderMove: (_e, gestureState) => {
+        const v = clamp(startValueRef.current + gestureState.dx / (trackWidthRef.current || 1), 0, 1);
+        onValueChangeRef.current(v);
       },
     })
   ).current;
@@ -97,7 +105,11 @@ function HsvSlider({ value, onValueChange, gradientColors, thumbColor }: SliderP
   return (
     <View
       style={styles.sliderTrack}
-      onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
+      onLayout={(e) => {
+        const w = e.nativeEvent.layout.width;
+        trackWidthRef.current = w;
+        setTrackWidth(w);
+      }}
       {...pan.panHandlers}
     >
       <LinearGradient
