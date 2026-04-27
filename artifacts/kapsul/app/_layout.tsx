@@ -9,7 +9,9 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useFonts as useExpoFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
@@ -62,7 +64,15 @@ export default function RootLayout() {
     SpaceMono_400Regular,
   });
 
-  const allLoaded = (fontsLoaded || fontError) && (monoLoaded || monoError);
+  const [iconsLoaded, iconsError] = useExpoFonts({
+    ...Ionicons.font,
+    ...Feather.font,
+  });
+
+  const allLoaded =
+    (fontsLoaded || fontError) &&
+    (monoLoaded || monoError) &&
+    (iconsLoaded || iconsError);
 
   useEffect(() => {
     if (allLoaded) {
