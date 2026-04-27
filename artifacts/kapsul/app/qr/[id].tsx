@@ -8,6 +8,7 @@ import React, { useState } from "react";
 import {
   Platform,
   ScrollView,
+  Share,
   StatusBar,
   StyleSheet,
   Text,
@@ -42,6 +43,13 @@ export default function QRScreen() {
     setCopied(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShare = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await Share.share({ message: `Partecipa a ${event?.name ?? "Kapsul"}!\n${eventLink}` });
+    } catch {}
   };
 
   if (!event) {
@@ -98,8 +106,24 @@ export default function QRScreen() {
           </LinearGradient>
         </View>
 
+        <TouchableOpacity
+          onPress={handleShare}
+          style={{ borderRadius: 999, overflow: "hidden", width: "100%", marginBottom: 12 }}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.shareBtn}
+          >
+            <Ionicons name="share-social-outline" size={20} color="#fff" />
+            <Text style={styles.shareBtnText}>Condividi con gli ospiti</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
         <Text style={[styles.qrHint, { color: colors.mutedForeground }]}>
-          Gli ospiti inquadrano questo QR
+          Gli ospiti inquadrano questo QR — nessun download
         </Text>
 
         <View style={[styles.linkRow, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
@@ -243,6 +267,19 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 19,
     fontWeight: "500",
+  },
+  shareBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 18,
+  },
+  shareBtnText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#fff",
+    letterSpacing: 0.2,
   },
   newEventBtn: {
     flexDirection: "row",

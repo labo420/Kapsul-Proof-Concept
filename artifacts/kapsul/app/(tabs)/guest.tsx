@@ -3,11 +3,11 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Animated as RNAnimated,
   Modal,
   Platform,
+  Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -47,6 +47,8 @@ export default function GuestScreen() {
 
   const pulseScale = useSharedValue(1);
   const pulseOpacity = useSharedValue(0.6);
+  const pressScale = useSharedValue(1);
+  const successBounce = useSharedValue(1);
 
   useEffect(() => {
     pulseScale.value = withRepeat(
@@ -70,6 +72,14 @@ export default function GuestScreen() {
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }],
     opacity: pulseOpacity.value,
+  }));
+
+  const cameraPressStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pressScale.value }],
+  }));
+
+  const successBounceStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: successBounce.value }],
   }));
 
   useEffect(() => {
@@ -98,6 +108,9 @@ export default function GuestScreen() {
           setUploadCount(c => c + 1);
           if (activeEvent) incrementPhotoCount(activeEvent.id);
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          successBounce.value = withSpring(1.18, { damping: 5, stiffness: 280 }, () => {
+            successBounce.value = withSpring(1, { damping: 10, stiffness: 200 });
+          });
           setTimeout(() => {
             setUploadState("idle");
             setProgress(0);
@@ -175,10 +188,15 @@ export default function GuestScreen() {
         </View>
 
         <View style={styles.cameraSection}>
-          <TouchableOpacity
+          <Pressable
             onPress={handleCamera}
             disabled={uploadState === "uploading"}
-            activeOpacity={0.85}
+            onPressIn={() => {
+              pressScale.value = withSpring(0.9, { damping: 8, stiffness: 300 });
+            }}
+            onPressOut={() => {
+              pressScale.value = withSpring(1, { damping: 6, stiffness: 200 });
+            }}
             style={styles.cameraBtnWrap}
           >
             <Animated.View style={[styles.cameraPulse, pulseStyle]}>
@@ -187,13 +205,15 @@ export default function GuestScreen() {
                 style={StyleSheet.absoluteFill}
               />
             </Animated.View>
-            <LinearGradient
-              colors={[colors.gradientStart, colors.gradientEnd]}
-              style={styles.cameraBtn}
-            >
-              <Ionicons name="camera" size={42} color="#fff" />
-            </LinearGradient>
-          </TouchableOpacity>
+            <Animated.View style={cameraPressStyle}>
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                style={styles.cameraBtn}
+              >
+                <Ionicons name="camera" size={42} color="#fff" />
+              </LinearGradient>
+            </Animated.View>
+          </Pressable>
           <Text style={[styles.cameraBtnLabel, { color: colors.foreground }]}>
             Scatta una foto
           </Text>
@@ -227,7 +247,7 @@ export default function GuestScreen() {
               label={uploadState === "done" ? "Completato! 🎉" : "Caricamento..."}
             />
             {uploadState === "done" && (
-              <View style={styles.doneRow}>
+              <Animated.View style={[styles.doneRow, successBounceStyle]}>
                 <LinearGradient
                   colors={[colors.gradientStart, colors.gradientEnd]}
                   style={styles.doneIcon}
@@ -237,7 +257,7 @@ export default function GuestScreen() {
                 <Text style={[styles.doneText, { color: colors.foreground }]}>
                   Foto aggiunta al vault
                 </Text>
-              </View>
+              </Animated.View>
             )}
           </View>
         )}

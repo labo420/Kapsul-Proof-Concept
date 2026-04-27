@@ -1,8 +1,9 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -56,10 +57,21 @@ export default function PhotoCard({ uri, height, width }: PhotoCardProps) {
       <Image source={{ uri }} style={{ width, height }} resizeMode="cover" />
 
       {reported && (
-        <View style={[styles.reportedOverlay, { height, backgroundColor: "rgba(8,6,15,0.92)" }]}>
-          <Ionicons name="flag" size={24} color={colors.mutedForeground} />
-          <Text style={[styles.reportedText, { color: colors.mutedForeground }]}>Segnalata</Text>
-        </View>
+        Platform.OS === "ios" ? (
+          <BlurView
+            intensity={60}
+            tint="dark"
+            style={[styles.reportedOverlay, { height }]}
+          >
+            <Ionicons name="flag" size={24} color="rgba(255,255,255,0.6)" />
+            <Text style={styles.reportedText}>Segnalata</Text>
+          </BlurView>
+        ) : (
+          <View style={[styles.reportedOverlay, styles.reportedFallback, { height }]}>
+            <Ionicons name="flag" size={24} color="rgba(255,255,255,0.6)" />
+            <Text style={styles.reportedText}>Segnalata</Text>
+          </View>
+        )
       )}
 
       <LinearGradient
@@ -110,9 +122,13 @@ const styles = StyleSheet.create({
     gap: 8,
     zIndex: 2,
   },
+  reportedFallback: {
+    backgroundColor: "rgba(8,6,15,0.75)",
+  },
   reportedText: {
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.6)",
   },
   gradientOverlay: {
     position: "absolute",
