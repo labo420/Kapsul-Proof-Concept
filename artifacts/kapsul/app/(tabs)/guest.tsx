@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -59,6 +60,32 @@ export default function GuestScreen() {
 
   const sheetTranslateY = useSharedValue(SCREEN_HEIGHT);
   const sheetOpacity = useSharedValue(0);
+  const dragStartY = useSharedValue(0);
+
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      dragStartY.value = sheetTranslateY.value;
+    })
+    .onUpdate((e) => {
+      const next = dragStartY.value + e.translationY;
+      sheetTranslateY.value = Math.max(0, next);
+    })
+    .onEnd((e) => {
+      const shouldClose = e.translationY > 100 || e.velocityY > 800;
+      if (shouldClose) {
+        sheetOpacity.value = withTiming(0, { duration: 160 });
+        sheetTranslateY.value = withSpring(
+          SCREEN_HEIGHT,
+          { ...SHEET_SPRING, damping: 30 },
+          () => {
+            runOnJS(setTermsVisible)(false);
+            runOnJS(setShowTerms)(false);
+          }
+        );
+      } else {
+        sheetTranslateY.value = withSpring(0, SHEET_SPRING);
+      }
+    });
 
   useEffect(() => {
     pulseScale.value = withRepeat(
@@ -319,15 +346,19 @@ export default function GuestScreen() {
         onRequestClose={closeTerms}
       >
         <Pressable style={styles.modalOverlay} onPress={closeTerms}>
-          <Animated.View
-            style={[
-              styles.modalCard,
-              sheetStyle,
-              { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 24 },
-            ]}
-          >
-            <Pressable onPress={() => {}}>
-              <LinearGradient
+          <GestureDetector gesture={panGesture}>
+            <Animated.View
+              style={[
+                styles.modalCard,
+                sheetStyle,
+                { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 24 },
+              ]}
+            >
+              <Pressable onPress={() => {}}>
+                <View style={styles.dragHandleWrap}>
+                  <View style={[styles.dragHandle, { backgroundColor: colors.mutedForeground }]} />
+                </View>
+                <LinearGradient
                 colors={[colors.gradientStart + "20", colors.gradientEnd + "20"]}
                 style={styles.modalHeader}
               >
@@ -393,7 +424,8 @@ export default function GuestScreen() {
                 <Text style={[styles.cancelText, { color: colors.mutedForeground }]}>Annulla</Text>
               </TouchableOpacity>
             </Pressable>
-          </Animated.View>
+            </Animated.View>
+          </GestureDetector>
         </Pressable>
       </Modal>
     </View>
@@ -600,5 +632,16 @@ const styles = StyleSheet.create({
   cancelText: {
     fontSize: 14,
     fontWeight: "500",
+  },
+  dragHandleWrap: {
+    alignItems: "center",
+    paddingBottom: 12,
+    marginTop: -4,
+  },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    opacity: 0.35,
   },
 });
