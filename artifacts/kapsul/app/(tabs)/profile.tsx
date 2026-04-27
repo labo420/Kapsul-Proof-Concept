@@ -26,7 +26,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/contexts/GuestContext";
 import { useEvents } from "@/contexts/EventContext";
-import { usePlan, PLAN_LIMITS } from "@/contexts/PlanContext";
+import { usePlan } from "@/contexts/PlanContext";
 
 const SPRING = { damping: 20, stiffness: 200, mass: 0.9 } as const;
 

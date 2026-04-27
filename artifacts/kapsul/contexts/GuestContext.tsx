@@ -66,12 +66,10 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetGuest = async () => {
-    await AsyncStorage.multiRemove([
-      "kapsul_guest_id",
-      "kapsul_terms",
-      "kapsul_current_event_id",
-    ]);
-    setGuestId(null);
+    const newId = generateGuestId();
+    await AsyncStorage.multiRemove(["kapsul_terms", "kapsul_current_event_id"]);
+    await AsyncStorage.setItem("kapsul_guest_id", newId);
+    setGuestId(newId);
     setAcceptedTermsState(false);
     setCurrentEventIdState(null);
   };
