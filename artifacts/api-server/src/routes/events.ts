@@ -142,7 +142,7 @@ router.post("/events/:id/join", async (req, res): Promise<void> => {
         )
       );
 
-    let guestToken: string;
+    let guestToken: string | undefined;
     if (existing.length === 0) {
       const maxGuests = PLAN_MAX_GUESTS[event.plan] ?? 9999;
       if (event.guestCount >= maxGuests) {
@@ -160,21 +160,13 @@ router.post("/events/:id/join", async (req, res): Promise<void> => {
         .update(eventsTable)
         .set({ guestCount: event.guestCount + 1 })
         .where(eq(eventsTable.id, id));
-    } else {
-      guestToken = existing[0].token || randomUUID();
-      if (!existing[0].token) {
-        await db
-          .update(guestsTable)
-          .set({ token: guestToken })
-          .where(eq(guestsTable.id, existing[0].id));
-      }
     }
 
     const [updated] = await db
       .select(publicEventFields)
       .from(eventsTable)
       .where(eq(eventsTable.id, id));
-    res.json({ event: updated, guestToken });
+    res.json({ event: updated, ...(guestToken != null ? { guestToken } : {}) });
   } catch (err) {
     req.log.error(err, "join event error");
     res.status(500).json({ error: "Server error" });

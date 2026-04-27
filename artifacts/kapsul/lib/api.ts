@@ -62,7 +62,7 @@ export async function apiGetEvent(id: string): Promise<ApiEvent> {
 export async function apiJoinEvent(
   eventId: string,
   guestId: string
-): Promise<{ event: ApiEvent; guestToken: string }> {
+): Promise<{ event: ApiEvent; guestToken?: string }> {
   const res = await fetch(
     `${API_BASE}/events/${encodeURIComponent(eventId)}/join`,
     {
@@ -78,7 +78,7 @@ export async function apiJoinEvent(
     throw err;
   }
   if (!res.ok) throw new Error(`Join event failed: ${res.status}`);
-  return res.json() as Promise<{ event: ApiEvent; guestToken: string }>;
+  return res.json() as Promise<{ event: ApiEvent; guestToken?: string }>;
 }
 
 export async function apiGetGuests(eventId: string, hostToken: string): Promise<ApiGuest[]> {

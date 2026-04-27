@@ -131,7 +131,7 @@ export default function ScanScreen() {
         triggerError("expired");
         return;
       }
-      await setGuestToken(eventId, guestToken);
+      if (guestToken) await setGuestToken(eventId, guestToken);
       await refreshEvent(eventId);
       await setCurrentEventId(eventId);
       setScanState("success");
