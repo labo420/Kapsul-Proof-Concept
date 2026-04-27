@@ -40,8 +40,8 @@ type UploadState = "idle" | "uploading" | "done";
 export default function GuestScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { guestId, acceptedTerms, setAcceptedTerms } = useGuest();
-  const { events, incrementPhotoCount } = useEvents();
+  const { guestId, acceptedTerms, setAcceptedTerms, currentEventId } = useGuest();
+  const { events, getEvent, incrementPhotoCount } = useEvents();
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
   const [uploadCount, setUploadCount] = useState(0);
@@ -49,7 +49,7 @@ export default function GuestScreen() {
   const [termsVisible, setTermsVisible] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
 
-  const activeEvent = events[0];
+  const activeEvent = currentEventId ? getEvent(currentEventId) : events[0];
   const liveCount = activeEvent?.photoCount ?? uploadCount;
 
   const pulseScale = useSharedValue(1);

@@ -5,12 +5,16 @@ interface GuestContextType {
   guestId: string | null;
   acceptedTerms: boolean;
   setAcceptedTerms: (v: boolean) => void;
+  currentEventId: string | null;
+  setCurrentEventId: (id: string | null) => void;
 }
 
 const GuestContext = createContext<GuestContextType>({
   guestId: null,
   acceptedTerms: false,
   setAcceptedTerms: () => {},
+  currentEventId: null,
+  setCurrentEventId: () => {},
 });
 
 function generateGuestId(): string {
@@ -25,6 +29,7 @@ function generateGuestId(): string {
 export function GuestProvider({ children }: { children: React.ReactNode }) {
   const [guestId, setGuestId] = useState<string | null>(null);
   const [acceptedTerms, setAcceptedTermsState] = useState(false);
+  const [currentEventId, setCurrentEventIdState] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -37,6 +42,9 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
 
       const terms = await AsyncStorage.getItem("kapsul_terms");
       if (terms === "true") setAcceptedTermsState(true);
+
+      const eventId = await AsyncStorage.getItem("kapsul_current_event_id");
+      if (eventId) setCurrentEventIdState(eventId);
     }
     init();
   }, []);
@@ -46,8 +54,17 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.setItem("kapsul_terms", v ? "true" : "false");
   };
 
+  const setCurrentEventId = async (id: string | null) => {
+    setCurrentEventIdState(id);
+    if (id) {
+      await AsyncStorage.setItem("kapsul_current_event_id", id);
+    } else {
+      await AsyncStorage.removeItem("kapsul_current_event_id");
+    }
+  };
+
   return (
-    <GuestContext.Provider value={{ guestId, acceptedTerms, setAcceptedTerms }}>
+    <GuestContext.Provider value={{ guestId, acceptedTerms, setAcceptedTerms, currentEventId, setCurrentEventId }}>
       {children}
     </GuestContext.Provider>
   );
