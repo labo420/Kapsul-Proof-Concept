@@ -22,6 +22,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useEvents } from "@/contexts/EventContext";
+import { PLAN_LIMITS } from "@/contexts/PlanContext";
 import GradientButton from "@/components/GradientButton";
 import GradientBadge from "@/components/GradientBadge";
 
@@ -182,10 +183,15 @@ export default function HostScreen() {
                           {event.date}
                         </Text>
                       </View>
-                      <GradientBadge
-                        label={DELIVERY_LABELS[event.deliveryMode] ?? event.deliveryMode}
-                        variant="soft"
-                      />
+                      <View style={{ gap: 6, alignItems: "flex-end" }}>
+                        <GradientBadge
+                          label={DELIVERY_LABELS[event.deliveryMode] ?? event.deliveryMode}
+                          variant="soft"
+                        />
+                        <GradientBadge
+                          label={`${PLAN_LIMITS[event.plan ?? "party"].emoji} ${PLAN_LIMITS[event.plan ?? "party"].label}`}
+                        />
+                      </View>
                     </View>
                     <View style={[styles.eventCardBottom, { borderTopColor: colors.border }]}>
                       <View style={styles.statItem}>

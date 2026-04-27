@@ -1,0 +1,83 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useContext, useEffect, useState } from "react";
+
+export type EventPlan = "free" | "party" | "pro";
+
+export interface PlanLimits {
+  maxPhotos: number;
+  maxGuests: number;
+  hasWatermark: boolean;
+  hasAiRecap: boolean;
+  hasHdDownload: boolean;
+  label: string;
+  price: string;
+  emoji: string;
+}
+
+export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
+  free: {
+    maxPhotos: 10,
+    maxGuests: 20,
+    hasWatermark: true,
+    hasAiRecap: false,
+    hasHdDownload: false,
+    label: "Free Trial",
+    price: "Gratis",
+    emoji: "🎁",
+  },
+  party: {
+    maxPhotos: 150,
+    maxGuests: 50,
+    hasWatermark: false,
+    hasAiRecap: false,
+    hasHdDownload: false,
+    label: "Party",
+    price: "1,99 €",
+    emoji: "🎉",
+  },
+  pro: {
+    maxPhotos: 9999,
+    maxGuests: 9999,
+    hasWatermark: false,
+    hasAiRecap: true,
+    hasHdDownload: true,
+    label: "Kapsul Pro",
+    price: "9,99 €",
+    emoji: "⚡️",
+  },
+};
+
+type PlanContextType = {
+  hasUsedFreeTrial: boolean;
+  markFreeTrialUsed: () => Promise<void>;
+};
+
+const PlanContext = createContext<PlanContextType>({
+  hasUsedFreeTrial: false,
+  markFreeTrialUsed: async () => {},
+});
+
+export function PlanProvider({ children }: { children: React.ReactNode }) {
+  const [hasUsedFreeTrial, setHasUsedFreeTrial] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem("kapsul_free_trial_used").then((val) => {
+      if (val === "true") setHasUsedFreeTrial(true);
+    });
+  }, []);
+
+  const markFreeTrialUsed = async () => {
+    await AsyncStorage.setItem("kapsul_free_trial_used", "true");
+    setHasUsedFreeTrial(true);
+  };
+
+  return (
+    <PlanContext.Provider value={{ hasUsedFreeTrial, markFreeTrialUsed }}>
+      {children}
+    </PlanContext.Provider>
+  );
+}
+
+export function usePlan() {
+  return useContext(PlanContext);
+}

@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import type { EventPlan } from "@/contexts/PlanContext";
 
 export type DeliveryMode = "party" | "morning_after" | "vault";
 
@@ -10,21 +11,25 @@ export interface KapsulEvent {
   deliveryMode: DeliveryMode;
   vaultHours?: number;
   photoCount: number;
+  guestCount: number;
+  plan: EventPlan;
   createdAt: number;
 }
 
 interface EventContextType {
   events: KapsulEvent[];
-  createEvent: (event: Omit<KapsulEvent, "id" | "photoCount" | "createdAt">) => KapsulEvent;
+  createEvent: (event: Omit<KapsulEvent, "id" | "photoCount" | "guestCount" | "createdAt">) => KapsulEvent;
   getEvent: (id: string) => KapsulEvent | undefined;
   incrementPhotoCount: (id: string) => void;
+  incrementGuestCount: (id: string) => void;
 }
 
 const EventContext = createContext<EventContextType>({
   events: [],
-  createEvent: () => ({ id: "", name: "", date: "", deliveryMode: "party", photoCount: 0, createdAt: 0 }),
+  createEvent: () => ({ id: "", name: "", date: "", deliveryMode: "party", photoCount: 0, guestCount: 0, plan: "free", createdAt: 0 }),
   getEvent: () => undefined,
   incrementPhotoCount: () => {},
+  incrementGuestCount: () => {},
 });
 
 export function EventProvider({ children }: { children: React.ReactNode }) {
@@ -45,11 +50,12 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     setEvents(updated);
   };
 
-  const createEvent = (partial: Omit<KapsulEvent, "id" | "photoCount" | "createdAt">): KapsulEvent => {
+  const createEvent = (partial: Omit<KapsulEvent, "id" | "photoCount" | "guestCount" | "createdAt">): KapsulEvent => {
     const event: KapsulEvent = {
       ...partial,
       id: Date.now().toString() + Math.random().toString(36).substr(2, 6),
       photoCount: 0,
+      guestCount: 0,
       createdAt: Date.now(),
     };
     const updated = [event, ...events];
@@ -66,8 +72,15 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     save(updated);
   };
 
+  const incrementGuestCount = (id: string) => {
+    const updated = events.map(e =>
+      e.id === id ? { ...e, guestCount: e.guestCount + 1 } : e
+    );
+    save(updated);
+  };
+
   return (
-    <EventContext.Provider value={{ events, createEvent, getEvent, incrementPhotoCount }}>
+    <EventContext.Provider value={{ events, createEvent, getEvent, incrementPhotoCount, incrementGuestCount }}>
       {children}
     </EventContext.Provider>
   );

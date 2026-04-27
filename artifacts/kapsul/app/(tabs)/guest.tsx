@@ -31,6 +31,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/contexts/GuestContext";
 import { useEvents } from "@/contexts/EventContext";
+import { PLAN_LIMITS } from "@/contexts/PlanContext";
 import NeonProgressBar from "@/components/NeonProgressBar";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
@@ -53,6 +54,9 @@ export default function GuestScreen() {
 
   const activeEvent = currentEventId ? getEvent(currentEventId) : events[0];
   const liveCount = activeEvent?.photoCount ?? uploadCount;
+  const activePlan = activeEvent?.plan ?? "party";
+  const planLimits = PLAN_LIMITS[activePlan];
+  const isLimitReached = liveCount >= planLimits.maxPhotos;
 
   const pulseScale = useSharedValue(1);
   const pulseOpacity = useSharedValue(0.6);
@@ -224,6 +228,7 @@ export default function GuestScreen() {
   };
 
   const handleCamera = async () => {
+    if (isLimitReached) { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); return; }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (!acceptedTerms) { setShowTerms(true); return; }
     if (Platform.OS === "web") { simulateUpload(); return; }
@@ -234,6 +239,7 @@ export default function GuestScreen() {
   };
 
   const handleGallery = async () => {
+    if (isLimitReached) { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); return; }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (!acceptedTerms) { setShowTerms(true); return; }
     if (Platform.OS === "web") { simulateUpload(); return; }
@@ -288,10 +294,33 @@ export default function GuestScreen() {
           />
         </Animated.View>
 
+        {isLimitReached && (
+          <Animated.View style={enterStyle2}>
+            <View style={[styles.limitBanner, { backgroundColor: colors.card, borderColor: colors.gradientEnd + "60" }]}>
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.limitIcon}
+              >
+                <Ionicons name="lock-closed" size={16} color="#fff" />
+              </LinearGradient>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={[styles.limitTitle, { color: colors.foreground }]}>
+                  Limite raggiunto ({planLimits.maxPhotos} foto)
+                </Text>
+                <Text style={[styles.limitSub, { color: colors.mutedForeground }]}>
+                  Passa a {activePlan === "free" ? "Party (1,99€)" : "Kapsul Pro (9,99€)"} per continuare
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+        )}
+
         <Animated.View style={[styles.cameraSection, enterStyle2]}>
           <Pressable
             onPress={handleCamera}
-            disabled={uploadState === "uploading"}
+            disabled={uploadState === "uploading" || isLimitReached}
             onPressIn={() => {
               pressScale.value = withSpring(0.88, { damping: 7, stiffness: 350, mass: 0.7 });
             }}
@@ -684,5 +713,32 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     opacity: 0.35,
+  },
+  limitBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  limitIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  limitTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: -0.2,
+  },
+  limitSub: {
+    fontSize: 12,
+    fontWeight: "500",
+    lineHeight: 17,
   },
 });
