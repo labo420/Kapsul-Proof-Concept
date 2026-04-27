@@ -27,12 +27,20 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="create-event" options={{ headerShown: false, presentation: "card" }} />
-      <Stack.Screen name="qr/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="wall" options={{ headerShown: false }} />
-      <Stack.Screen name="scan" options={{ headerShown: false, presentation: "modal" }} />
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: "slide_from_right",
+        animationDuration: 280,
+        contentStyle: { backgroundColor: "#0E0E0F" },
+      }}
+    >
+      <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
+      <Stack.Screen name="create-event" options={{ animation: "slide_from_bottom" }} />
+      <Stack.Screen name="qr/[id]" options={{ animation: "slide_from_right" }} />
+      <Stack.Screen name="event/[id]" options={{ animation: "slide_from_right" }} />
+      <Stack.Screen name="wall" options={{ animation: "slide_from_right" }} />
+      <Stack.Screen name="scan" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
     </Stack>
   );
 }
