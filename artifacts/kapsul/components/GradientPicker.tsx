@@ -5,13 +5,13 @@ import React, { useRef, useState } from "react";
 import {
   Modal,
   PanResponder,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 
 type TwoOrMoreColors = [string, string, ...string[]];
@@ -127,6 +127,7 @@ interface PickerSheetProps {
 
 function ColorPickerSheet({ initialColor, colorStart, colorEnd, onLiveChange, onConfirm, onCancel }: PickerSheetProps) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const [hue, setHue] = useState(() => hexToHsv(initialColor)[0] / 360);
   const [sat, setSat] = useState(() => hexToHsv(initialColor)[1]);
   const [val, setVal] = useState(() => hexToHsv(initialColor)[2]);
@@ -142,7 +143,7 @@ function ColorPickerSheet({ initialColor, colorStart, colorEnd, onLiveChange, on
   };
 
   return (
-    <View style={[styles.pickerSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={[styles.pickerSheet, { backgroundColor: colors.card, borderColor: colors.border, paddingBottom: Math.max(insets.bottom, 24) }]}>
       <View style={styles.sheetHandle}>
         <View style={[styles.handleBar, { backgroundColor: colors.mutedForeground }]} />
       </View>
@@ -361,7 +362,7 @@ const styles = StyleSheet.create({
   pickerSheet: {
     borderTopLeftRadius: 28, borderTopRightRadius: 28,
     borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1,
-    padding: 24, paddingBottom: Platform.OS === "ios" ? 44 : 24, gap: 20,
+    padding: 24, gap: 20,
   },
   sheetHandle: { alignItems: "center", marginBottom: 4 },
   handleBar: { width: 40, height: 4, borderRadius: 2, opacity: 0.4 },
