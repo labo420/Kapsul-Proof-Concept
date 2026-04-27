@@ -1,0 +1,52 @@
+Obiettivo: Creare il Proof of Concept (MVP) di "Kapsul", una web-app mobile-first per raccogliere foto durante gli eventi tramite QR code, progettata per distruggere i competitor (come POV) grazie a un'esperienza utente senza attriti e a un design premium.
+
+ARCHITETTURA E FLUSSI UTENTE
+L'app ha due attori principali: l'Organizzatore (Host) e l'Invitato (Guest). Il focus assoluto è la "Zero Friction" (nessun ostacolo).
+
+Flusso ORGANIZZATORE (Host):
+
+Crea l'evento in 2 passaggi: inserisce "Nome Evento" e "Data".
+
+(Nessun obbligo di caricare una foto di copertina iniziale).
+
+Seleziona la "Delivery Mode" (Modalità di sblocco galleria):
+
+Party Mode: Foto visibili in tempo reale.
+
+Morning After: Foto sbloccate alle 06:00 del mattino seguente.
+
+Vault Mode: Foto sbloccate dopo un numero "X" di ore.
+
+L'app genera immediatamente un QR Code gigante e un link da copiare.
+
+Flusso INVITATO (Guest):
+
+Inquadra il QR Code. Si apre la web-app (nessun download richiesto).
+
+Sistema di Login Invisibile: Non chiedere email o password. Genera un ID anonimo (es. Guest_849X) salvato nel LocalStorage del browser per tenere traccia delle sue sessioni e delle foto caricate.
+
+Mostra un rapido checkbox: "Accetto i Termini per caricare le foto".
+
+Arriva nella "Dashboard Evento". Da qui ha due bottoni enormi: "Scatta Ora" (apre la fotocamera nativa) oppure "Carica dal Rullino" (permette l'upload dalla galleria del telefono).
+
+3. FUNZIONI CHIAVE DA IMPLEMENTARE NEL MVP
+Guest Wall Interattivo: Quando le foto sono visibili (in base alla Delivery Mode), mostra un feed in stile masonry. Sotto ogni foto metti un tasto per le reazioni rapide (emoji) e un piccolo tasto "Report" (per segnalare contenuti inappropriati e oscurarli subito).
+
+Counter Persistente: Usa il font monospace per mostrare in tempo reale quante foto sono state caricate nel caveau dell'evento.
+
+Upload Asincrono: L'esperienza di caricamento deve essere fulminea. Mostra una progress bar con stile "hacker/cyber" mentre le immagini vanno sul server.
+
+4. TECNOLOGIE CONSIGLIATE
+Frontend: React o Next.js, Tailwind CSS (per lo styling personalizzato), Framer Motion (per animazioni fluide).
+
+Backend/Storage: Preparati a integrare Supabase per il database in tempo reale e lo storage delle immagini.
+
+Generazione QR: Libreria qrcode.react o simili.
+
+5. PRIMO TASK PER TE (REPLIT)
+Per iniziare, non collegare ancora il database. Costruisci lo scheletro frontend dell'interfaccia utente.
+Crea due viste navigabili mockate (con dati finti):
+
+La schermata di creazione evento dell'Host (con il toggle per le 3 modalità di sblocco).
+
+La "Camera/Upload Dashboard" del Guest, con l'estetica OLED Black/Neon, i pulsanti giganteschi per caricare e il counter in stile monospace.
