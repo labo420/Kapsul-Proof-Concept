@@ -1,10 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import {
   Modal,
-  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
@@ -28,11 +27,6 @@ const QUICK_PRESETS = [
   { emoji: "❄️", name: "Ghiaccio", start: "#BAE6FD", end: "#E0E7FF" },
 ];
 
-const HUE_STOPS: TwoOrMoreColors = [
-  "#FF0000", "#FF8000", "#FFFF00", "#00FF00",
-  "#00FFFF", "#0000FF", "#FF00FF", "#FF0000",
-];
-
 function hsvToHex(h: number, s: number, v: number): string {
   const c = v * s;
   const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
@@ -44,7 +38,8 @@ function hsvToHex(h: number, s: number, v: number): string {
   else if (h < 240)  { r = 0; g = x; b = c; }
   else if (h < 300)  { r = x; g = 0; b = c; }
   else               { r = c; g = 0; b = x; }
-  const toHex = (n: number) => Math.round((n + m) * 255).toString(16).padStart(2, "0");
+  const toHex = (n: number) =>
+    Math.round((n + m) * 255).toString(16).padStart(2, "0");
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
@@ -68,137 +63,32 @@ function hexToHsv(hex: string): [number, number, number] {
   return [h, s, max];
 }
 
-function hueToColor(h: number): string {
-  return hsvToHex(h, 1, 1);
-}
-
-function clamp(v: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, v));
-}
-
-interface ErrorBoundaryState { hasError: boolean }
-interface ErrorBoundaryProps { children: React.ReactNode; fallback: React.ReactNode }
-
-class ColorWheelErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false };
-  static getDerivedStateFromError(): ErrorBoundaryState { return { hasError: true }; }
-  render() {
-    return this.state.hasError ? this.props.fallback : this.props.children;
-  }
-}
-
-interface SliderProps {
-  value: number;
-  onValueChange: (v: number) => void;
-  gradientColors: TwoOrMoreColors;
-  thumbColor: string;
-}
-
-function HsvSlider({ value, onValueChange, gradientColors, thumbColor }: SliderProps) {
-  const [trackWidth, setTrackWidth] = useState(0);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (e) => {
-        const x = e.nativeEvent.locationX;
-        onValueChange(clamp(x / (trackWidth || 1), 0, 1));
-      },
-      onPanResponderMove: (e) => {
-        const x = e.nativeEvent.locationX;
-        onValueChange(clamp(x / (trackWidth || 1), 0, 1));
-      },
-    })
-  ).current;
-
-  const thumbLeft = value * trackWidth;
-
-  return (
-    <View
-      style={styles.sliderTrack}
-      onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
-      {...panResponder.panHandlers}
-    >
-      <LinearGradient
-        colors={gradientColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <View
-        style={[
-          styles.sliderThumb,
-          {
-            left: thumbLeft,
-            backgroundColor: thumbColor,
-            transform: [{ translateX: -12 }],
-          },
-        ]}
-      />
-    </View>
-  );
-}
-
 interface PickerSheetProps {
   initialColor: string;
-  onConfirm: (hex: string) => void;
-  onCancel: () => void;
   colorStart: string;
   colorEnd: string;
+  onLiveChange: (hex: string) => void;
+  onConfirm: (hex: string) => void;
+  onCancel: () => void;
 }
 
-function SliderPicker({ initialColor, onColorChange }: { initialColor: string; onColorChange: (hex: string) => void }) {
-  const [hue, setHue] = useState(() => hexToHsv(initialColor)[0] / 360);
-  const [sat, setSat] = useState(() => hexToHsv(initialColor)[1]);
-  const [val, setVal] = useState(() => hexToHsv(initialColor)[2]);
-
-  const currentHex = hsvToHex(hue * 360, sat, val);
-  const hueColor = hueToColor(hue * 360);
-  const satGradient: TwoOrMoreColors = ["#808080", hueColor];
-  const valGradient: TwoOrMoreColors = ["#000000", hsvToHex(hue * 360, sat, 1)];
-
-  const setHueAndNotify = (v: number) => { setHue(v); onColorChange(hsvToHex(v * 360, sat, val)); Haptics.selectionAsync(); };
-  const setSatAndNotify = (v: number) => { setSat(v); onColorChange(hsvToHex(hue * 360, v, val)); };
-  const setValAndNotify = (v: number) => { setVal(v); onColorChange(hsvToHex(hue * 360, sat, v)); };
-
-  return (
-    <>
-      <View style={styles.sliderGroup}>
-        <Text style={styles.sliderLabelDynamic}>TONALITÀ</Text>
-        <HsvSlider value={hue} onValueChange={setHueAndNotify} gradientColors={HUE_STOPS} thumbColor={hueColor} />
-      </View>
-      <View style={styles.sliderGroup}>
-        <Text style={styles.sliderLabelDynamic}>SATURAZIONE</Text>
-        <HsvSlider value={sat} onValueChange={setSatAndNotify} gradientColors={satGradient} thumbColor={currentHex} />
-      </View>
-      <View style={styles.sliderGroup}>
-        <Text style={styles.sliderLabelDynamic}>LUMINOSITÀ</Text>
-        <HsvSlider value={val} onValueChange={setValAndNotify} gradientColors={valGradient} thumbColor={currentHex} />
-      </View>
-    </>
-  );
-}
-
-function WheelPicker({ initialColor, onColorChange }: { initialColor: string; onColorChange: (hex: string) => void }) {
-  const [h0, s0, v0] = hexToHsv(initialColor);
-  return (
-    <HueSaturationValuePicker
-      wheelStyle={styles.colorWheel}
-      sliderStyle={styles.colorWheelSlider}
-      initialHue={h0}
-      initialSaturation={s0}
-      initialValue={v0}
-      onColorChange={(hsv) => {
-        onColorChange(hsvToHex(hsv.h, hsv.s, hsv.v));
-      }}
-    />
-  );
-}
-
-function ColorPickerSheet({ initialColor, onConfirm, onCancel, colorStart, colorEnd }: PickerSheetProps) {
+function ColorPickerSheet({
+  initialColor,
+  colorStart,
+  colorEnd,
+  onLiveChange,
+  onConfirm,
+  onCancel,
+}: PickerSheetProps) {
   const colors = useColors();
   const [currentHex, setCurrentHex] = useState(initialColor);
+  const [h0, s0, v0] = hexToHsv(initialColor);
+
+  const handleChange = ({ h, s, v }: { h: number; s: number; v: number }) => {
+    const hex = hsvToHex(h, s, v);
+    setCurrentHex(hex);
+    onLiveChange(hex);
+  };
 
   return (
     <View style={[styles.pickerSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -216,13 +106,15 @@ function ColorPickerSheet({ initialColor, onConfirm, onCancel, colorStart, color
         </View>
       </View>
 
-      <ColorWheelErrorBoundary
-        fallback={
-          <SliderPicker initialColor={initialColor} onColorChange={setCurrentHex} />
-        }
-      >
-        <WheelPicker initialColor={initialColor} onColorChange={setCurrentHex} />
-      </ColorWheelErrorBoundary>
+      <HueSaturationValuePicker
+        wheelStyle={styles.colorWheel}
+        sliderStyle={styles.colorWheelSlider}
+        initialHue={h0}
+        initialSaturation={s0}
+        initialValue={v0}
+        onColorChange={handleChange}
+        onColorChangeComplete={handleChange}
+      />
 
       <View style={styles.pickerButtons}>
         <TouchableOpacity
@@ -238,7 +130,7 @@ function ColorPickerSheet({ initialColor, onConfirm, onCancel, colorStart, color
           activeOpacity={0.8}
         >
           <LinearGradient
-            colors={[colorStart, colorEnd]}
+            colors={[colorStart, colorEnd] as TwoOrMoreColors}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.confirmBtn}
@@ -262,10 +154,19 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
   const colors = useColors();
   const [showPicker, setShowPicker] = useState<"start" | "end" | null>(null);
   const [showPresets, setShowPresets] = useState(false);
+  const [savedStart, setSavedStart] = useState(colorStart);
+  const [savedEnd, setSavedEnd] = useState(colorEnd);
 
   const openPicker = (which: "start" | "end") => {
+    setSavedStart(colorStart);
+    setSavedEnd(colorEnd);
     setShowPicker(which);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  const handleLiveChange = (hex: string) => {
+    if (showPicker === "start") onChangeStart(hex);
+    else if (showPicker === "end") onChangeEnd(hex);
   };
 
   const handleConfirm = (hex: string) => {
@@ -275,10 +176,16 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
+  const handleCancel = () => {
+    onChangeStart(savedStart);
+    onChangeEnd(savedEnd);
+    setShowPicker(null);
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[colorStart, colorEnd]}
+        colors={[colorStart, colorEnd] as TwoOrMoreColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.previewBar}
@@ -298,7 +205,7 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
 
         <View style={styles.arrowWrap}>
           <LinearGradient
-            colors={[colorStart, colorEnd]}
+            colors={[colorStart, colorEnd] as TwoOrMoreColors}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.arrowLine}
@@ -320,7 +227,7 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
 
       <TouchableOpacity
         onPress={() => {
-          setShowPresets(v => !v);
+          setShowPresets((v) => !v);
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }}
         style={[styles.presetsToggle, { borderColor: colors.border, backgroundColor: colors.muted }]}
@@ -350,7 +257,7 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
               style={styles.presetCard}
             >
               <LinearGradient
-                colors={[p.start, p.end]}
+                colors={[p.start, p.end] as TwoOrMoreColors}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.presetGradient}
@@ -368,17 +275,18 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
         visible={showPicker !== null}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowPicker(null)}
+        onRequestClose={handleCancel}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setShowPicker(null)}>
+        <Pressable style={styles.modalOverlay} onPress={handleCancel}>
           <Pressable onPress={() => {}}>
             {showPicker !== null && (
               <ColorPickerSheet
-                initialColor={showPicker === "start" ? colorStart : colorEnd}
-                onConfirm={handleConfirm}
-                onCancel={() => setShowPicker(null)}
+                initialColor={showPicker === "start" ? savedStart : savedEnd}
                 colorStart={colorStart}
                 colorEnd={colorEnd}
+                onLiveChange={handleLiveChange}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
               />
             )}
           </Pressable>
@@ -527,37 +435,8 @@ const styles = StyleSheet.create({
   colorWheelSlider: {
     width: "100%",
     height: 36,
-    marginTop: 12,
-  },
-  sliderGroup: {
-    gap: 10,
-  },
-  sliderLabelDynamic: {
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 2,
-    color: "#9CA3AF",
-  },
-  sliderTrack: {
-    height: 36,
+    marginTop: 8,
     borderRadius: 18,
-    overflow: "visible",
-    justifyContent: "center",
-    position: "relative",
-  },
-  sliderThumb: {
-    position: "absolute",
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 3,
-    borderColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    elevation: 4,
-    top: 6,
   },
   pickerButtons: {
     flexDirection: "row",
