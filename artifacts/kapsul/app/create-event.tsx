@@ -62,7 +62,7 @@ export default function CreateEventScreen() {
       if (selectedPlan === "free") {
         await markFreeTrialUsed();
       }
-      const event = createEvent({
+      const event = await createEvent({
         name: eventName.trim(),
         date: eventDate.trim(),
         deliveryMode,

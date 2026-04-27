@@ -1,0 +1,132 @@
+import Constants from "expo-constants";
+
+const domain =
+  Constants.expoConfig?.extra?.apiDomain ??
+  process.env.EXPO_PUBLIC_DOMAIN ??
+  "";
+
+export const API_BASE = domain ? `https://${domain}/api` : "/api";
+
+export interface ApiEvent {
+  id: string;
+  name: string;
+  date: string;
+  deliveryMode: "party" | "morning_after" | "vault";
+  vaultHours: number;
+  plan: "free" | "party" | "pro";
+  themeGradientStart: string;
+  themeGradientEnd: string;
+  coverImagePath: string | null;
+  photoCount: number;
+  guestCount: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface ApiPhoto {
+  id: string;
+  eventId: string;
+  guestId: string;
+  objectPath: string;
+  width: number | null;
+  height: number | null;
+  createdAt: string;
+}
+
+export async function apiCreateEvent(
+  payload: Omit<ApiEvent, "coverImagePath" | "isActive" | "createdAt" | "photoCount" | "guestCount">
+): Promise<ApiEvent> {
+  const res = await fetch(`${API_BASE}/events`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Create event failed: ${res.status}`);
+  return res.json() as Promise<ApiEvent>;
+}
+
+export async function apiGetEvent(id: string): Promise<ApiEvent> {
+  const res = await fetch(`${API_BASE}/events/${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error(`Get event failed: ${res.status}`);
+  return res.json() as Promise<ApiEvent>;
+}
+
+export async function apiJoinEvent(
+  eventId: string,
+  guestId: string
+): Promise<{ event: ApiEvent }> {
+  const res = await fetch(
+    `${API_BASE}/events/${encodeURIComponent(eventId)}/join`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guestId }),
+    }
+  );
+  if (!res.ok) throw new Error(`Join event failed: ${res.status}`);
+  return res.json() as Promise<{ event: ApiEvent }>;
+}
+
+export async function apiGetPhotos(eventId: string): Promise<ApiPhoto[]> {
+  const res = await fetch(
+    `${API_BASE}/events/${encodeURIComponent(eventId)}/photos`
+  );
+  if (!res.ok) throw new Error(`Get photos failed: ${res.status}`);
+  return res.json() as Promise<ApiPhoto[]>;
+}
+
+export async function apiUploadPhoto(
+  eventId: string,
+  guestId: string,
+  fileUri: string,
+  mimeType: string,
+  onProgress?: (pct: number) => void
+): Promise<ApiPhoto> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const url = `${API_BASE}/events/${encodeURIComponent(eventId)}/photos`;
+    xhr.open("POST", url);
+
+    if (xhr.upload && onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText) as ApiPhoto);
+        } catch {
+          reject(new Error("Invalid JSON response"));
+        }
+      } else {
+        reject(new Error(`Upload failed: ${xhr.status}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Network error during upload"));
+
+    const form = new FormData();
+    form.append("guestId", guestId);
+    form.append("photo", {
+      uri: fileUri,
+      name: `photo.${mimeType.includes("png") ? "png" : "jpg"}`,
+      type: mimeType,
+    } as unknown as Blob);
+
+    xhr.send(form);
+  });
+}
+
+export function photoUrl(objectPath: string): string {
+  if (objectPath.startsWith("/api/")) {
+    const domain2 =
+      Constants.expoConfig?.extra?.apiDomain ??
+      process.env.EXPO_PUBLIC_DOMAIN ??
+      "";
+    return domain2 ? `https://${domain2}${objectPath}` : objectPath;
+  }
+  return objectPath;
+}

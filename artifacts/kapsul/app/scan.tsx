@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/contexts/GuestContext";
 import { useEvents } from "@/contexts/EventContext";
+import { apiJoinEvent } from "@/lib/api";
 
 type ScanState = "scanning" | "success" | "error";
 type ErrorKind = "invalid" | "expired" | "unknown";
@@ -48,8 +49,8 @@ function extractEventId(raw: string): string | null {
 export default function ScanScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { setCurrentEventId } = useGuest();
-  const { getEvent } = useEvents();
+  const { guestId, setCurrentEventId } = useGuest();
+  const { refreshEvent } = useEvents();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const [scanState, setScanState] = useState<ScanState>("scanning");
@@ -113,7 +114,7 @@ export default function ScanScreen() {
     }, 2500);
   }
 
-  function handleScanResult(raw: string) {
+  async function handleScanResult(raw: string) {
     if (scanLock.current || scanState !== "scanning") return;
     scanLock.current = true;
 
@@ -123,27 +124,26 @@ export default function ScanScreen() {
       return;
     }
 
-    const event = getEvent(eventId);
-    if (!event) {
-      triggerError("invalid");
-      return;
+    try {
+      const { event } = await apiJoinEvent(eventId, guestId ?? "anon");
+      if (!event.isActive) {
+        triggerError("expired");
+        return;
+      }
+      await refreshEvent(eventId);
+      await setCurrentEventId(eventId);
+      setScanState("success");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      successScale.value = withSequence(
+        withTiming(1.15, { duration: 200 }),
+        withTiming(1, { duration: 160 })
+      );
+      setTimeout(() => {
+        router.replace("/(tabs)/guest");
+      }, 900);
+    } catch {
+      triggerError("unknown");
     }
-
-    if (Date.now() - event.createdAt > TWO_DAYS_MS) {
-      triggerError("expired");
-      return;
-    }
-
-    setCurrentEventId(eventId);
-    setScanState("success");
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    successScale.value = withSequence(
-      withTiming(1.15, { duration: 200 }),
-      withTiming(1, { duration: 160 })
-    );
-    setTimeout(() => {
-      router.replace("/(tabs)/guest");
-    }, 900);
   }
 
   function handleSkip() {

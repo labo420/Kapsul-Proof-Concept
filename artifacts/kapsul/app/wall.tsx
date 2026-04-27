@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Platform,
+  RefreshControl,
   StatusBar,
   StyleSheet,
   Text,
@@ -13,24 +15,39 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
+import { useGuest } from "@/contexts/GuestContext";
 import PhotoCard from "@/components/PhotoCard";
+import { apiGetPhotos, photoUrl, type ApiPhoto } from "@/lib/api";
 
 const MOCK_PHOTOS = [
-  { id: "1", uri: "https://picsum.photos/seed/party1/400/550", h: 220, col: 0 },
-  { id: "2", uri: "https://picsum.photos/seed/party2/400/300", h: 160, col: 1 },
-  { id: "3", uri: "https://picsum.photos/seed/party3/400/480", h: 210, col: 1 },
-  { id: "4", uri: "https://picsum.photos/seed/party4/400/400", h: 190, col: 0 },
-  { id: "5", uri: "https://picsum.photos/seed/party5/400/320", h: 170, col: 1 },
-  { id: "6", uri: "https://picsum.photos/seed/party6/400/500", h: 230, col: 0 },
-  { id: "7", uri: "https://picsum.photos/seed/party7/400/360", h: 180, col: 0 },
-  { id: "8", uri: "https://picsum.photos/seed/party8/400/450", h: 200, col: 1 },
+  { id: "m1", uri: "https://picsum.photos/seed/party1/400/550", h: 220, col: 0 },
+  { id: "m2", uri: "https://picsum.photos/seed/party2/400/300", h: 160, col: 1 },
+  { id: "m3", uri: "https://picsum.photos/seed/party3/400/480", h: 210, col: 1 },
+  { id: "m4", uri: "https://picsum.photos/seed/party4/400/400", h: 190, col: 0 },
 ];
+
+type WallPhoto = { id: string; uri: string; h: number; col: number };
+
+function toWallPhotos(apiPhotos: ApiPhoto[]): WallPhoto[] {
+  return apiPhotos.map((p, i) => ({
+    id: p.id,
+    uri: photoUrl(p.objectPath),
+    h: 160 + (i % 3) * 30,
+    col: i % 2,
+  }));
+}
 
 export default function WallScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const { currentEventId } = useGuest();
+  const [photos, setPhotos] = useState<WallPhoto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -39,15 +56,49 @@ export default function WallScreen() {
   const GAP = 10;
   const colWidth = (width - PADDING * 2 - GAP) / 2;
 
+  const fetchPhotos = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true);
+      setError(false);
+      try {
+        if (currentEventId) {
+          const data = await apiGetPhotos(currentEventId);
+          const wall = toWallPhotos(data);
+          setPhotos(wall.length > 0 ? wall : MOCK_PHOTOS);
+        } else {
+          setPhotos(MOCK_PHOTOS);
+        }
+      } catch {
+        setError(true);
+        setPhotos(MOCK_PHOTOS);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [currentEventId]
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchPhotos();
+    }, [fetchPhotos])
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchPhotos(true);
+  };
+
   const { leftCol, rightCol } = useMemo(() => {
-    const left: typeof MOCK_PHOTOS = [];
-    const right: typeof MOCK_PHOTOS = [];
-    MOCK_PHOTOS.forEach(p => {
+    const left: WallPhoto[] = [];
+    const right: WallPhoto[] = [];
+    photos.forEach((p) => {
       if (p.col === 0) left.push(p);
       else right.push(p);
     });
     return { leftCol: left, rightCol: right };
-  }, []);
+  }, [photos]);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -61,45 +112,86 @@ export default function WallScreen() {
             <Ionicons name="chevron-back" size={24} color={colors.foreground} />
           </TouchableOpacity>
           <View style={styles.titleWrap}>
-            <Text style={[styles.title, { color: colors.foreground }]}>Guest Wall</Text>
+            <Text style={[styles.title, { color: colors.foreground }]}>
+              Guest Wall
+            </Text>
             <LinearGradient
               colors={[colors.gradientStart, colors.gradientEnd]}
               style={styles.liveDot}
             />
           </View>
-          <View style={[styles.countBadge, { backgroundColor: colors.primary + "18", borderRadius: 999, borderWidth: 1, borderColor: colors.primary + "40" }]}>
+          <View
+            style={[
+              styles.countBadge,
+              {
+                backgroundColor: colors.primary + "18",
+                borderRadius: 999,
+                borderWidth: 1,
+                borderColor: colors.primary + "40",
+              },
+            ]}
+          >
             <Text style={[styles.countText, { color: colors.primary }]}>
-              {MOCK_PHOTOS.length} foto
+              {photos.length} foto
             </Text>
           </View>
         </View>
       </LinearGradient>
 
-      <FlatList
-        data={[{ key: "masonry" }]}
-        keyExtractor={item => item.key}
-        contentContainerStyle={{
-          paddingHorizontal: PADDING,
-          paddingTop: 14,
-          paddingBottom: bottomPad + 80,
-        }}
-        showsVerticalScrollIndicator={false}
-        renderItem={() => (
-          <View style={[styles.masonryRow, { gap: GAP }]}>
-            <View style={[styles.col, { width: colWidth, gap: GAP }]}>
-              {leftCol.map(photo => (
-                <PhotoCard key={photo.id} uri={photo.uri} height={photo.h} width={colWidth} />
-              ))}
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator color={colors.primary} size="large" />
+        </View>
+      ) : error ? (
+        <View style={styles.center}>
+          <Text style={[styles.errorText, { color: colors.mutedForeground }]}>
+            Errore di rete. Tira su per riprovare.
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={[{ key: "masonry" }]}
+          keyExtractor={(item) => item.key}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+            />
+          }
+          contentContainerStyle={{
+            paddingHorizontal: PADDING,
+            paddingTop: 14,
+            paddingBottom: bottomPad + 80,
+          }}
+          showsVerticalScrollIndicator={false}
+          renderItem={() => (
+            <View style={[styles.masonryRow, { gap: GAP }]}>
+              <View style={[styles.col, { width: colWidth, gap: GAP }]}>
+                {leftCol.map((photo) => (
+                  <PhotoCard
+                    key={photo.id}
+                    uri={photo.uri}
+                    height={photo.h}
+                    width={colWidth}
+                  />
+                ))}
+              </View>
+              <View style={[styles.col, { width: colWidth, gap: GAP }]}>
+                {rightCol.map((photo) => (
+                  <PhotoCard
+                    key={photo.id}
+                    uri={photo.uri}
+                    height={photo.h}
+                    width={colWidth}
+                  />
+                ))}
+              </View>
             </View>
-            <View style={[styles.col, { width: colWidth, gap: GAP }]}>
-              {rightCol.map(photo => (
-                <PhotoCard key={photo.id} uri={photo.uri} height={photo.h} width={colWidth} />
-              ))}
-            </View>
-          </View>
-        )}
-        scrollEnabled={true}
-      />
+          )}
+          scrollEnabled={true}
+        />
+      )}
     </View>
   );
 }
@@ -142,5 +234,15 @@ const styles = StyleSheet.create({
   },
   col: {
     flexDirection: "column",
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  errorText: {
+    fontSize: 14,
+    textAlign: "center",
+    paddingHorizontal: 32,
   },
 });

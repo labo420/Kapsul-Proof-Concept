@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import type { EventPlan } from "@/contexts/PlanContext";
+import { apiCreateEvent, apiGetEvent, type ApiEvent } from "@/lib/api";
 
 export type DeliveryMode = "party" | "morning_after" | "vault";
 
@@ -19,10 +20,30 @@ export interface KapsulEvent {
   coverImageUri: string | null;
 }
 
+function apiEventToLocal(e: ApiEvent): KapsulEvent {
+  return {
+    id: e.id,
+    name: e.name,
+    date: e.date,
+    deliveryMode: e.deliveryMode as DeliveryMode,
+    vaultHours: e.vaultHours,
+    photoCount: e.photoCount,
+    guestCount: e.guestCount,
+    plan: e.plan as EventPlan,
+    createdAt: new Date(e.createdAt).getTime(),
+    themeGradientStart: e.themeGradientStart,
+    themeGradientEnd: e.themeGradientEnd,
+    coverImageUri: null,
+  };
+}
+
 interface EventContextType {
   events: KapsulEvent[];
-  createEvent: (event: Omit<KapsulEvent, "id" | "photoCount" | "guestCount" | "createdAt">) => KapsulEvent;
+  createEvent: (
+    event: Omit<KapsulEvent, "id" | "photoCount" | "guestCount" | "createdAt">
+  ) => Promise<KapsulEvent>;
   getEvent: (id: string) => KapsulEvent | undefined;
+  refreshEvent: (id: string) => Promise<KapsulEvent | null>;
   incrementPhotoCount: (id: string) => void;
   incrementGuestCount: (id: string) => void;
   resetEvents: () => Promise<void>;
@@ -30,12 +51,21 @@ interface EventContextType {
 
 const EventContext = createContext<EventContextType>({
   events: [],
-  createEvent: () => ({
-    id: "", name: "", date: "", deliveryMode: "party",
-    photoCount: 0, guestCount: 0, plan: "free", createdAt: 0,
-    themeGradientStart: "#6366F1", themeGradientEnd: "#EC4899", coverImageUri: null,
+  createEvent: async () => ({
+    id: "",
+    name: "",
+    date: "",
+    deliveryMode: "party",
+    photoCount: 0,
+    guestCount: 0,
+    plan: "free",
+    createdAt: 0,
+    themeGradientStart: "#6366F1",
+    themeGradientEnd: "#EC4899",
+    coverImageUri: null,
   }),
   getEvent: () => undefined,
+  refreshEvent: async () => null,
   incrementPhotoCount: () => {},
   incrementGuestCount: () => {},
   resetEvents: async () => {},
@@ -66,38 +96,70 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     load();
   }, []);
 
-  const save = async (updated: KapsulEvent[]) => {
+  const saveLocal = async (updated: KapsulEvent[]) => {
     await AsyncStorage.setItem("kapsul_events", JSON.stringify(updated));
     setEvents(updated);
   };
 
-  const createEvent = (partial: Omit<KapsulEvent, "id" | "photoCount" | "guestCount" | "createdAt">): KapsulEvent => {
-    const event: KapsulEvent = {
-      ...partial,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 6),
-      photoCount: 0,
-      guestCount: 0,
-      createdAt: Date.now(),
-    };
-    const updated = [event, ...events];
-    save(updated);
-    return event;
+  const createEvent = async (
+    partial: Omit<KapsulEvent, "id" | "photoCount" | "guestCount" | "createdAt">
+  ): Promise<KapsulEvent> => {
+    try {
+      const apiEvent = await apiCreateEvent({
+        id: undefined as unknown as string,
+        name: partial.name,
+        date: partial.date,
+        deliveryMode: partial.deliveryMode,
+        vaultHours: partial.vaultHours,
+        plan: partial.plan,
+        themeGradientStart: partial.themeGradientStart,
+        themeGradientEnd: partial.themeGradientEnd,
+      });
+      const local = apiEventToLocal(apiEvent);
+      const updated = [local, ...events];
+      await saveLocal(updated);
+      return local;
+    } catch {
+      const local: KapsulEvent = {
+        ...partial,
+        id: Date.now().toString() + Math.random().toString(36).substring(2, 8),
+        photoCount: 0,
+        guestCount: 0,
+        createdAt: Date.now(),
+      };
+      const updated = [local, ...events];
+      await saveLocal(updated);
+      return local;
+    }
   };
 
-  const getEvent = (id: string) => events.find(e => e.id === id);
+  const getEvent = (id: string) => events.find((e) => e.id === id);
+
+  const refreshEvent = async (id: string): Promise<KapsulEvent | null> => {
+    try {
+      const apiEvent = await apiGetEvent(id);
+      const local = apiEventToLocal(apiEvent);
+      const updated = events.map((e) => (e.id === id ? local : e));
+      if (!events.find((e) => e.id === id)) updated.unshift(local);
+      await saveLocal(updated);
+      return local;
+    } catch {
+      return getEvent(id) ?? null;
+    }
+  };
 
   const incrementPhotoCount = (id: string) => {
-    const updated = events.map(e =>
+    const updated = events.map((e) =>
       e.id === id ? { ...e, photoCount: e.photoCount + 1 } : e
     );
-    save(updated);
+    saveLocal(updated);
   };
 
   const incrementGuestCount = (id: string) => {
-    const updated = events.map(e =>
+    const updated = events.map((e) =>
       e.id === id ? { ...e, guestCount: e.guestCount + 1 } : e
     );
-    save(updated);
+    saveLocal(updated);
   };
 
   const resetEvents = async () => {
@@ -106,7 +168,17 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <EventContext.Provider value={{ events, createEvent, getEvent, incrementPhotoCount, incrementGuestCount, resetEvents }}>
+    <EventContext.Provider
+      value={{
+        events,
+        createEvent,
+        getEvent,
+        refreshEvent,
+        incrementPhotoCount,
+        incrementGuestCount,
+        resetEvents,
+      }}
+    >
       {children}
     </EventContext.Provider>
   );

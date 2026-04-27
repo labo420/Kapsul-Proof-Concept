@@ -20,13 +20,16 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ### Kapsul (artifacts/kapsul) — Mobile App (Expo)
 MVP of Kapsul, a mobile-first event photo collection app.
-- **Theme**: Social/Viral — Deep violet-black (#08060F) + Violet→Pink gradient (#8B5CF6→#EC4899), glassmorphic cards
+- **Theme**: Social/Viral — Deep violet-black (#08060F) + Indigo→Pink gradient (#6366F1→#EC4899), glassmorphic cards
 - **Fonts**: Inter (UI) + Space Mono (counters only)
 - **Screens**: Host Home, Create Event (2-step wizard), QR Code, Guest Upload Dashboard, Guest Wall (masonry), Scan QR, Event Detail
 - **Components**: GradientButton, GradientBadge, NeonProgressBar (gradient fill), PhotoCard (gradient overlay + reactions), DeliveryModeSelector (gradient chips)
-- **State**: EventContext + GuestContext (both AsyncStorage-backed, no backend)
+- **State**: EventContext (API-first, AsyncStorage as cache) + GuestContext (AsyncStorage-backed)
+- **Backend**: Real API via `artifacts/kapsul/lib/api.ts` — creates events in DB, uploads photos to object storage, join event via QR scan
 - **Key packages**: expo-linear-gradient, react-native-qrcode-svg, expo-clipboard, @expo-google-fonts/space-mono, react-native-reanimated
-- **Next steps**: Supabase integration, real QR scanner, Vault timer
+- **Backend DB schema**: `lib/db/src/schema/` — events, photos, guests tables (Drizzle + PostgreSQL)
+- **Photo storage**: Replit Object Storage (GCS) via `artifacts/api-server/src/lib/objectStorage.ts`
+- **API Routes**: POST /api/events, GET /api/events/:id, POST /api/events/:id/join, POST /api/events/:id/photos, GET /api/events/:id/photos, GET /api/photos/{*objectPath}
 
 ## Key Commands
 

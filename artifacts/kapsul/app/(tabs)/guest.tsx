@@ -35,6 +35,7 @@ import { useGuest } from "@/contexts/GuestContext";
 import { useEvents } from "@/contexts/EventContext";
 import { PLAN_LIMITS } from "@/contexts/PlanContext";
 import NeonProgressBar from "@/components/NeonProgressBar";
+import { apiUploadPhoto } from "@/lib/api";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
@@ -207,16 +208,45 @@ export default function GuestScreen() {
 
   useEffect(() => {
     if (!activeEvent) return;
-    const timer = setInterval(() => {
-      if (Math.random() < 0.3) incrementPhotoCount(activeEvent.id);
-    }, 4000);
-    return () => clearInterval(timer);
   }, [activeEvent?.id]);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
 
-  const simulateUpload = () => {
+  const doUpload = async (fileUri: string, mimeType: string) => {
+    if (!guestId) return;
+    setUploadState("uploading");
+    setProgress(0);
+    try {
+      if (activeEvent) {
+        await apiUploadPhoto(
+          activeEvent.id,
+          guestId,
+          fileUri,
+          mimeType,
+          (pct) => setProgress(pct)
+        );
+        incrementPhotoCount(activeEvent.id);
+      }
+      setProgress(100);
+      setUploadState("done");
+      setUploadCount((c) => c + 1);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      successBounce.value = withSpring(1.18, { damping: 5, stiffness: 280 }, () => {
+        successBounce.value = withSpring(1, { damping: 10, stiffness: 200 });
+      });
+      setTimeout(() => {
+        setUploadState("idle");
+        setProgress(0);
+      }, 1400);
+    } catch {
+      setUploadState("idle");
+      setProgress(0);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+  };
+
+  const simulateUploadWeb = () => {
     setUploadState("uploading");
     setProgress(0);
     let p = 0;
@@ -228,7 +258,7 @@ export default function GuestScreen() {
         clearInterval(interval);
         setTimeout(() => {
           setUploadState("done");
-          setUploadCount(c => c + 1);
+          setUploadCount((c) => c + 1);
           if (activeEvent) incrementPhotoCount(activeEvent.id);
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           successBounce.value = withSpring(1.18, { damping: 5, stiffness: 280 }, () => {
@@ -249,24 +279,30 @@ export default function GuestScreen() {
     if (isLimitReached) { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); return; }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (!acceptedTerms) { setShowTerms(true); return; }
-    if (Platform.OS === "web") { simulateUpload(); return; }
+    if (Platform.OS === "web") { simulateUploadWeb(); return; }
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") return;
     const result = await ImagePicker.launchCameraAsync({ quality: 0.85 });
-    if (!result.canceled) simulateUpload();
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      await doUpload(asset.uri, asset.mimeType ?? "image/jpeg");
+    }
   };
 
   const handleGallery = async () => {
     if (isLimitReached) { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); return; }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (!acceptedTerms) { setShowTerms(true); return; }
-    if (Platform.OS === "web") { simulateUpload(); return; }
+    if (Platform.OS === "web") { simulateUploadWeb(); return; }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true,
+      allowsMultipleSelection: false,
       quality: 0.85,
     });
-    if (!result.canceled && result.assets.length > 0) simulateUpload();
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      await doUpload(asset.uri, asset.mimeType ?? "image/jpeg");
+    }
   };
 
   return (
