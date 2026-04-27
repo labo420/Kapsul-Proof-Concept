@@ -15,25 +15,22 @@ interface DeliveryModeSelectorProps {
   onVaultHoursChange: (h: number) => void;
 }
 
-const MODES: { id: DeliveryMode; icon: IoniconsName; title: string; subtitle: string; emoji: string }[] = [
+const MODES: { id: DeliveryMode; icon: IoniconsName; title: string; subtitle: string }[] = [
   {
     id: "party",
     icon: "flash",
-    emoji: "⚡️",
     title: "Party Mode",
     subtitle: "Foto visibili in tempo reale",
   },
   {
     id: "morning_after",
     icon: "sunny",
-    emoji: "🌅",
     title: "Morning After",
     subtitle: "Sbloccate alle 06:00 del mattino",
   },
   {
     id: "vault",
     icon: "lock-closed",
-    emoji: "🔒",
     title: "Vault Mode",
     subtitle: "Sbloccate dopo X ore",
   },
@@ -149,11 +146,11 @@ function ModeCardContent({
             colors={[colors.gradientStart, colors.gradientEnd]}
             style={styles.iconWrap}
           >
-            <Text style={{ fontSize: 18 }}>{mode.emoji}</Text>
+            <Ionicons name={mode.icon} size={22} color="#fff" />
           </LinearGradient>
         ) : (
           <View style={[styles.iconWrap, { backgroundColor: colors.muted }]}>
-            <Text style={{ fontSize: 18 }}>{mode.emoji}</Text>
+            <Ionicons name={mode.icon} size={22} color={colors.foreground} />
           </View>
         )}
         <View style={styles.modeText}>

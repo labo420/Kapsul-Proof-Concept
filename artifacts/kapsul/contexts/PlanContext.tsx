@@ -11,7 +11,7 @@ export interface PlanLimits {
   hasHdDownload: boolean;
   label: string;
   price: string;
-  emoji: string;
+  icon: string;
 }
 
 export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
@@ -23,7 +23,7 @@ export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
     hasHdDownload: false,
     label: "Free Trial",
     price: "Gratis",
-    emoji: "🎁",
+    icon: "gift-outline",
   },
   party: {
     maxPhotos: 150,
@@ -33,7 +33,7 @@ export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
     hasHdDownload: false,
     label: "Party",
     price: "1,99 €",
-    emoji: "🎉",
+    icon: "flash-outline",
   },
   pro: {
     maxPhotos: 9999,
@@ -43,7 +43,7 @@ export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
     hasHdDownload: true,
     label: "Kapsul Pro",
     price: "9,99 €",
-    emoji: "⚡️",
+    icon: "star-outline",
   },
 };
 

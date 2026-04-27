@@ -15,9 +15,9 @@ import { useColors } from "@/hooks/useColors";
 import { useEvents } from "@/contexts/EventContext";
 
 const DELIVERY_LABELS: Record<string, string> = {
-  party: "⚡️ Party Mode",
-  morning_after: "🌅 Morning After",
-  vault: "🔒 Vault Mode",
+  party: "Party Mode",
+  morning_after: "Morning After",
+  vault: "Vault Mode",
 };
 
 export default function EventDetailScreen() {

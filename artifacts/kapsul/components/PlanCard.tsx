@@ -100,7 +100,11 @@ export default function PlanCard({
 
         <View style={styles.header}>
           <View style={styles.titleRow}>
-            <Text style={styles.emoji}>{limits.emoji}</Text>
+            <Ionicons
+              name={limits.icon as React.ComponentProps<typeof Ionicons>["name"]}
+              size={24}
+              color={isPro ? colors.gradientEnd : isParty ? colors.gradientStart : colors.primary}
+            />
             <View>
               <Text style={[styles.planName, { color: colors.foreground }]}>
                 {limits.label}
@@ -230,7 +234,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
-  emoji: { fontSize: 24 },
   planName: {
     fontSize: 17,
     fontWeight: "800",

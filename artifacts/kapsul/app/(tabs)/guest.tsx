@@ -412,7 +412,7 @@ export default function GuestScreen() {
           >
             <NeonProgressBar
               progress={progress}
-              label={uploadState === "done" ? "Completato! 🎉" : "Caricamento..."}
+              label={uploadState === "done" ? "Completato!" : "Caricamento..."}
             />
             {uploadState === "done" && (
               <Animated.View style={[styles.doneRow, successBounceStyle]}>
@@ -436,7 +436,7 @@ export default function GuestScreen() {
             style={[styles.wallLink, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}
             activeOpacity={0.7}
           >
-            <Text style={{ fontSize: 20 }}>🎞️</Text>
+            <Ionicons name="film-outline" size={20} color={colors.foreground} />
             <Text style={[styles.wallLinkText, { color: colors.foreground }]}>
               Guarda il Guest Wall
             </Text>
@@ -468,7 +468,7 @@ export default function GuestScreen() {
                 colors={[colors.gradientStart + "20", colors.gradientEnd + "20"]}
                 style={styles.modalHeader}
               >
-                <Text style={{ fontSize: 36 }}>📸</Text>
+                <Ionicons name="camera-outline" size={48} color={colors.gradientStart} />
               </LinearGradient>
               <Text style={[styles.modalTitle, { color: colors.foreground }]}>
                 Prima di caricare

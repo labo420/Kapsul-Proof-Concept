@@ -197,7 +197,7 @@ export default function CreateEventScreen() {
           {step === 0 ? (
             <View style={styles.form}>
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                Di che evento{"\n"}si tratta? 🎉
+                Di che evento{"\n"}si tratta?
               </Text>
               <Text
                 style={[
@@ -463,7 +463,7 @@ export default function CreateEventScreen() {
               <Text style={styles.nextBtnText}>
                 {step === LAST_STEP
                   ? selectedPlan === "free"
-                    ? "Inizia gratis 🎁"
+                    ? "Inizia gratis"
                     : `Paga ${PLAN_LIMITS[selectedPlan].price} e crea evento`
                   : "Avanti"}
               </Text>

@@ -1,17 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Modal,
-  Platform,
+  PanResponder,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { HueSaturationValuePicker } from "react-native-reanimated-color-picker";
 import { useColors } from "@/hooks/useColors";
 
 type TwoOrMoreColors = [string, string, ...string[]];
@@ -25,6 +24,11 @@ const QUICK_PRESETS = [
   { name: "Rosa & Viola", start: "#F472B6", end: "#A855F7" },
   { name: "Limone", start: "#FDE047", end: "#86EFAC" },
   { name: "Ghiaccio", start: "#BAE6FD", end: "#E0E7FF" },
+];
+
+const HUE_STOPS: TwoOrMoreColors = [
+  "#FF0000", "#FF8000", "#FFFF00", "#00FF00",
+  "#00FFFF", "#0000FF", "#FF00FF", "#FF0000",
 ];
 
 function hsvToHex(h: number, s: number, v: number): string {
@@ -59,8 +63,56 @@ function hexToHsv(hex: string): [number, number, number] {
     else h = (r - g) / delta + 4;
     h *= 60;
   }
-  const s = max === 0 ? 0 : delta / max;
-  return [h, s, max];
+  return [h, max === 0 ? 0 : delta / max, max];
+}
+
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+interface SliderProps {
+  value: number;
+  onValueChange: (v: number) => void;
+  gradientColors: TwoOrMoreColors;
+  thumbColor: string;
+}
+
+function HsvSlider({ value, onValueChange, gradientColors, thumbColor }: SliderProps) {
+  const [trackWidth, setTrackWidth] = useState(0);
+
+  const pan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (e) => {
+        onValueChange(clamp(e.nativeEvent.locationX / (trackWidth || 1), 0, 1));
+      },
+      onPanResponderMove: (e) => {
+        onValueChange(clamp(e.nativeEvent.locationX / (trackWidth || 1), 0, 1));
+      },
+    })
+  ).current;
+
+  return (
+    <View
+      style={styles.sliderTrack}
+      onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
+      {...pan.panHandlers}
+    >
+      <LinearGradient
+        colors={gradientColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <View
+        style={[
+          styles.sliderThumb,
+          { left: value * trackWidth, backgroundColor: thumbColor, transform: [{ translateX: -12 }] },
+        ]}
+      />
+    </View>
+  );
 }
 
 interface PickerSheetProps {
@@ -72,21 +124,19 @@ interface PickerSheetProps {
   onCancel: () => void;
 }
 
-function ColorPickerSheet({
-  initialColor,
-  colorStart,
-  colorEnd,
-  onLiveChange,
-  onConfirm,
-  onCancel,
-}: PickerSheetProps) {
+function ColorPickerSheet({ initialColor, colorStart, colorEnd, onLiveChange, onConfirm, onCancel }: PickerSheetProps) {
   const colors = useColors();
-  const [currentHex, setCurrentHex] = useState(initialColor);
-  const [h0, s0, v0] = hexToHsv(initialColor);
+  const [hue, setHue] = useState(() => hexToHsv(initialColor)[0] / 360);
+  const [sat, setSat] = useState(() => hexToHsv(initialColor)[1]);
+  const [val, setVal] = useState(() => hexToHsv(initialColor)[2]);
 
-  const handleChange = ({ h, s, v }: { h: number; s: number; v: number }) => {
-    const hex = hsvToHex(h, s, v);
-    setCurrentHex(hex);
+  const currentHex = hsvToHex(hue * 360, sat, val);
+  const hueColor = hsvToHex(hue * 360, 1, 1);
+  const satGradient: TwoOrMoreColors = ["#808080", hueColor];
+  const valGradient: TwoOrMoreColors = ["#000000", hsvToHex(hue * 360, sat, 1)];
+
+  const update = (h: number, s: number, v: number) => {
+    const hex = hsvToHex(h * 360, s, v);
     onLiveChange(hex);
   };
 
@@ -100,21 +150,39 @@ function ColorPickerSheet({
         <View style={[styles.colorPreviewBig, { backgroundColor: currentHex }]} />
         <View style={{ flex: 1 }}>
           <Text style={[styles.hexLabel, { color: colors.mutedForeground }]}>HEX</Text>
-          <Text style={[styles.hexValue, { color: colors.foreground }]}>
-            {currentHex.toUpperCase()}
-          </Text>
+          <Text style={[styles.hexValue, { color: colors.foreground }]}>{currentHex.toUpperCase()}</Text>
         </View>
       </View>
 
-      <HueSaturationValuePicker
-        wheelStyle={styles.colorWheel}
-        sliderStyle={styles.colorWheelSlider}
-        initialHue={h0}
-        initialSaturation={s0}
-        initialValue={v0}
-        onColorChange={handleChange}
-        onColorChangeComplete={handleChange}
-      />
+      <View style={styles.sliderGroup}>
+        <Text style={[styles.sliderLabel, { color: colors.mutedForeground }]}>TONALITÀ</Text>
+        <HsvSlider
+          value={hue}
+          onValueChange={(v) => { setHue(v); update(v, sat, val); Haptics.selectionAsync(); }}
+          gradientColors={HUE_STOPS}
+          thumbColor={hueColor}
+        />
+      </View>
+
+      <View style={styles.sliderGroup}>
+        <Text style={[styles.sliderLabel, { color: colors.mutedForeground }]}>SATURAZIONE</Text>
+        <HsvSlider
+          value={sat}
+          onValueChange={(v) => { setSat(v); update(hue, v, val); }}
+          gradientColors={satGradient}
+          thumbColor={currentHex}
+        />
+      </View>
+
+      <View style={styles.sliderGroup}>
+        <Text style={[styles.sliderLabel, { color: colors.mutedForeground }]}>LUMINOSITÀ</Text>
+        <HsvSlider
+          value={val}
+          onValueChange={(v) => { setVal(v); update(hue, sat, v); }}
+          gradientColors={valGradient}
+          thumbColor={currentHex}
+        />
+      </View>
 
       <View style={styles.pickerButtons}>
         <TouchableOpacity
@@ -192,11 +260,7 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
       />
 
       <View style={styles.swatchRow}>
-        <TouchableOpacity
-          style={styles.swatchWrap}
-          onPress={() => openPicker("start")}
-          activeOpacity={0.8}
-        >
+        <TouchableOpacity style={styles.swatchWrap} onPress={() => openPicker("start")} activeOpacity={0.8}>
           <View style={[styles.swatch, { backgroundColor: colorStart }]}>
             <Ionicons name="color-palette" size={18} color="#fff" />
           </View>
@@ -213,11 +277,7 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
           <Ionicons name="arrow-forward" size={16} color={colors.mutedForeground} />
         </View>
 
-        <TouchableOpacity
-          style={styles.swatchWrap}
-          onPress={() => openPicker("end")}
-          activeOpacity={0.8}
-        >
+        <TouchableOpacity style={styles.swatchWrap} onPress={() => openPicker("end")} activeOpacity={0.8}>
           <View style={[styles.swatch, { backgroundColor: colorEnd }]}>
             <Ionicons name="color-palette" size={18} color="#fff" />
           </View>
@@ -226,21 +286,12 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
       </View>
 
       <TouchableOpacity
-        onPress={() => {
-          setShowPresets((v) => !v);
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }}
+        onPress={() => { setShowPresets(v => !v); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
         style={[styles.presetsToggle, { borderColor: colors.border, backgroundColor: colors.muted }]}
         activeOpacity={0.7}
       >
-        <Text style={[styles.presetsToggleText, { color: colors.mutedForeground }]}>
-          Suggerimenti rapidi
-        </Text>
-        <Ionicons
-          name={showPresets ? "chevron-up" : "chevron-down"}
-          size={14}
-          color={colors.mutedForeground}
-        />
+        <Text style={[styles.presetsToggleText, { color: colors.mutedForeground }]}>Suggerimenti rapidi</Text>
+        <Ionicons name={showPresets ? "chevron-up" : "chevron-down"} size={14} color={colors.mutedForeground} />
       </TouchableOpacity>
 
       {showPresets && (
@@ -248,11 +299,7 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
           {QUICK_PRESETS.map((p) => (
             <TouchableOpacity
               key={p.name}
-              onPress={() => {
-                onChangeStart(p.start);
-                onChangeEnd(p.end);
-                Haptics.selectionAsync();
-              }}
+              onPress={() => { onChangeStart(p.start); onChangeEnd(p.end); Haptics.selectionAsync(); }}
               activeOpacity={0.8}
               style={styles.presetCard}
             >
@@ -262,20 +309,13 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
                 end={{ x: 1, y: 0 }}
                 style={styles.presetGradient}
               />
-              <Text style={[styles.presetName, { color: colors.mutedForeground }]} numberOfLines={1}>
-                {p.name}
-              </Text>
+              <Text style={[styles.presetName, { color: colors.mutedForeground }]} numberOfLines={1}>{p.name}</Text>
             </TouchableOpacity>
           ))}
         </View>
       )}
 
-      <Modal
-        visible={showPicker !== null}
-        transparent
-        animationType="slide"
-        onRequestClose={handleCancel}
-      >
+      <Modal visible={showPicker !== null} transparent animationType="slide" onRequestClose={handleCancel}>
         <Pressable style={styles.modalOverlay} onPress={handleCancel}>
           <Pressable onPress={() => {}}>
             {showPicker !== null && (
@@ -297,167 +337,51 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
 
 const styles = StyleSheet.create({
   container: { gap: 16 },
-  previewBar: {
-    height: 64,
-    borderRadius: 16,
-  },
-  swatchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-  },
-  swatchWrap: {
-    alignItems: "center",
-    gap: 8,
-  },
+  previewBar: { height: 64, borderRadius: 16 },
+  swatchRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 },
+  swatchWrap: { alignItems: "center", gap: 8 },
   swatch: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
+    width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 6,
   },
-  swatchLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  arrowWrap: {
-    alignItems: "center",
-    gap: 6,
-    flex: 1,
-  },
-  arrowLine: {
-    height: 2,
-    width: "100%",
-    borderRadius: 999,
-  },
+  swatchLabel: { fontSize: 12, fontWeight: "600" },
+  arrowWrap: { alignItems: "center", gap: 6, flex: 1 },
+  arrowLine: { height: 2, width: "100%", borderRadius: 999 },
   presetsToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 999,
-    borderWidth: 1,
-    alignSelf: "center",
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 6, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, alignSelf: "center",
   },
-  presetsToggleText: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  presetsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  presetCard: {
-    width: "22%",
-    alignItems: "center",
-    gap: 6,
-  },
-  presetGradient: {
-    width: "100%",
-    aspectRatio: 2,
-    borderRadius: 8,
-  },
-  presetName: {
-    fontSize: 10,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.75)",
-    justifyContent: "flex-end",
-  },
+  presetsToggleText: { fontSize: 13, fontWeight: "600" },
+  presetsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  presetCard: { width: "22%", alignItems: "center", gap: 6 },
+  presetGradient: { width: "100%", aspectRatio: 2, borderRadius: 8 },
+  presetName: { fontSize: 10, fontWeight: "600", textAlign: "center" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end" },
   pickerSheet: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    padding: 24,
-    paddingBottom: Platform.OS === "ios" ? 44 : 24,
-    gap: 20,
+    borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1,
+    padding: 24, paddingBottom: 24, gap: 20,
   },
-  sheetHandle: {
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  handleBar: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    opacity: 0.4,
-  },
-  previewRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-  },
+  sheetHandle: { alignItems: "center", marginBottom: 4 },
+  handleBar: { width: 40, height: 4, borderRadius: 2, opacity: 0.4 },
+  previewRow: { flexDirection: "row", alignItems: "center", gap: 16 },
   colorPreviewBig: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 6,
+    width: 56, height: 56, borderRadius: 28,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.4, shadowRadius: 6, elevation: 6,
   },
-  hexLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 2,
-    marginBottom: 4,
+  hexLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 2, marginBottom: 4 },
+  hexValue: { fontSize: 22, fontWeight: "800", fontFamily: "SpaceMono_400Regular", letterSpacing: 1 },
+  sliderGroup: { gap: 10 },
+  sliderLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 2 },
+  sliderTrack: { height: 36, borderRadius: 18, overflow: "visible", justifyContent: "center", position: "relative" },
+  sliderThumb: {
+    position: "absolute", width: 24, height: 24, borderRadius: 12,
+    borderWidth: 3, borderColor: "#fff",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4, elevation: 4, top: 6,
   },
-  hexValue: {
-    fontSize: 22,
-    fontWeight: "800",
-    fontFamily: "SpaceMono_400Regular",
-    letterSpacing: 1,
-  },
-  colorWheel: {
-    width: "100%",
-    aspectRatio: 1,
-  },
-  colorWheelSlider: {
-    width: "100%",
-    height: 36,
-    marginTop: 8,
-    borderRadius: 18,
-  },
-  pickerButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  cancelBtn: {
-    flex: 1,
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  cancelBtnText: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  confirmBtn: {
-    paddingVertical: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 999,
-  },
-  confirmBtnText: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#fff",
-  },
+  pickerButtons: { flexDirection: "row", gap: 12 },
+  cancelBtn: { flex: 1, borderRadius: 999, borderWidth: 1, paddingVertical: 16, alignItems: "center" },
+  cancelBtnText: { fontSize: 15, fontWeight: "700" },
+  confirmBtn: { paddingVertical: 16, alignItems: "center", justifyContent: "center", borderRadius: 999 },
+  confirmBtnText: { fontSize: 15, fontWeight: "800", color: "#fff" },
 });

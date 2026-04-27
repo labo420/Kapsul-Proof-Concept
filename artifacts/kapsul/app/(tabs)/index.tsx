@@ -30,9 +30,9 @@ import GradientBadge from "@/components/GradientBadge";
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
 const DELIVERY_LABELS: Record<string, string> = {
-  party: "⚡️ Party",
-  morning_after: "🌅 Morning After",
-  vault: "🔒 Vault",
+  party: "Party",
+  morning_after: "Morning After",
+  vault: "Vault",
 };
 
 const DELIVERY_ICONS: Record<string, IoniconsName> = {
@@ -131,7 +131,7 @@ export default function HostScreen() {
               colors={[colors.gradientStart + "30", colors.gradientEnd + "30"]}
               style={[styles.emptyIcon, { borderRadius: 28 }]}
             >
-              <Text style={{ fontSize: 44 }}>📸</Text>
+              <Ionicons name="camera-outline" size={44} color={colors.gradientStart} />
             </LinearGradient>
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
               Crea il tuo primo{"\n"}evento
@@ -203,7 +203,7 @@ export default function HostScreen() {
                           variant="soft"
                         />
                         <GradientBadge
-                          label={`${PLAN_LIMITS[event.plan ?? "party"].emoji} ${PLAN_LIMITS[event.plan ?? "party"].label}`}
+                          label={PLAN_LIMITS[event.plan ?? "party"].label}
                         />
                         <LinearGradient
                           colors={[

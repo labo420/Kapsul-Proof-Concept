@@ -149,11 +149,12 @@ export default function ProfileScreen() {
     );
   };
 
-  const stats = [
-    { label: "Eventi creati", value: String(events.length), emoji: "🎉" },
-    { label: "Foto raccolte", value: String(totalPhotos), emoji: "📸" },
-    { label: "Eventi Party", value: String(partyEvents), emoji: "⚡️" },
-    { label: "Eventi Pro", value: String(proEvents), emoji: "👑" },
+  type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
+  const stats: { label: string; value: string; icon: IoniconsName }[] = [
+    { label: "Eventi creati", value: String(events.length), icon: "calendar-outline" },
+    { label: "Foto raccolte", value: String(totalPhotos), icon: "camera-outline" },
+    { label: "Eventi Party", value: String(partyEvents), icon: "flash-outline" },
+    { label: "Eventi Pro", value: String(proEvents), icon: "ribbon-outline" },
   ];
 
   return (
@@ -224,7 +225,11 @@ export default function ProfileScreen() {
                   { borderColor: colors.border, borderRadius: colors.radius },
                 ]}
               >
-                <Text style={styles.statEmoji}>{s.emoji}</Text>
+                <Ionicons
+                  name={s.icon}
+                  size={22}
+                  color={colors.gradientStart}
+                />
                 <Text
                   style={[
                     styles.statValue,
@@ -270,9 +275,11 @@ export default function ProfileScreen() {
                 },
               ]}
             >
-              <Text style={{ fontSize: 22 }}>
-                {hasUsedFreeTrial ? "✓" : "🎁"}
-              </Text>
+              <Ionicons
+                name={hasUsedFreeTrial ? "checkmark" : "gift-outline"}
+                size={22}
+                color={hasUsedFreeTrial ? colors.mutedForeground : colors.gradientStart}
+              />
             </View>
             <View style={{ flex: 1, gap: 3 }}>
               <Text style={[styles.trialTitle, { color: colors.foreground }]}>
@@ -502,7 +509,6 @@ const styles = StyleSheet.create({
     gap: 6,
     alignItems: "flex-start",
   },
-  statEmoji: { fontSize: 20 },
   statValue: {
     fontSize: 28,
     letterSpacing: -0.5,
