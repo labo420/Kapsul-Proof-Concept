@@ -101,7 +101,7 @@ export default function PlanCard({
         <View style={styles.header}>
           <View style={styles.titleRow}>
             <Ionicons
-              name={limits.icon as React.ComponentProps<typeof Ionicons>["name"]}
+              name={limits.icon}
               size={24}
               color={isPro ? colors.gradientEnd : isParty ? colors.gradientStart : colors.primary}
             />

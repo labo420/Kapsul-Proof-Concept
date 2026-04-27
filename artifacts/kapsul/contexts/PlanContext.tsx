@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 export type EventPlan = "free" | "party" | "pro";
@@ -11,7 +12,7 @@ export interface PlanLimits {
   hasHdDownload: boolean;
   label: string;
   price: string;
-  icon: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
 }
 
 export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
