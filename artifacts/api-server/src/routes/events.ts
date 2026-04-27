@@ -6,6 +6,8 @@ import { randomUUID } from "crypto";
 import multer from "multer";
 import { objectStorageClient } from "../lib/objectStorage.js";
 
+const PLAN_MAX_GUESTS: Record<string, number> = { free: 15, party: 50, pro: 9999 };
+
 const router = Router();
 
 const upload = multer({
@@ -123,6 +125,11 @@ router.post("/events/:id/join", async (req, res): Promise<void> => {
       );
 
     if (existing.length === 0) {
+      const maxGuests = PLAN_MAX_GUESTS[event.plan] ?? 9999;
+      if (event.guestCount >= maxGuests) {
+        res.status(403).json({ error: "guest_limit_reached", max: maxGuests });
+        return;
+      }
       await db.insert(guestsTable).values({
         id: randomUUID(),
         eventId: id,
@@ -226,6 +233,89 @@ router.get("/events/:id/photos", async (req, res): Promise<void> => {
       .orderBy(photosTable.createdAt);
     res.json(photos);
   } catch {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/events/:id/guests", async (req, res): Promise<void> => {
+  try {
+    const id = param(req.params.id);
+    const guests = await db
+      .select()
+      .from(guestsTable)
+      .where(eq(guestsTable.eventId, id))
+      .orderBy(guestsTable.joinedAt);
+
+    const photos = await db
+      .select()
+      .from(photosTable)
+      .where(eq(photosTable.eventId, id));
+
+    const photoCounts: Record<string, number> = {};
+    for (const photo of photos) {
+      photoCounts[photo.guestId] = (photoCounts[photo.guestId] ?? 0) + 1;
+    }
+
+    res.json(
+      guests.map((g) => ({
+        guestId: g.guestId,
+        joinedAt: g.joinedAt,
+        photoCount: photoCounts[g.guestId] ?? 0,
+      }))
+    );
+  } catch {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.delete("/events/:id/guests/:guestId", async (req, res): Promise<void> => {
+  try {
+    const eventId = param(req.params.id);
+    const guestId = param(req.params.guestId);
+
+    const [event] = await db
+      .select()
+      .from(eventsTable)
+      .where(eq(eventsTable.id, eventId));
+    if (!event) {
+      res.status(404).json({ error: "Event not found" });
+      return;
+    }
+
+    const photos = await db
+      .select()
+      .from(photosTable)
+      .where(and(eq(photosTable.eventId, eventId), eq(photosTable.guestId, guestId)));
+
+    const bucket = getBucket();
+    await Promise.all(
+      photos.map((photo) => {
+        const objectKey = photo.objectPath.replace(/^\/api\/photos\//, "");
+        return bucket.file(objectKey).delete().catch(() => {});
+      })
+    );
+
+    if (photos.length > 0) {
+      await db
+        .delete(photosTable)
+        .where(and(eq(photosTable.eventId, eventId), eq(photosTable.guestId, guestId)));
+    }
+
+    await db
+      .delete(guestsTable)
+      .where(and(eq(guestsTable.eventId, eventId), eq(guestsTable.guestId, guestId)));
+
+    await db
+      .update(eventsTable)
+      .set({
+        guestCount: Math.max(0, event.guestCount - 1),
+        photoCount: Math.max(0, event.photoCount - photos.length),
+      })
+      .where(eq(eventsTable.id, eventId));
+
+    res.json({ removed: true, photosDeleted: photos.length });
+  } catch (err) {
+    req.log.error(err, "remove guest error");
     res.status(500).json({ error: "Server error" });
   }
 });

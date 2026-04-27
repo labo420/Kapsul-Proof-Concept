@@ -34,6 +34,12 @@ export interface ApiPhoto {
   createdAt: string;
 }
 
+export interface ApiGuest {
+  guestId: string;
+  joinedAt: string;
+  photoCount: number;
+}
+
 export async function apiCreateEvent(
   payload: Omit<ApiEvent, "coverImagePath" | "isActive" | "createdAt" | "photoCount" | "guestCount">
 ): Promise<ApiEvent> {
@@ -64,8 +70,34 @@ export async function apiJoinEvent(
       body: JSON.stringify({ guestId }),
     }
   );
+  if (res.status === 403) {
+    const body = await res.json().catch(() => ({})) as { error?: string };
+    const err = new Error("guest_limit_reached") as Error & { code: string };
+    err.code = body.error ?? "guest_limit_reached";
+    throw err;
+  }
   if (!res.ok) throw new Error(`Join event failed: ${res.status}`);
   return res.json() as Promise<{ event: ApiEvent }>;
+}
+
+export async function apiGetGuests(eventId: string): Promise<ApiGuest[]> {
+  const res = await fetch(
+    `${API_BASE}/events/${encodeURIComponent(eventId)}/guests`
+  );
+  if (!res.ok) throw new Error(`Get guests failed: ${res.status}`);
+  return res.json() as Promise<ApiGuest[]>;
+}
+
+export async function apiRemoveGuest(
+  eventId: string,
+  guestId: string
+): Promise<{ removed: boolean; photosDeleted: number }> {
+  const res = await fetch(
+    `${API_BASE}/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}`,
+    { method: "DELETE" }
+  );
+  if (!res.ok) throw new Error(`Remove guest failed: ${res.status}`);
+  return res.json() as Promise<{ removed: boolean; photosDeleted: number }>;
 }
 
 export async function apiGetPhotos(eventId: string): Promise<ApiPhoto[]> {

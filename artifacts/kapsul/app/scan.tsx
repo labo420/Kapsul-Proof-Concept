@@ -25,7 +25,7 @@ import { useEvents } from "@/contexts/EventContext";
 import { apiJoinEvent } from "@/lib/api";
 
 type ScanState = "scanning" | "success" | "error";
-type ErrorKind = "invalid" | "expired" | "unknown";
+type ErrorKind = "invalid" | "expired" | "full" | "unknown";
 
 const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
 
@@ -141,8 +141,13 @@ export default function ScanScreen() {
       setTimeout(() => {
         router.replace("/(tabs)/guest");
       }, 900);
-    } catch {
-      triggerError("unknown");
+    } catch (err) {
+      const code = (err as Error & { code?: string }).code;
+      if (code === "guest_limit_reached") {
+        triggerError("full");
+      } else {
+        triggerError("unknown");
+      }
     }
   }
 
@@ -165,6 +170,10 @@ export default function ScanScreen() {
     expired: {
       title: "Evento scaduto",
       body: "Questo evento non è più attivo. Contatta l'organizzatore per ulteriori informazioni.",
+    },
+    full: {
+      title: "Evento al completo",
+      body: "Questo evento ha raggiunto il limite di ospiti. Contatta l'organizzatore per ulteriori informazioni.",
     },
     unknown: {
       title: "Errore di scansione",

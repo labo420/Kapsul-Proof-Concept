@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  Alert,
   Platform,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -13,6 +15,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useEvents } from "@/contexts/EventContext";
+import { apiGetGuests, apiRemoveGuest, type ApiGuest } from "@/lib/api";
 
 const DELIVERY_LABELS: Record<string, string> = {
   party: "Party Mode",
@@ -24,10 +27,61 @@ export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { getEvent } = useEvents();
+  const { getEvent, refreshEvent } = useEvents();
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const event = getEvent(id ?? "");
+
+  const [guests, setGuests] = useState<ApiGuest[]>([]);
+  const [removingGuest, setRemovingGuest] = useState<string | null>(null);
+
+  const loadGuests = useCallback(async () => {
+    if (!id) return;
+    try {
+      const list = await apiGetGuests(id);
+      setGuests(list);
+    } catch {
+      setGuests([]);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    loadGuests();
+  }, [loadGuests]);
+
+  function handleRemoveGuest(guest: ApiGuest) {
+    const photoLabel =
+      guest.photoCount === 0
+        ? "Questo ospite non ha caricato foto."
+        : guest.photoCount === 1
+        ? "Verranno eliminate anche le 1 foto caricate da questo ospite."
+        : `Verranno eliminate anche le ${guest.photoCount} foto caricate da questo ospite.`;
+
+    Alert.alert(
+      "Rimuovi ospite",
+      `Vuoi rimuovere ${guest.guestId} dall'evento? ${photoLabel}`,
+      [
+        { text: "Annulla", style: "cancel" },
+        {
+          text: "Rimuovi",
+          style: "destructive",
+          onPress: async () => {
+            if (!id) return;
+            setRemovingGuest(guest.guestId);
+            try {
+              await apiRemoveGuest(id, guest.guestId);
+              await refreshEvent(id);
+              await loadGuests();
+            } catch {
+              Alert.alert("Errore", "Impossibile rimuovere l'ospite. Riprova.");
+            } finally {
+              setRemovingGuest(null);
+            }
+          },
+        },
+      ]
+    );
+  }
 
   if (!event) {
     return (
@@ -57,7 +111,11 @@ export default function EventDetailScreen() {
         </View>
       </LinearGradient>
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <LinearGradient
           colors={[colors.gradientStart + "14", colors.gradientEnd + "14"]}
           style={[styles.statsCard, { borderRadius: colors.radius, borderWidth: 1, borderColor: colors.gradientStart + "40" }]}
@@ -107,7 +165,58 @@ export default function EventDetailScreen() {
           <Ionicons name="qr-code-outline" size={20} color={colors.foreground} />
           <Text style={[styles.qrBtnText, { color: colors.foreground }]}>Mostra QR Code</Text>
         </TouchableOpacity>
-      </View>
+
+        <View style={styles.guestSection}>
+          <View style={styles.guestHeader}>
+            <Text style={[styles.guestSectionTitle, { color: colors.foreground }]}>Ospiti</Text>
+            <Text style={[styles.guestCount, { color: colors.mutedForeground }]}>{guests.length}</Text>
+          </View>
+
+          {guests.length === 0 ? (
+            <View style={[styles.emptyGuests, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
+              <Ionicons name="people-outline" size={32} color={colors.mutedForeground} />
+              <Text style={[styles.emptyGuestsText, { color: colors.mutedForeground }]}>
+                Nessun ospite ancora
+              </Text>
+            </View>
+          ) : (
+            <View style={[styles.guestList, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
+              {guests.map((guest, index) => {
+                const initials = guest.guestId.replace("Guest_", "").slice(0, 2).toUpperCase();
+                const isRemoving = removingGuest === guest.guestId;
+                return (
+                  <View key={guest.guestId}>
+                    {index > 0 && (
+                      <View style={[styles.guestDivider, { backgroundColor: colors.border }]} />
+                    )}
+                    <View style={styles.guestRow}>
+                      <View style={[styles.guestAvatar, { backgroundColor: colors.primary + "22" }]}>
+                        <Text style={[styles.guestAvatarText, { color: colors.primary }]}>{initials}</Text>
+                      </View>
+                      <View style={styles.guestInfo}>
+                        <Text style={[styles.guestId, { color: colors.foreground }]} numberOfLines={1}>
+                          {guest.guestId}
+                        </Text>
+                        <Text style={[styles.guestPhotoCount, { color: colors.mutedForeground }]}>
+                          {guest.photoCount} {guest.photoCount === 1 ? "foto" : "foto"}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => handleRemoveGuest(guest)}
+                        disabled={isRemoving}
+                        style={[styles.removeBtn, { opacity: isRemoving ? 0.4 : 1 }]}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons name="person-remove-outline" size={18} color="#FF4466" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -125,10 +234,11 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, alignItems: "center" },
   topTitle: { fontSize: 17, fontWeight: "700", flex: 1, textAlign: "center" },
   errorText: { textAlign: "center", marginTop: 100, fontSize: 16 },
+  scroll: { flex: 1 },
   content: {
-    flex: 1,
     padding: 20,
     gap: 14,
+    paddingBottom: 40,
   },
   statsCard: {
     overflow: "hidden",
@@ -202,5 +312,75 @@ const styles = StyleSheet.create({
   qrBtnText: {
     fontSize: 15,
     fontWeight: "600",
+  },
+  guestSection: {
+    gap: 10,
+    marginTop: 4,
+  },
+  guestHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  guestSectionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+  },
+  guestCount: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  emptyGuests: {
+    borderWidth: 1,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 28,
+    gap: 10,
+  },
+  emptyGuestsText: {
+    fontSize: 14,
+  },
+  guestList: {
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  guestDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: 56,
+  },
+  guestRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 12,
+  },
+  guestAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  guestAvatarText: {
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  guestInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  guestId: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  guestPhotoCount: {
+    fontSize: 12,
+  },
+  removeBtn: {
+    padding: 4,
   },
 });

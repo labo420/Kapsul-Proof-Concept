@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  Alert,
   Dimensions,
   Modal,
   Platform,
@@ -35,7 +36,7 @@ import { useGuest } from "@/contexts/GuestContext";
 import { useEvents } from "@/contexts/EventContext";
 import { PLAN_LIMITS } from "@/contexts/PlanContext";
 import NeonProgressBar from "@/components/NeonProgressBar";
-import { apiUploadPhoto } from "@/lib/api";
+import { apiUploadPhoto, apiRemoveGuest } from "@/lib/api";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
@@ -47,7 +48,7 @@ export default function GuestScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { setActiveGradient } = useTheme();
-  const { guestId, acceptedTerms, setAcceptedTerms, currentEventId } = useGuest();
+  const { guestId, acceptedTerms, setAcceptedTerms, currentEventId, setCurrentEventId } = useGuest();
   const { events, getEvent, incrementPhotoCount } = useEvents();
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
@@ -294,6 +295,28 @@ export default function GuestScreen() {
     }
   };
 
+  function handleLeaveEvent() {
+    if (!activeEvent || !guestId) return;
+    Alert.alert(
+      "Lascia evento",
+      "Vuoi lasciare questo evento? Le foto che hai caricato verranno eliminate.",
+      [
+        { text: "Annulla", style: "cancel" },
+        {
+          text: "Lascia",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await apiRemoveGuest(activeEvent.id, guestId);
+            } catch {
+            }
+            setCurrentEventId(null);
+          },
+        },
+      ]
+    );
+  }
+
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
@@ -474,6 +497,19 @@ export default function GuestScreen() {
             <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
           </TouchableOpacity>
         </Animated.View>
+
+        {activeEvent && (
+          <Animated.View style={enterStyle3}>
+            <TouchableOpacity
+              onPress={handleLeaveEvent}
+              style={[styles.leaveBtn, { borderColor: "#FF4466" + "44", borderRadius: colors.radius }]}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="exit-outline" size={18} color="#FF4466" />
+              <Text style={styles.leaveBtnText}>Lascia evento</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
       </ScrollView>
 
       <Modal
@@ -822,5 +858,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
     lineHeight: 17,
+  },
+  leaveBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderStyle: "dashed",
+  },
+  leaveBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FF4466",
   },
 });
