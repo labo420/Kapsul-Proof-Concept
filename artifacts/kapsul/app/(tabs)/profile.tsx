@@ -1,7 +1,7 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -101,9 +101,9 @@ function SettingRow({
 export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { guestId } = useGuest();
-  const { events } = useEvents();
-  const { hasUsedFreeTrial } = usePlan();
+  const { guestId, resetGuest } = useGuest();
+  const { events, resetEvents } = useEvents();
+  const { hasUsedFreeTrial, resetPlan } = usePlan();
 
   const [notifEnabled, setNotifEnabled] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
@@ -136,15 +136,13 @@ export default function ProfileScreen() {
           text: "Reset",
           style: "destructive",
           onPress: async () => {
-            await AsyncStorage.multiRemove([
-              "kapsul_events",
-              "kapsul_guest_id",
-              "kapsul_terms",
-              "kapsul_current_event_id",
-              "kapsul_free_trial_used",
-            ]);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            router.replace("/(tabs)");
+            try {
+              await Promise.all([resetEvents(), resetGuest(), resetPlan()]);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              router.replace("/(tabs)");
+            } catch {
+              Alert.alert("Errore", "Il reset non è riuscito. Riprova.");
+            }
           },
         },
       ]
@@ -360,6 +358,10 @@ export default function ProfileScreen() {
                 <Ionicons name="document-text-outline" size={16} color={colors.gradientStart} />
               }
               label="Termini di Servizio"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Linking.openURL("https://kapsul.app/terms");
+              }}
             />
             <SettingRow
               icon={
@@ -367,6 +369,10 @@ export default function ProfileScreen() {
               }
               label="Privacy Policy"
               isLast
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Linking.openURL("https://kapsul.app/privacy");
+              }}
             />
           </View>
         </Animated.View>

@@ -22,6 +22,7 @@ interface EventContextType {
   getEvent: (id: string) => KapsulEvent | undefined;
   incrementPhotoCount: (id: string) => void;
   incrementGuestCount: (id: string) => void;
+  resetEvents: () => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType>({
@@ -30,6 +31,7 @@ const EventContext = createContext<EventContextType>({
   getEvent: () => undefined,
   incrementPhotoCount: () => {},
   incrementGuestCount: () => {},
+  resetEvents: async () => {},
 });
 
 export function EventProvider({ children }: { children: React.ReactNode }) {
@@ -79,8 +81,13 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     save(updated);
   };
 
+  const resetEvents = async () => {
+    await AsyncStorage.removeItem("kapsul_events");
+    setEvents([]);
+  };
+
   return (
-    <EventContext.Provider value={{ events, createEvent, getEvent, incrementPhotoCount, incrementGuestCount }}>
+    <EventContext.Provider value={{ events, createEvent, getEvent, incrementPhotoCount, incrementGuestCount, resetEvents }}>
       {children}
     </EventContext.Provider>
   );

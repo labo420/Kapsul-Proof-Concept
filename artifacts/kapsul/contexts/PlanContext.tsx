@@ -50,11 +50,13 @@ export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
 type PlanContextType = {
   hasUsedFreeTrial: boolean;
   markFreeTrialUsed: () => Promise<void>;
+  resetPlan: () => Promise<void>;
 };
 
 const PlanContext = createContext<PlanContextType>({
   hasUsedFreeTrial: false,
   markFreeTrialUsed: async () => {},
+  resetPlan: async () => {},
 });
 
 export function PlanProvider({ children }: { children: React.ReactNode }) {
@@ -71,8 +73,13 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
     setHasUsedFreeTrial(true);
   };
 
+  const resetPlan = async () => {
+    await AsyncStorage.removeItem("kapsul_free_trial_used");
+    setHasUsedFreeTrial(false);
+  };
+
   return (
-    <PlanContext.Provider value={{ hasUsedFreeTrial, markFreeTrialUsed }}>
+    <PlanContext.Provider value={{ hasUsedFreeTrial, markFreeTrialUsed, resetPlan }}>
       {children}
     </PlanContext.Provider>
   );

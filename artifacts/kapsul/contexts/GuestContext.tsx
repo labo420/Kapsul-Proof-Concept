@@ -7,6 +7,7 @@ interface GuestContextType {
   setAcceptedTerms: (v: boolean) => void;
   currentEventId: string | null;
   setCurrentEventId: (id: string | null) => void;
+  resetGuest: () => Promise<void>;
 }
 
 const GuestContext = createContext<GuestContextType>({
@@ -15,6 +16,7 @@ const GuestContext = createContext<GuestContextType>({
   setAcceptedTerms: () => {},
   currentEventId: null,
   setCurrentEventId: () => {},
+  resetGuest: async () => {},
 });
 
 function generateGuestId(): string {
@@ -63,8 +65,19 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const resetGuest = async () => {
+    await AsyncStorage.multiRemove([
+      "kapsul_guest_id",
+      "kapsul_terms",
+      "kapsul_current_event_id",
+    ]);
+    setGuestId(null);
+    setAcceptedTermsState(false);
+    setCurrentEventIdState(null);
+  };
+
   return (
-    <GuestContext.Provider value={{ guestId, acceptedTerms, setAcceptedTerms, currentEventId, setCurrentEventId }}>
+    <GuestContext.Provider value={{ guestId, acceptedTerms, setAcceptedTerms, currentEventId, setCurrentEventId, resetGuest }}>
       {children}
     </GuestContext.Provider>
   );
