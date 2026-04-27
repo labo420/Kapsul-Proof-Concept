@@ -6,6 +6,7 @@ export const guestsTable = pgTable("guests", {
   id: text("id").primaryKey(),
   eventId: text("event_id").notNull(),
   guestId: text("guest_id").notNull(),
+  token: text("token").notNull().default(""),
   photoCount: integer("photo_count").notNull().default(0),
   joinedAt: timestamp("joined_at").notNull().defaultNow(),
 });

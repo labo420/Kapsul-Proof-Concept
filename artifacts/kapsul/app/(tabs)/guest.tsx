@@ -48,7 +48,7 @@ export default function GuestScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { setActiveGradient } = useTheme();
-  const { guestId, acceptedTerms, setAcceptedTerms, currentEventId, setCurrentEventId } = useGuest();
+  const { guestId, acceptedTerms, setAcceptedTerms, currentEventId, setCurrentEventId, guestTokens } = useGuest();
   const { events, getEvent, incrementPhotoCount } = useEvents();
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
@@ -320,7 +320,7 @@ export default function GuestScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await apiRemoveGuest(activeEvent.id, guestId, guestId);
+              await apiRemoveGuest(activeEvent.id, guestId, guestTokens[activeEvent.id] ?? "");
               setCurrentEventId(null);
               router.push("/scan");
             } catch {

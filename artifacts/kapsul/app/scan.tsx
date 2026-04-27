@@ -50,7 +50,7 @@ function extractEventId(raw: string): string | null {
 export default function ScanScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { guestId, setCurrentEventId } = useGuest();
+  const { guestId, setCurrentEventId, setGuestToken } = useGuest();
   const { refreshEvent } = useEvents();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
@@ -126,11 +126,12 @@ export default function ScanScreen() {
     }
 
     try {
-      const { event } = await apiJoinEvent(eventId, guestId ?? "anon");
+      const { event, guestToken } = await apiJoinEvent(eventId, guestId ?? "anon");
       if (!event.isActive) {
         triggerError("expired");
         return;
       }
+      await setGuestToken(eventId, guestToken);
       await refreshEvent(eventId);
       await setCurrentEventId(eventId);
       setScanState("success");

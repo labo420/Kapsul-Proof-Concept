@@ -7,6 +7,8 @@ interface GuestContextType {
   setAcceptedTerms: (v: boolean) => void;
   currentEventId: string | null;
   setCurrentEventId: (id: string | null) => void;
+  guestTokens: Record<string, string>;
+  setGuestToken: (eventId: string, token: string) => Promise<void>;
   resetGuest: () => Promise<void>;
 }
 
@@ -16,6 +18,8 @@ const GuestContext = createContext<GuestContextType>({
   setAcceptedTerms: () => {},
   currentEventId: null,
   setCurrentEventId: () => {},
+  guestTokens: {},
+  setGuestToken: async () => {},
   resetGuest: async () => {},
 });
 
@@ -32,6 +36,7 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
   const [guestId, setGuestId] = useState<string | null>(null);
   const [acceptedTerms, setAcceptedTermsState] = useState(false);
   const [currentEventId, setCurrentEventIdState] = useState<string | null>(null);
+  const [guestTokens, setGuestTokensState] = useState<Record<string, string>>({});
 
   useEffect(() => {
     async function init() {
@@ -47,6 +52,13 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
 
       const eventId = await AsyncStorage.getItem("kapsul_current_event_id");
       if (eventId) setCurrentEventIdState(eventId);
+
+      const tokensRaw = await AsyncStorage.getItem("kapsul_guest_tokens");
+      if (tokensRaw) {
+        try {
+          setGuestTokensState(JSON.parse(tokensRaw) as Record<string, string>);
+        } catch {}
+      }
     }
     init();
   }, []);
@@ -65,17 +77,24 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const setGuestToken = async (eventId: string, token: string) => {
+    const updated = { ...guestTokens, [eventId]: token };
+    setGuestTokensState(updated);
+    await AsyncStorage.setItem("kapsul_guest_tokens", JSON.stringify(updated));
+  };
+
   const resetGuest = async () => {
     const newId = generateGuestId();
-    await AsyncStorage.multiRemove(["kapsul_terms", "kapsul_current_event_id"]);
+    await AsyncStorage.multiRemove(["kapsul_terms", "kapsul_current_event_id", "kapsul_guest_tokens"]);
     await AsyncStorage.setItem("kapsul_guest_id", newId);
     setGuestId(newId);
     setAcceptedTermsState(false);
     setCurrentEventIdState(null);
+    setGuestTokensState({});
   };
 
   return (
-    <GuestContext.Provider value={{ guestId, acceptedTerms, setAcceptedTerms, currentEventId, setCurrentEventId, resetGuest }}>
+    <GuestContext.Provider value={{ guestId, acceptedTerms, setAcceptedTerms, currentEventId, setCurrentEventId, guestTokens, setGuestToken, resetGuest }}>
       {children}
     </GuestContext.Provider>
   );

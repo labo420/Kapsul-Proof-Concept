@@ -142,28 +142,39 @@ router.post("/events/:id/join", async (req, res): Promise<void> => {
         )
       );
 
+    let guestToken: string;
     if (existing.length === 0) {
       const maxGuests = PLAN_MAX_GUESTS[event.plan] ?? 9999;
       if (event.guestCount >= maxGuests) {
         res.status(403).json({ error: "guest_limit_reached", max: maxGuests });
         return;
       }
+      guestToken = randomUUID();
       await db.insert(guestsTable).values({
         id: randomUUID(),
         eventId: id,
         guestId,
+        token: guestToken,
       });
       await db
         .update(eventsTable)
         .set({ guestCount: event.guestCount + 1 })
         .where(eq(eventsTable.id, id));
+    } else {
+      guestToken = existing[0].token || randomUUID();
+      if (!existing[0].token) {
+        await db
+          .update(guestsTable)
+          .set({ token: guestToken })
+          .where(eq(guestsTable.id, existing[0].id));
+      }
     }
 
     const [updated] = await db
-      .select()
+      .select(publicEventFields)
       .from(eventsTable)
       .where(eq(eventsTable.id, id));
-    res.json({ event: updated });
+    res.json({ event: updated, guestToken });
   } catch (err) {
     req.log.error(err, "join event error");
     res.status(500).json({ error: "Server error" });
@@ -303,8 +314,8 @@ router.delete("/events/:id/guests/:guestId", async (req, res): Promise<void> => 
     const eventId = param(req.params.id);
     const guestId = param(req.params.guestId);
 
-    const { requesterId } = z
-      .object({ requesterId: z.string() })
+    const { token } = z
+      .object({ token: z.string() })
       .parse(req.body);
 
     const [event] = await db
@@ -316,9 +327,18 @@ router.delete("/events/:id/guests/:guestId", async (req, res): Promise<void> => 
       return;
     }
 
-    const isSelf = requesterId === guestId;
-    const isHost = event.hostToken != null && requesterId === event.hostToken;
-    if (!isSelf && !isHost) {
+    const isHost = event.hostToken != null && token === event.hostToken;
+
+    let isSelf = false;
+    if (!isHost) {
+      const [guestRecord] = await db
+        .select()
+        .from(guestsTable)
+        .where(and(eq(guestsTable.eventId, eventId), eq(guestsTable.guestId, guestId)));
+      isSelf = !!guestRecord?.token && token === guestRecord.token;
+    }
+
+    if (!isHost && !isSelf) {
       res.status(403).json({ error: "Forbidden" });
       return;
     }
