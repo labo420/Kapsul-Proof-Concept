@@ -43,7 +43,7 @@ export default function WallScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { currentEventId } = useGuest();
+  const { currentEventId, guestId } = useGuest();
   const [photos, setPhotos] = useState<WallPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -62,7 +62,7 @@ export default function WallScreen() {
       setError(false);
       try {
         if (currentEventId) {
-          const data = await apiGetPhotos(currentEventId);
+          const data = await apiGetPhotos(currentEventId, guestId ?? undefined);
           const wall = toWallPhotos(data);
           setPhotos(wall.length > 0 ? wall : MOCK_PHOTOS);
         } else {
@@ -76,7 +76,7 @@ export default function WallScreen() {
         setRefreshing(false);
       }
     },
-    [currentEventId]
+    [currentEventId, guestId]
   );
 
   useFocusEffect(

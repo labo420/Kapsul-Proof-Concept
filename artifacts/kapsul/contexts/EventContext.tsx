@@ -38,6 +38,7 @@ function apiEventToLocal(e: ApiEvent, existingLocal?: KapsulEvent): KapsulEvent 
     themeGradientEnd: e.themeGradientEnd,
     coverImageUri: existingLocal?.coverImageUri ?? null,
     hostToken: e.hostToken ?? existingLocal?.hostToken ?? null,
+    isPublic: (e as ApiEvent & { isPublic?: boolean }).isPublic ?? true,
   };
 }
 

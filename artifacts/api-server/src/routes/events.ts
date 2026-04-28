@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, eventsTable, photosTable, guestsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or } from "drizzle-orm";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import multer from "multer";
@@ -22,6 +22,8 @@ const publicEventFields = {
   photoCount: eventsTable.photoCount,
   guestCount: eventsTable.guestCount,
   isActive: eventsTable.isActive,
+  isPublic: eventsTable.isPublic,
+  creatorId: eventsTable.creatorId,
   createdAt: eventsTable.createdAt,
 } as const;
 
@@ -94,11 +96,17 @@ router.post("/events", optionalAuth, async (req, res) => {
   }
 });
 
-router.get("/events", async (_req, res) => {
+router.get("/events", optionalAuth, async (req, res) => {
   try {
+    const userId = req.user?.userId;
     const events = await db
       .select(publicEventFields)
       .from(eventsTable)
+      .where(
+        userId
+          ? or(eq(eventsTable.isPublic, true), eq(eventsTable.creatorId, userId))
+          : eq(eventsTable.isPublic, true)
+      )
       .orderBy(eventsTable.createdAt);
     res.json(events);
   } catch {
@@ -106,18 +114,28 @@ router.get("/events", async (_req, res) => {
   }
 });
 
-router.get("/events/:id", async (req, res): Promise<void> => {
+router.get("/events/:id", optionalAuth, async (req, res): Promise<void> => {
   try {
     const id = param(req.params.id);
-    const [event] = await db
-      .select(publicEventFields)
+    const { hostToken } = req.query as { hostToken?: string };
+    const [full] = await db
+      .select()
       .from(eventsTable)
       .where(eq(eventsTable.id, id));
-    if (!event) {
+    if (!full) {
       res.status(404).json({ error: "Event not found" });
       return;
     }
-    res.json(event);
+    if (!full.isPublic) {
+      const isCreator = req.user && req.user.userId === full.creatorId;
+      const hasHostToken = hostToken && full.hostToken === hostToken;
+      if (!isCreator && !hasHostToken) {
+        res.status(403).json({ error: "Private event" });
+        return;
+      }
+    }
+    const { hostToken: _ht, ...safe } = full;
+    res.json({ ...safe, hostToken: req.user?.userId === full.creatorId ? full.hostToken : undefined });
   } catch {
     res.status(500).json({ error: "Server error" });
   }
@@ -240,9 +258,11 @@ router.post(
   }
 );
 
-router.get("/events/:id/photos", async (req, res): Promise<void> => {
+router.get("/events/:id/photos", optionalAuth, async (req, res): Promise<void> => {
   try {
     const id = param(req.params.id);
+    const { hostToken, guestId } = req.query as { hostToken?: string; guestId?: string };
+
     const [event] = await db
       .select()
       .from(eventsTable)
@@ -251,10 +271,34 @@ router.get("/events/:id/photos", async (req, res): Promise<void> => {
       res.status(404).json({ error: "Event not found" });
       return;
     }
+
+    const isCreator = req.user && req.user.userId === event.creatorId;
+    const isHost = hostToken && event.hostToken === hostToken;
+
+    let isGuest = false;
+    if (guestId) {
+      const [guestRow] = await db
+        .select({ guestId: guestsTable.guestId })
+        .from(guestsTable)
+        .where(and(eq(guestsTable.eventId, id), eq(guestsTable.guestId, guestId)));
+      isGuest = !!guestRow;
+    }
+
+    const isMember = isCreator || isHost || isGuest;
+
+    if (!event.isPublic && !isMember) {
+      res.status(403).json({ error: "Private event" });
+      return;
+    }
+
     const photos = await db
       .select()
       .from(photosTable)
-      .where(eq(photosTable.eventId, id))
+      .where(
+        isMember
+          ? eq(photosTable.eventId, id)
+          : and(eq(photosTable.eventId, id), eq(photosTable.isPublic, true))
+      )
       .orderBy(photosTable.createdAt);
     res.json(photos);
   } catch {

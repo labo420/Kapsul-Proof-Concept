@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { randomUUID } from "crypto";
-import { db, usersTable, followsTable, eventsTable, photosTable } from "@workspace/db";
+import { db, usersTable, followsTable, eventsTable, photosTable, notificationsTable } from "@workspace/db";
 import { eq, and, ne, sql, desc, inArray } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/auth.js";
 
@@ -32,7 +32,16 @@ router.post("/social/follow/:userId", requireAuth, async (req, res): Promise<voi
       res.status(404).json({ error: "User not found" });
       return;
     }
-    await db.insert(followsTable).values({ id: randomUUID(), followerId, followedId }).onConflictDoNothing();
+    const result = await db.insert(followsTable).values({ id: randomUUID(), followerId, followedId }).onConflictDoNothing().returning();
+    if (result.length > 0) {
+      await db.insert(notificationsTable).values({
+        id: randomUUID(),
+        recipientId: followedId,
+        actorId: followerId,
+        type: "follow",
+        entityId: followerId,
+      }).onConflictDoNothing();
+    }
     res.json({ following: true });
   } catch (err) {
     req.log.error(err, "follow error");

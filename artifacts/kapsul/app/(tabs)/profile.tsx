@@ -346,6 +346,116 @@ function HighlightsPickerModal({ visible, onClose, events, selectedIds, onSave }
   );
 }
 
+interface AppNotification {
+  id: string;
+  type: string;
+  entityId: string | null;
+  read: boolean;
+  createdAt: string;
+  actor: { id: string; username: string; displayName: string; avatarUrl: string | null };
+}
+
+function NotificationsModal({ visible, onClose, token, onRead }: {
+  visible: boolean; onClose: () => void; token: string; onRead: () => void;
+}) {
+  const colors = useColors();
+  const [items, setItems] = useState<AppNotification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!visible) return;
+    setLoading(true);
+    fetch(`${API_BASE}/notifications`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json() as Promise<AppNotification[]>)
+      .then((data) => { setItems(data); })
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false));
+  }, [visible, token]);
+
+  const markAllRead = async () => {
+    try {
+      await fetch(`${API_BASE}/notifications/read-all`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+      onRead();
+    } catch {}
+  };
+
+  const notifLabel = (n: AppNotification) => {
+    if (n.type === "follow") return `${n.actor.displayName} ha iniziato a seguirti`;
+    if (n.type === "photo") return `${n.actor.displayName} ha caricato una foto`;
+    return `Nuova notifica da ${n.actor.displayName}`;
+  };
+
+  const timeAgo = (date: string) => {
+    const diff = Date.now() - new Date(date).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "adesso";
+    if (m < 60) return `${m}m fa`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h fa`;
+    return `${Math.floor(h / 24)}g fa`;
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <View style={[styles.modalRoot, { backgroundColor: colors.background }]}>
+        <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity onPress={onClose}>
+            <X size={22} color={colors.mutedForeground} />
+          </TouchableOpacity>
+          <Text style={[styles.modalTitle, { color: colors.foreground }]}>Notifiche</Text>
+          <TouchableOpacity onPress={markAllRead}>
+            <Text style={{ color: colors.gradientStart, fontSize: 13, fontFamily: "Inter_600SemiBold" }}>Segna lette</Text>
+          </TouchableOpacity>
+        </View>
+        {loading ? (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <ActivityIndicator color={colors.gradientStart} />
+          </View>
+        ) : items.length === 0 ? (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 30 }}>
+            <Bell size={44} color={colors.mutedForeground + "60"} style={{ marginBottom: 14 }} />
+            <Text style={{ color: colors.mutedForeground, fontSize: 15, textAlign: "center" }}>
+              Nessuna notifica ancora.{"\n"}Inizia a seguire altri utenti per ricevere aggiornamenti.
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={items}
+            keyExtractor={(n) => n.id}
+            contentContainerStyle={{ padding: 16, gap: 2 }}
+            renderItem={({ item }) => (
+              <View style={{
+                flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12,
+                paddingHorizontal: 14, borderRadius: 12,
+                backgroundColor: item.read ? "transparent" : colors.gradientStart + "11",
+              }}>
+                {item.actor.avatarUrl ? (
+                  <Image source={{ uri: photoUrl(item.actor.avatarUrl) }} style={{ width: 44, height: 44, borderRadius: 22 }} />
+                ) : (
+                  <DefaultAvatar size={44} />
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.foreground, fontSize: 14, fontFamily: "Inter_400Regular" }}>
+                    {notifLabel(item)}
+                  </Text>
+                  <Text style={{ color: colors.mutedForeground, fontSize: 12, marginTop: 2 }}>{timeAgo(item.createdAt)}</Text>
+                </View>
+                {!item.read && (
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.gradientStart }} />
+                )}
+              </View>
+            )}
+          />
+        )}
+      </View>
+    </Modal>
+  );
+}
+
 function SectionHeader({ label }: { label: string }) {
   const colors = useColors();
   return <Text style={[styles.sectionHeader, { color: colors.mutedForeground }]}>{label}</Text>;
@@ -415,6 +525,8 @@ export default function ProfileScreen() {
   const [followersModalVisible, setFollowersModalVisible] = useState(false);
   const [followingModalVisible, setFollowingModalVisible] = useState(false);
   const [highlightPickerVisible, setHighlightPickerVisible] = useState(false);
+  const [notifModalVisible, setNotifModalVisible] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [counts, setCounts] = useState<SocialCounts>({ followers: 0, following: 0, posts: 0 });
   const [suggestions, setSuggestions] = useState<SuggestedUser[]>([]);
   const [myPhotos, setMyPhotos] = useState<ApiPhoto[]>([]);
@@ -439,6 +551,19 @@ export default function ProfileScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) setCounts(await res.json() as SocialCounts);
+    } catch {}
+  }, [user, token]);
+
+  const fetchUnreadCount = useCallback(async () => {
+    if (!user || !token) return;
+    try {
+      const res = await fetch(`${API_BASE}/notifications/unread-count`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json() as { unreadCount: number };
+        setUnreadCount(data.unreadCount);
+      }
     } catch {}
   }, [user, token]);
 
@@ -468,7 +593,8 @@ export default function ProfileScreen() {
     fetchCounts();
     fetchSuggestions();
     fetchMyPhotos();
-  }, [fetchCounts, fetchSuggestions, fetchMyPhotos]);
+    fetchUnreadCount();
+  }, [fetchCounts, fetchSuggestions, fetchMyPhotos, fetchUnreadCount]);
 
   const handleAvatarPress = async () => {
     if (!token) return;
@@ -520,6 +646,18 @@ export default function ProfileScreen() {
     } catch {
       Alert.alert("Errore", "Impossibile aggiornare la privacy");
     }
+  };
+
+  const handleToggleEventPrivacy = async (eventId: string, currentlyPublic: boolean) => {
+    if (!token) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      await fetch(`${API_BASE}/social/events/${eventId}/privacy`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ isPublic: !currentlyPublic }),
+      });
+    } catch {}
   };
 
   const handleTogglePhotoPrivacy = async (photo: ApiPhoto) => {
@@ -596,11 +734,34 @@ export default function ProfileScreen() {
         selectedIds={highlightIds}
         onSave={handleSaveHighlights}
       />
+      <NotificationsModal
+        visible={notifModalVisible}
+        onClose={() => setNotifModalVisible(false)}
+        token={token!}
+        onRead={() => setUnreadCount(0)}
+      />
 
       <ScrollView
         contentContainerStyle={{ paddingTop: topPad + 16, paddingBottom: bottomPad + 120 }}
         showsVerticalScrollIndicator={false}
       >
+        {/* ── Top bar with notifications ── */}
+        <Animated.View style={[anim0, { paddingHorizontal: 20, flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }]}>
+          <Text style={{ color: colors.foreground, fontSize: 20, fontWeight: "800", fontFamily: "Inter_700Bold", letterSpacing: -0.3 }}>Profilo</Text>
+          <TouchableOpacity
+            onPress={() => { Haptics.selectionAsync(); setNotifModalVisible(true); }}
+            style={{ position: "relative" }}
+            activeOpacity={0.7}
+          >
+            <Bell size={24} color={colors.foreground} />
+            {unreadCount > 0 && (
+              <View style={{ position: "absolute", top: -4, right: -4, backgroundColor: colors.gradientEnd, borderRadius: 8, minWidth: 16, height: 16, alignItems: "center", justifyContent: "center", paddingHorizontal: 3 }}>
+                <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+
         {/* ── Instagram-style header ── */}
         <Animated.View style={[anim0, { paddingHorizontal: 20 }]}>
           <View style={styles.headerRow}>
@@ -772,6 +933,8 @@ export default function ProfileScreen() {
                   <TouchableOpacity
                     key={e.id}
                     onPress={() => router.push(`/event/${e.id}`)}
+                    onLongPress={() => handleToggleEventPrivacy(e.id, e.isPublic ?? true)}
+                    delayLongPress={500}
                     activeOpacity={0.8}
                     style={{ width: GRID_ITEM, aspectRatio: 1, marginBottom: 4 }}
                   >
@@ -782,7 +945,9 @@ export default function ProfileScreen() {
                       <Calendar size={24} color="#fff" />
                       <Text style={styles.gridEventName} numberOfLines={2}>{e.name}</Text>
                       {e.isPublic === false && (
-                        <View style={styles.lockBadge}><Lock size={10} color="#fff" /></View>
+                        <View style={[styles.lockBadge, { backgroundColor: "rgba(0,0,0,0.5)" }]}>
+                          <Lock size={10} color="#fff" />
+                        </View>
                       )}
                     </LinearGradient>
                   </TouchableOpacity>

@@ -109,9 +109,10 @@ export async function apiRemoveGuest(
   return res.json() as Promise<{ removed: boolean; photosDeleted: number }>;
 }
 
-export async function apiGetPhotos(eventId: string): Promise<ApiPhoto[]> {
+export async function apiGetPhotos(eventId: string, guestId?: string): Promise<ApiPhoto[]> {
+  const params = guestId ? `?guestId=${encodeURIComponent(guestId)}` : "";
   const res = await fetch(
-    `${API_BASE}/events/${encodeURIComponent(eventId)}/photos`
+    `${API_BASE}/events/${encodeURIComponent(eventId)}/photos${params}`
   );
   if (!res.ok) throw new Error(`Get photos failed: ${res.status}`);
   return res.json() as Promise<ApiPhoto[]>;
