@@ -35,6 +35,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useGuest } from "@/contexts/GuestContext";
 import { useEvents } from "@/contexts/EventContext";
 import { PLAN_LIMITS } from "@/contexts/PlanContext";
+import GradientButton from "@/components/GradientButton";
 import NeonProgressBar from "@/components/NeonProgressBar";
 import { apiUploadPhoto, apiRemoveGuest, apiGetPhotos } from "@/lib/api";
 
@@ -347,20 +348,11 @@ export default function GuestScreen() {
           <Text style={{ color: colors.mutedForeground, textAlign: "center", fontSize: 15, lineHeight: 22 }}>
             Scansiona il QR code dell'evento o inserisci il codice manualmente per partecipare.
           </Text>
-          <TouchableOpacity
+          <GradientButton
+            label="Partecipa a un evento"
             onPress={() => router.push("/scan")}
-            style={{ borderRadius: 999, overflow: "hidden", marginTop: 8, width: "100%" }}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={[colors.gradientStart, colors.gradientEnd]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{ paddingVertical: 16, alignItems: "center", borderRadius: 999 }}
-            >
-              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>Partecipa a un evento</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+            size="lg"
+          />
         </View>
       </View>
     );
