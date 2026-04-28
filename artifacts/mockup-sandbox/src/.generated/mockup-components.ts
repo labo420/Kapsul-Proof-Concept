@@ -6,5 +6,10 @@ export const modules: ModuleMap = {
   "./components/mockups/kapsul-login/SplitScreen.tsx": () => import("../components/mockups/kapsul-login/SplitScreen.tsx"),
   "./components/mockups/kapsul-palette/Caldo.tsx": () => import("../components/mockups/kapsul-palette/Caldo.tsx"),
   "./components/mockups/kapsul-palette/Lusso.tsx": () => import("../components/mockups/kapsul-palette/Lusso.tsx"),
-  "./components/mockups/kapsul-palette/Oceano.tsx": () => import("../components/mockups/kapsul-palette/Oceano.tsx")
+  "./components/mockups/kapsul-palette/Oceano.tsx": () => import("../components/mockups/kapsul-palette/Oceano.tsx"),
+  "./components/mockups/kapsul-palettes/Aurora.tsx": () => import("../components/mockups/kapsul-palettes/Aurora.tsx"),
+  "./components/mockups/kapsul-palettes/Bosco.tsx": () => import("../components/mockups/kapsul-palettes/Bosco.tsx"),
+  "./components/mockups/kapsul-palettes/Fuoco.tsx": () => import("../components/mockups/kapsul-palettes/Fuoco.tsx"),
+  "./components/mockups/kapsul-palettes/Ghiaccio.tsx": () => import("../components/mockups/kapsul-palettes/Ghiaccio.tsx"),
+  "./components/mockups/kapsul-palettes/Tramonto.tsx": () => import("../components/mockups/kapsul-palettes/Tramonto.tsx")
 };
