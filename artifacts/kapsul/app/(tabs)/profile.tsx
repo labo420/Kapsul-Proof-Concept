@@ -387,6 +387,7 @@ function NotificationsModal({ visible, onClose, token, onRead }: {
     if (n.type === "follow") return `${n.actor.displayName} ha iniziato a seguirti`;
     if (n.type === "photo") return `${n.actor.displayName} ha caricato una foto`;
     if (n.type === "like") return `${n.actor.displayName} ha messo like alla tua foto`;
+    if (n.type === "comment") return `${n.actor.displayName} ha commentato la tua foto`;
     return `Nuova notifica da ${n.actor.displayName}`;
   };
 

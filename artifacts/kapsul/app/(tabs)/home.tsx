@@ -1,15 +1,18 @@
-import { Calendar, Camera, Heart, RefreshCw, Users } from "lucide-react-native";
+import { Calendar, Camera, Heart, MessageCircle, RefreshCw, Users } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   Image,
+  KeyboardAvoidingView,
+  Modal,
   Platform,
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -37,6 +40,148 @@ interface FeedItem {
   author: FeedAuthor | null;
 }
 
+interface PhotoComment {
+  id: string;
+  photoId: string;
+  text: string;
+  createdAt: string;
+  author: FeedAuthor | null;
+}
+
+function CommentsModal({
+  visible,
+  photoId,
+  onClose,
+  authToken,
+}: {
+  visible: boolean;
+  photoId: string;
+  onClose: () => void;
+  authToken: string | null;
+}) {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const [comments, setComments] = useState<PhotoComment[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [text, setText] = useState("");
+  const [posting, setPosting] = useState(false);
+  const inputRef = useRef<TextInput>(null);
+
+  const fetchComments = useCallback(async () => {
+    setLoading(true);
+    try {
+      const headers: Record<string, string> = {};
+      if (authToken) headers.Authorization = `Bearer ${authToken}`;
+      const res = await fetch(`${API_BASE}/social/photos/${photoId}/comments`, { headers });
+      if (res.ok) setComments(await res.json());
+    } catch {}
+    setLoading(false);
+  }, [photoId, authToken]);
+
+  useEffect(() => {
+    if (visible) fetchComments();
+    else { setComments([]); setText(""); }
+  }, [visible, fetchComments]);
+
+  const postComment = async () => {
+    if (!authToken || !text.trim() || posting) return;
+    setPosting(true);
+    try {
+      const res = await fetch(`${API_BASE}/social/photos/${photoId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({ text: text.trim() }),
+      });
+      if (res.ok) {
+        const newComment = await res.json() as PhotoComment;
+        setComments((prev) => [newComment, ...prev]);
+        setText("");
+      }
+    } catch {}
+    setPosting(false);
+  };
+
+  const timeAgo = (date: string) => {
+    const diff = Date.now() - new Date(date).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "adesso";
+    if (m < 60) return `${m}m fa`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h fa`;
+    return `${Math.floor(h / 24)}g fa`;
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: colors.background }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+          <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>Commenti</Text>
+          <TouchableOpacity onPress={onClose}>
+            <Text style={{ color: colors.gradientStart, fontSize: 15 }}>Chiudi</Text>
+          </TouchableOpacity>
+        </View>
+        {loading ? (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <ActivityIndicator color={colors.gradientStart} />
+          </View>
+        ) : (
+          <FlatList
+            data={comments}
+            keyExtractor={(c) => c.id}
+            contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+            ListEmptyComponent={
+              <Text style={{ color: colors.mutedForeground, textAlign: "center", marginTop: 32 }}>
+                Nessun commento ancora. Sii il primo!
+              </Text>
+            }
+            renderItem={({ item }) => (
+              <View style={{ flexDirection: "row", marginBottom: 16, gap: 10 }}>
+                {item.author?.avatarUrl ? (
+                  <Image source={{ uri: photoUrl(item.author.avatarUrl) }} style={{ width: 32, height: 32, borderRadius: 16 }} />
+                ) : (
+                  <DefaultAvatar size={32} />
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: "700" }}>
+                    {item.author?.displayName ?? "Utente"}{" "}
+                    <Text style={{ color: colors.mutedForeground, fontWeight: "400" }}>· {timeAgo(item.createdAt)}</Text>
+                  </Text>
+                  <Text style={{ color: colors.foreground, fontSize: 14, marginTop: 2 }}>{item.text}</Text>
+                </View>
+              </View>
+            )}
+          />
+        )}
+        {authToken && (
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 12, paddingBottom: Math.max(insets.bottom, 12), borderTopWidth: 1, borderTopColor: colors.border, gap: 8 }}>
+            <TextInput
+              ref={inputRef}
+              value={text}
+              onChangeText={setText}
+              placeholder="Scrivi un commento..."
+              placeholderTextColor={colors.mutedForeground}
+              style={{ flex: 1, backgroundColor: colors.card, color: colors.foreground, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, fontSize: 14 }}
+              maxLength={500}
+              returnKeyType="send"
+              onSubmitEditing={postComment}
+            />
+            <TouchableOpacity
+              onPress={postComment}
+              disabled={!text.trim() || posting}
+              style={{ backgroundColor: colors.gradientStart, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, opacity: (!text.trim() || posting) ? 0.5 : 1 }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Invia</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
 function DefaultAvatar({ size = 36 }: { size?: number }) {
   const colors = useColors();
   return (
@@ -56,6 +201,7 @@ function FeedCard({ item, authToken }: { item: FeedItem; authToken: string | nul
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [liking, setLiking] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   const timeAgo = (date: string) => {
     const diff = Date.now() - new Date(date).getTime();
@@ -143,7 +289,18 @@ function FeedCard({ item, authToken }: { item: FeedItem; authToken: string | nul
               </Text>
             )}
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowComments(true)} style={[styles.likeButton, { marginLeft: 14 }]}>
+            <MessageCircle size={22} color={colors.mutedForeground} />
+          </TouchableOpacity>
         </View>
+      )}
+      {!isEvent && (
+        <CommentsModal
+          visible={showComments}
+          photoId={item.id}
+          onClose={() => setShowComments(false)}
+          authToken={authToken}
+        />
       )}
     </View>
   );

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { randomUUID } from "crypto";
-import { db, usersTable, followsTable, eventsTable, photosTable, notificationsTable, photoLikesTable, guestsTable } from "@workspace/db";
+import { db, usersTable, followsTable, eventsTable, photosTable, notificationsTable, photoLikesTable, guestsTable, photoCommentsTable } from "@workspace/db";
 import { eq, and, ne, sql, desc, inArray } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/auth.js";
 
@@ -157,7 +157,7 @@ router.get("/social/suggestions", requireAuth, async (req, res): Promise<void> =
   }
 });
 
-router.get("/social/feed", requireAuth, async (req, res): Promise<void> => {
+async function feedHandler(req: import("express").Request, res: import("express").Response): Promise<void> {
   try {
     const currentUserId = req.user!.userId;
     const page = Math.max(1, Number(req.query.page ?? 1));
@@ -220,7 +220,10 @@ router.get("/social/feed", requireAuth, async (req, res): Promise<void> => {
     req.log.error(err, "feed error");
     res.status(500).json({ error: "Server error" });
   }
-});
+}
+
+router.get("/social/feed", requireAuth, feedHandler);
+router.get("/feed", requireAuth, feedHandler);
 
 router.patch("/social/photos/:photoId/privacy", requireAuth, async (req, res): Promise<void> => {
   try {
@@ -295,10 +298,14 @@ router.get("/social/myphotos", requireAuth, async (req, res): Promise<void> => {
 
 async function canAccessPhoto(photoId: string, userId: string | undefined): Promise<boolean> {
   const [photo] = await db
-    .select({ eventId: photosTable.eventId, isPublic: photosTable.isPublic })
+    .select({ eventId: photosTable.eventId, isPublic: photosTable.isPublic, guestId: photosTable.guestId })
     .from(photosTable)
     .where(eq(photosTable.id, photoId));
   if (!photo) return false;
+
+  if (!photo.isPublic) {
+    return !!userId && photo.guestId === userId;
+  }
 
   const [event] = await db
     .select({ isPublic: eventsTable.isPublic, creatorId: eventsTable.creatorId })
@@ -409,6 +416,80 @@ router.get("/social/photos/:photoId/likes", optionalAuth, async (req, res): Prom
     res.json({ likeCount: count, liked });
   } catch (err) {
     req.log.error(err, "get likes error");
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.post("/social/photos/:photoId/comments", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const photoId = param(req.params.photoId);
+    const userId = req.user!.userId;
+    const { text } = z.object({ text: z.string().min(1).max(500) }).parse(req.body);
+
+    if (!(await canAccessPhoto(photoId, userId))) {
+      res.status(403).json({ error: "Cannot access this photo" });
+      return;
+    }
+
+    const [photo] = await db.select({ guestId: photosTable.guestId }).from(photosTable).where(eq(photosTable.id, photoId));
+
+    const comment = { id: randomUUID(), photoId, userId, text };
+    await db.insert(photoCommentsTable).values(comment);
+
+    if (photo?.guestId && photo.guestId !== userId) {
+      await db.insert(notificationsTable).values({
+        id: randomUUID(),
+        recipientId: photo.guestId,
+        actorId: userId,
+        type: "comment",
+        entityId: photoId,
+      }).onConflictDoNothing();
+    }
+
+    const [commenter] = await db
+      .select({ id: usersTable.id, username: usersTable.username, displayName: usersTable.displayName, avatarUrl: usersTable.avatarUrl })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
+
+    res.status(201).json({ ...comment, author: commenter ?? null });
+  } catch (err) {
+    req.log.error(err, "comment photo error");
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/social/photos/:photoId/comments", optionalAuth, async (req, res): Promise<void> => {
+  try {
+    const photoId = param(req.params.photoId);
+    const userId = req.user?.userId;
+
+    if (!(await canAccessPhoto(photoId, userId))) {
+      res.status(403).json({ error: "Cannot access this photo" });
+      return;
+    }
+
+    const rows = await db
+      .select({
+        id: photoCommentsTable.id,
+        photoId: photoCommentsTable.photoId,
+        text: photoCommentsTable.text,
+        createdAt: photoCommentsTable.createdAt,
+        author: {
+          id: usersTable.id,
+          username: usersTable.username,
+          displayName: usersTable.displayName,
+          avatarUrl: usersTable.avatarUrl,
+        },
+      })
+      .from(photoCommentsTable)
+      .innerJoin(usersTable, eq(usersTable.id, photoCommentsTable.userId))
+      .where(eq(photoCommentsTable.photoId, photoId))
+      .orderBy(desc(photoCommentsTable.createdAt))
+      .limit(50);
+
+    res.json(rows);
+  } catch (err) {
+    req.log.error(err, "get comments error");
     res.status(500).json({ error: "Server error" });
   }
 });

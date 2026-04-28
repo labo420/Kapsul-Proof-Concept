@@ -32,6 +32,12 @@ MVP of Kapsul, a mobile-first event photo collection app.
 - **Backend DB schema**: `lib/db/src/schema/` — events, photos, guests tables (Drizzle + PostgreSQL)
 - **Photo storage**: Replit Object Storage (GCS) via `artifacts/api-server/src/lib/objectStorage.ts`
 - **API Routes**: POST /api/events, GET /api/events/:id, POST /api/events/:id/join, POST /api/events/:id/photos, GET /api/events/:id/photos, GET /api/photos/{*objectPath}
+- **Auth**: POST /api/auth/register, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/profile, GET /api/auth/check-username, GET /api/users/:username (privacy-aware)
+- **Social**: POST/DELETE /api/social/follow/:id, GET /api/social/followers/:id, GET /api/social/following/:id, GET /api/social/feed (alias: /api/feed), GET /api/social/suggestions, PATCH /api/social/photos/:id/privacy, POST/DELETE/GET /api/social/photos/:id/like(s), POST/GET /api/social/photos/:id/comments
+- **Notifications**: GET/PATCH /api/notifications (types: follow, photo, like, comment)
+- **DB Migrations**: 0000_init, 0001_users_follows, 0002_photo_likes_public, 0003_notifications, 0004_photo_likes, 0005_photo_comments
+- **Profile tab**: Instagram-style with avatar, bio, link, followers/following, highlights, content grid, public/private toggle, notifications modal (handles follow/photo/like/comment types)
+- **Home tab**: Feed of followed users' public content with like button + comment modal (CommentsModal)
 
 ## Key Commands
 

@@ -234,6 +234,20 @@ router.post(
         return;
       }
 
+      if (!event.isPublic && authUserId) {
+        const isCreator = event.creatorId === authUserId;
+        if (!isCreator) {
+          const [membership] = await db
+            .select({ id: guestsTable.id })
+            .from(guestsTable)
+            .where(and(eq(guestsTable.eventId, id), eq(guestsTable.guestId, authUserId)));
+          if (!membership) {
+            res.status(403).json({ error: "Not a member of this event" });
+            return;
+          }
+        }
+      }
+
       const photoId = randomUUID();
       const ext = req.file.mimetype.includes("png") ? "png" : "jpg";
       const objectKey = `photos/${id}/${photoId}.${ext}`;

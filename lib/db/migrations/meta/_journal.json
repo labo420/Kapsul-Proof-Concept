@@ -36,6 +36,13 @@
       "when": 1777400000000,
       "tag": "0004_photo_likes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777405000000,
+      "tag": "0005_photo_comments",
+      "breakpoints": true
     }
   ]
 }
