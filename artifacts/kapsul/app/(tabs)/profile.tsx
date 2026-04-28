@@ -1,7 +1,7 @@
 import {
-  Bell, Camera, Calendar, ChevronRight, Edit3, Eye, EyeOff,
-  FileText, Globe, Info, Link, Lock, LogIn, Save, Settings,
-  ShieldCheck, Trash2, User, UserPlus, Users,
+  Bell, Calendar, ChevronRight, Edit3, Eye, EyeOff,
+  FileText, Globe, Info, Link, Lock, LogIn, Plus, Save,
+  Settings, ShieldCheck, Trash2, User, UserPlus, X,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
@@ -10,6 +10,7 @@ import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   FlatList,
@@ -37,9 +38,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGuest } from "@/contexts/GuestContext";
-import { useEvents } from "@/contexts/EventContext";
+import { useEvents, type KapsulEvent } from "@/contexts/EventContext";
 import { usePlan } from "@/contexts/PlanContext";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, photoUrl } from "@/lib/api";
 import GradientButton from "@/components/GradientButton";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -70,18 +71,6 @@ function DefaultAvatar({ size = 90 }: { size?: number }) {
   );
 }
 
-function CounterItem({ value, label, onPress }: { value: number | string; label: string; onPress?: () => void }) {
-  const colors = useColors();
-  return (
-    <TouchableOpacity style={styles.counterItem} onPress={onPress} activeOpacity={onPress ? 0.7 : 1}>
-      <Text style={[styles.counterValue, { color: colors.foreground, fontFamily: "SpaceMono_400Regular" }]}>
-        {value}
-      </Text>
-      <Text style={[styles.counterLabel, { color: colors.mutedForeground }]}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
 interface SocialCounts {
   followers: number;
   following: number;
@@ -94,6 +83,14 @@ interface SuggestedUser {
   displayName: string;
   avatarUrl: string | null;
   bio: string;
+}
+
+interface ApiPhoto {
+  id: string;
+  objectPath: string;
+  eventId: string;
+  isPublic: boolean;
+  createdAt: string;
 }
 
 function SuggestedCard({ user, token }: { user: SuggestedUser; token: string }) {
@@ -114,16 +111,16 @@ function SuggestedCard({ user, token }: { user: SuggestedUser; token: string }) 
   };
 
   return (
-    <View style={[styles.suggestedCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={[styles.suggestedCard, { backgroundColor: "#1a1825", borderColor: "#2a2535" }]}>
       {user.avatarUrl ? (
-        <Image source={{ uri: user.avatarUrl }} style={styles.suggestedAvatar} />
+        <Image source={{ uri: photoUrl(user.avatarUrl) }} style={styles.suggestedAvatar} />
       ) : (
         <DefaultAvatar size={48} />
       )}
-      <Text style={[styles.suggestedName, { color: colors.foreground }]} numberOfLines={1}>{user.displayName}</Text>
+      <Text style={[styles.suggestedName, { color: "#fff" }]} numberOfLines={1}>{user.displayName}</Text>
       <Text style={[styles.suggestedUsername, { color: colors.mutedForeground }]} numberOfLines={1}>@{user.username}</Text>
       <TouchableOpacity
-        style={[styles.suggestedFollowBtn, { backgroundColor: following ? colors.muted : colors.gradientStart + "22", borderColor: following ? colors.border : colors.gradientStart }]}
+        style={[styles.suggestedFollowBtn, { backgroundColor: following ? "#2a2535" : colors.gradientStart + "22", borderColor: following ? "#3a3545" : colors.gradientStart }]}
         onPress={handleFollow}
         activeOpacity={0.7}
       >
@@ -204,6 +201,151 @@ function EditProfileModal({ visible, onClose }: { visible: boolean; onClose: () 
   );
 }
 
+function UserListModal({ visible, onClose, title, endpoint, token }: { visible: boolean; onClose: () => void; title: string; endpoint: string; token: string }) {
+  const colors = useColors();
+  const [users, setUsers] = useState<SuggestedUser[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!visible) return;
+    setLoading(true);
+    fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json() as Promise<SuggestedUser[]>)
+      .then((data) => setUsers(data))
+      .catch(() => setUsers([]))
+      .finally(() => setLoading(false));
+  }, [visible, endpoint]);
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <View style={[styles.modalRoot, { backgroundColor: colors.background }]}>
+        <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity onPress={onClose}>
+            <X size={22} color={colors.mutedForeground} />
+          </TouchableOpacity>
+          <Text style={[styles.modalTitle, { color: colors.foreground }]}>{title}</Text>
+          <View style={{ width: 30 }} />
+        </View>
+        {loading ? (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <ActivityIndicator color={colors.gradientStart} />
+          </View>
+        ) : users.length === 0 ? (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 20 }}>
+            <Text style={{ color: colors.mutedForeground, fontSize: 15, textAlign: "center" }}>Nessuno da mostrare</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={users}
+            keyExtractor={(u) => u.id}
+            contentContainerStyle={{ padding: 16, gap: 12 }}
+            renderItem={({ item }) => (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                {item.avatarUrl ? (
+                  <Image source={{ uri: photoUrl(item.avatarUrl) }} style={{ width: 44, height: 44, borderRadius: 22 }} />
+                ) : (
+                  <DefaultAvatar size={44} />
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 14, fontFamily: "Inter_700Bold" }}>{item.displayName}</Text>
+                  <Text style={{ color: colors.mutedForeground, fontSize: 12, fontFamily: "Inter_400Regular" }}>@{item.username}</Text>
+                </View>
+              </View>
+            )}
+          />
+        )}
+      </View>
+    </Modal>
+  );
+}
+
+function HighlightsPickerModal({ visible, onClose, events, selectedIds, onSave }: {
+  visible: boolean; onClose: () => void;
+  events: KapsulEvent[];
+  selectedIds: string[];
+  onSave: (ids: string[]) => Promise<void>;
+}) {
+  const colors = useColors();
+  const [selected, setSelected] = useState<string[]>(selectedIds);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { if (visible) setSelected(selectedIds); }, [visible, selectedIds]);
+
+  const toggle = (id: string) => {
+    Haptics.selectionAsync();
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id].slice(0, 10)
+    );
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await onSave(selected);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      onClose();
+    } catch {
+      Alert.alert("Errore", "Salvataggio fallito");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <View style={[styles.modalRoot, { backgroundColor: colors.background }]}>
+        <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity onPress={onClose}>
+            <Text style={{ color: colors.mutedForeground, fontSize: 16, fontFamily: "Inter_400Regular" }}>Annulla</Text>
+          </TouchableOpacity>
+          <Text style={[styles.modalTitle, { color: colors.foreground }]}>Scegli Highlights</Text>
+          <TouchableOpacity onPress={save} disabled={saving}>
+            <Text style={{ color: saving ? colors.mutedForeground : colors.gradientStart, fontSize: 16, fontWeight: "700", fontFamily: "Inter_700Bold" }}>
+              {saving ? "..." : "Salva"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={{ color: colors.mutedForeground, fontSize: 13, padding: 16, fontFamily: "Inter_400Regular" }}>
+          Seleziona gli eventi da mostrare in evidenza (max 10)
+        </Text>
+        <FlatList
+          data={events}
+          keyExtractor={(e) => e.id}
+          contentContainerStyle={{ padding: 16, gap: 10 }}
+          renderItem={({ item }) => {
+            const isSelected = selected.includes(item.id);
+            return (
+              <TouchableOpacity
+                onPress={() => toggle(item.id)}
+                activeOpacity={0.8}
+                style={{ flexDirection: "row", alignItems: "center", gap: 14 }}
+              >
+                <LinearGradient
+                  colors={[item.themeGradientStart, item.themeGradientEnd]}
+                  style={{ width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" }}
+                >
+                  <Calendar size={22} color="#fff" />
+                </LinearGradient>
+                <Text style={{ flex: 1, color: colors.foreground, fontSize: 15, fontWeight: "600", fontFamily: "Inter_600SemiBold" }} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                <View style={{
+                  width: 24, height: 24, borderRadius: 12,
+                  backgroundColor: isSelected ? colors.gradientStart : "transparent",
+                  borderWidth: 2, borderColor: isSelected ? colors.gradientStart : colors.border,
+                  alignItems: "center", justifyContent: "center",
+                }}>
+                  {isSelected && <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>✓</Text>}
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+        />
+      </View>
+    </Modal>
+  );
+}
+
 function SectionHeader({ label }: { label: string }) {
   const colors = useColors();
   return <Text style={[styles.sectionHeader, { color: colors.mutedForeground }]}>{label}</Text>;
@@ -261,17 +403,23 @@ function NotLoggedIn() {
 export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, updateProfile, refreshUser } = useAuth();
   const { resetGuest } = useGuest();
   const { events, resetEvents } = useEvents();
-  const { hasUsedFreeTrial, resetPlan } = usePlan();
+  const { resetPlan } = usePlan();
 
   const [notifEnabled, setNotifEnabled] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const [activeTab, setActiveTab] = useState<"photos" | "events">("photos");
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [followersModalVisible, setFollowersModalVisible] = useState(false);
+  const [followingModalVisible, setFollowingModalVisible] = useState(false);
+  const [highlightPickerVisible, setHighlightPickerVisible] = useState(false);
   const [counts, setCounts] = useState<SocialCounts>({ followers: 0, following: 0, posts: 0 });
   const [suggestions, setSuggestions] = useState<SuggestedUser[]>([]);
+  const [myPhotos, setMyPhotos] = useState<ApiPhoto[]>([]);
+  const [photosLoading, setPhotosLoading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
@@ -279,6 +427,10 @@ export default function ProfileScreen() {
   const anim1 = useFadeIn(80);
   const anim2 = useFadeIn(160);
   const anim3 = useFadeIn(240);
+
+  const highlightIds: string[] = user?.highlights ?? [];
+  const highlightEvents = events.filter((e) => highlightIds.includes(e.id));
+  const displayHighlights = highlightEvents.length > 0 ? highlightEvents : events.slice(0, 6);
 
   const fetchCounts = useCallback(async () => {
     if (!user || !token) return;
@@ -300,24 +452,93 @@ export default function ProfileScreen() {
     } catch {}
   }, [user, token]);
 
+  const fetchMyPhotos = useCallback(async () => {
+    if (!user || !token) return;
+    setPhotosLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/social/myphotos`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setMyPhotos(await res.json() as ApiPhoto[]);
+    } catch {}
+    setPhotosLoading(false);
+  }, [user, token]);
+
   useEffect(() => {
     fetchCounts();
     fetchSuggestions();
-  }, [fetchCounts, fetchSuggestions]);
+    fetchMyPhotos();
+  }, [fetchCounts, fetchSuggestions, fetchMyPhotos]);
+
+  const handleAvatarPress = async () => {
+    if (!token) return;
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    const asset = result.assets[0];
+    setAvatarUploading(true);
+    try {
+      const form = new FormData();
+      if (Platform.OS === "web") {
+        const r = await fetch(asset.uri);
+        const blob = await r.blob();
+        form.append("avatar", blob, "avatar.jpg");
+      } else {
+        form.append("avatar", { uri: asset.uri, name: "avatar.jpg", type: "image/jpeg" } as unknown as Blob);
+      }
+      const res = await fetch(`${API_BASE}/auth/avatar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      if (res.ok) {
+        await refreshUser();
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        Alert.alert("Errore", "Caricamento avatar fallito");
+      }
+    } catch {
+      Alert.alert("Errore", "Impossibile caricare la foto");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   const handleTogglePrivacy = async () => {
     if (!user || !token) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      const res = await fetch(`${API_BASE}/auth/profile`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ isPublic: !user.isPublic }),
-      });
-      if (!res.ok) throw new Error();
+      await updateProfile({ isPublic: !user.isPublic });
     } catch {
       Alert.alert("Errore", "Impossibile aggiornare la privacy");
     }
+  };
+
+  const handleTogglePhotoPrivacy = async (photo: ApiPhoto) => {
+    if (!token) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const res = await fetch(`${API_BASE}/social/photos/${photo.id}/privacy`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ isPublic: !photo.isPublic }),
+      });
+      if (res.ok) {
+        setMyPhotos((prev) => prev.map((p) => p.id === photo.id ? { ...p, isPublic: !p.isPublic } : p));
+      }
+    } catch {}
+  };
+
+  const handleSaveHighlights = async (ids: string[]) => {
+    await updateProfile({ highlights: ids });
   };
 
   const handleLogout = () => {
@@ -349,12 +570,32 @@ export default function ProfileScreen() {
 
   if (!user) return <NotLoggedIn />;
 
-  const totalPhotos = events.reduce((sum, e) => sum + e.photoCount, 0);
-
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+
       <EditProfileModal visible={editModalVisible} onClose={() => { setEditModalVisible(false); fetchCounts(); }} />
+      <UserListModal
+        visible={followersModalVisible}
+        onClose={() => setFollowersModalVisible(false)}
+        title={`Follower (${counts.followers})`}
+        endpoint={`${API_BASE}/social/followers/${user.id}`}
+        token={token!}
+      />
+      <UserListModal
+        visible={followingModalVisible}
+        onClose={() => setFollowingModalVisible(false)}
+        title={`Seguiti (${counts.following})`}
+        endpoint={`${API_BASE}/social/following/${user.id}`}
+        token={token!}
+      />
+      <HighlightsPickerModal
+        visible={highlightPickerVisible}
+        onClose={() => setHighlightPickerVisible(false)}
+        events={events}
+        selectedIds={highlightIds}
+        onSave={handleSaveHighlights}
+      />
 
       <ScrollView
         contentContainerStyle={{ paddingTop: topPad + 16, paddingBottom: bottomPad + 120 }}
@@ -362,34 +603,47 @@ export default function ProfileScreen() {
       >
         {/* ── Instagram-style header ── */}
         <Animated.View style={[anim0, { paddingHorizontal: 20 }]}>
-          {/* Top row: avatar + counters */}
           <View style={styles.headerRow}>
-            <TouchableOpacity activeOpacity={0.8} onPress={() => setEditModalVisible(true)}>
+            <TouchableOpacity activeOpacity={0.8} onPress={handleAvatarPress} disabled={avatarUploading}>
               {user.avatarUrl ? (
-                <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
+                <Image source={{ uri: photoUrl(user.avatarUrl) }} style={styles.avatar} />
               ) : (
                 <DefaultAvatar size={90} />
               )}
-              <View style={[styles.avatarEditBadge, { backgroundColor: colors.gradientStart }]}>
-                <Camera size={10} color="#fff" />
+              <View style={[styles.avatarEditBadge, { backgroundColor: avatarUploading ? colors.mutedForeground : colors.gradientStart }]}>
+                {avatarUploading
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Plus size={10} color="#fff" />}
               </View>
             </TouchableOpacity>
 
             <View style={styles.countersRow}>
-              <CounterItem value={counts.posts} label="Post" />
-              <CounterItem value={counts.followers} label="Follower" />
-              <CounterItem value={counts.following} label="Seguiti" />
+              <TouchableOpacity style={styles.counterItem} activeOpacity={0.7}>
+                <Text style={[styles.counterValue, { color: colors.foreground }]}>{counts.posts}</Text>
+                <Text style={[styles.counterLabel, { color: colors.mutedForeground }]}>Post</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.counterItem}
+                activeOpacity={0.7}
+                onPress={() => { Haptics.selectionAsync(); setFollowersModalVisible(true); }}
+              >
+                <Text style={[styles.counterValue, { color: colors.foreground }]}>{counts.followers}</Text>
+                <Text style={[styles.counterLabel, { color: colors.mutedForeground }]}>Follower</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.counterItem}
+                activeOpacity={0.7}
+                onPress={() => { Haptics.selectionAsync(); setFollowingModalVisible(true); }}
+              >
+                <Text style={[styles.counterValue, { color: colors.foreground }]}>{counts.following}</Text>
+                <Text style={[styles.counterLabel, { color: colors.mutedForeground }]}>Seguiti</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
-          {/* Name + username */}
           <Text style={[styles.displayName, { color: colors.foreground }]}>{user.displayName}</Text>
           <Text style={[styles.usernameText, { color: colors.gradientStart }]}>@{user.username}</Text>
-
-          {/* Bio */}
           {user.bio ? <Text style={[styles.bioText, { color: colors.foreground }]}>{user.bio}</Text> : null}
-
-          {/* Link */}
           {user.link ? (
             <TouchableOpacity onPress={() => Linking.openURL(user.link)} style={styles.linkRow}>
               <Link size={12} color={colors.gradientMid} />
@@ -397,7 +651,6 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           ) : null}
 
-          {/* Action buttons */}
           <View style={styles.actionRow}>
             <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
@@ -407,7 +660,6 @@ export default function ProfileScreen() {
               <Edit3 size={14} color={colors.foreground} />
               <Text style={[styles.actionBtnText, { color: colors.foreground }]}>Modifica profilo</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={[styles.privacyBtn, { backgroundColor: user.isPublic ? colors.card : colors.gradientStart + "22", borderColor: user.isPublic ? colors.border : colors.gradientStart }]}
               onPress={handleTogglePrivacy}
@@ -421,55 +673,99 @@ export default function ProfileScreen() {
         </Animated.View>
 
         {/* ── Highlights row ── */}
-        {events.length > 0 && (
-          <Animated.View style={[anim1, { marginTop: 20 }]}>
-            <Text style={[styles.sectionHeader, { color: colors.mutedForeground, paddingHorizontal: 20, marginBottom: 10 }]}>HIGHLIGHTS</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}>
-              {events.slice(0, 8).map((e) => (
-                <TouchableOpacity
-                  key={e.id}
-                  style={styles.highlightItem}
-                  onPress={() => router.push(`/event/${e.id}`)}
-                  activeOpacity={0.8}
+        <Animated.View style={[anim1, { marginTop: 20 }]}>
+          <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginBottom: 10 }}>
+            <Text style={[styles.sectionHeader, { color: colors.mutedForeground, flex: 1 }]}>HIGHLIGHTS</Text>
+            <TouchableOpacity onPress={() => setHighlightPickerVisible(true)} activeOpacity={0.7}>
+              <Plus size={16} color={colors.gradientStart} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}>
+            {displayHighlights.map((e) => (
+              <TouchableOpacity
+                key={e.id}
+                style={styles.highlightItem}
+                onPress={() => router.push(`/event/${e.id}`)}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={[e.themeGradientStart, e.themeGradientEnd]}
+                  style={styles.highlightCircle}
                 >
-                  <LinearGradient
-                    colors={[e.themeGradientStart, e.themeGradientEnd]}
-                    style={styles.highlightCircle}
-                  >
-                    <Calendar size={22} color="#fff" />
-                  </LinearGradient>
-                  <Text style={[styles.highlightLabel, { color: colors.foreground }]} numberOfLines={1}>{e.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </Animated.View>
-        )}
+                  <Calendar size={22} color="#fff" />
+                </LinearGradient>
+                <Text style={[styles.highlightLabel, { color: colors.foreground }]} numberOfLines={1}>{e.name}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.highlightItem}
+              onPress={() => setHighlightPickerVisible(true)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.highlightCircle, { backgroundColor: colors.card, borderWidth: 2, borderColor: colors.border, borderStyle: "dashed" }]}>
+                <Plus size={22} color={colors.mutedForeground} />
+              </View>
+              <Text style={[styles.highlightLabel, { color: colors.mutedForeground }]}>Aggiungi</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </Animated.View>
 
         {/* ── Content grid tabs ── */}
         <Animated.View style={[anim2, { marginTop: 24 }]}>
-          {/* Tab selector */}
           <View style={[styles.tabBar, { borderBottomColor: colors.border }]}>
-            {([["photos", "Foto", Camera], ["events", "Eventi", Calendar]] as const).map(([key, label, Icon]) => (
+            {([["photos", "Foto", "camera"], ["events", "Eventi", "calendar"]] as const).map(([key, label]) => (
               <TouchableOpacity
                 key={key}
                 style={[styles.tabItem, activeTab === key && { borderBottomColor: colors.gradientStart, borderBottomWidth: 2 }]}
                 onPress={() => { setActiveTab(key); Haptics.selectionAsync(); }}
                 activeOpacity={0.7}
               >
-                <Icon size={18} color={activeTab === key ? colors.gradientStart : colors.mutedForeground} />
-                <Text style={{ color: activeTab === key ? colors.gradientStart : colors.mutedForeground, fontSize: 13, fontWeight: "600", fontFamily: "Inter_600SemiBold", marginLeft: 4 }}>
+                <Text style={{ color: activeTab === key ? colors.gradientStart : colors.mutedForeground, fontSize: 13, fontWeight: "600", fontFamily: "Inter_600SemiBold" }}>
                   {label}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          {activeTab === "events" ? (
+          {activeTab === "photos" ? (
+            photosLoading ? (
+              <View style={styles.gridEmpty}>
+                <ActivityIndicator color={colors.gradientStart} />
+              </View>
+            ) : myPhotos.length === 0 ? (
+              <View style={styles.gridEmpty}>
+                <Text style={{ color: colors.mutedForeground, fontSize: 14, textAlign: "center" }}>
+                  Nessuna foto ancora.{"\n"}Carica foto negli eventi per vederle qui.
+                </Text>
+              </View>
+            ) : (
+              <View style={[styles.grid, { paddingHorizontal: 20, marginTop: 4 }]}>
+                {myPhotos.map((p) => (
+                  <TouchableOpacity
+                    key={p.id}
+                    onLongPress={() => handleTogglePhotoPrivacy(p)}
+                    activeOpacity={0.85}
+                    style={{ width: GRID_ITEM, aspectRatio: 1, marginBottom: 4 }}
+                  >
+                    <Image
+                      source={{ uri: photoUrl(p.objectPath) }}
+                      style={{ width: "100%", height: "100%", borderRadius: 8 }}
+                      resizeMode="cover"
+                    />
+                    {!p.isPublic && (
+                      <View style={[styles.lockBadge, { backgroundColor: "rgba(0,0,0,0.6)" }]}>
+                        <Lock size={10} color="#fff" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )
+          ) : (
             <View style={[styles.grid, { paddingHorizontal: 20, marginTop: 4 }]}>
               {events.length === 0 ? (
                 <View style={styles.gridEmpty}>
-                  <Calendar size={32} color={colors.mutedForeground} />
-                  <Text style={{ color: colors.mutedForeground, fontSize: 14, marginTop: 8, textAlign: "center" }}>Nessun evento ancora</Text>
+                  <Text style={{ color: colors.mutedForeground, fontSize: 14, textAlign: "center" }}>Nessun evento ancora</Text>
                 </View>
               ) : (
                 events.map((e) => (
@@ -485,20 +781,13 @@ export default function ProfileScreen() {
                     >
                       <Calendar size={24} color="#fff" />
                       <Text style={styles.gridEventName} numberOfLines={2}>{e.name}</Text>
-                      {!e.isPublic && (
+                      {e.isPublic === false && (
                         <View style={styles.lockBadge}><Lock size={10} color="#fff" /></View>
                       )}
                     </LinearGradient>
                   </TouchableOpacity>
                 ))
               )}
-            </View>
-          ) : (
-            <View style={styles.gridEmpty}>
-              <Camera size={32} color={colors.mutedForeground} />
-              <Text style={{ color: colors.mutedForeground, fontSize: 14, marginTop: 8, textAlign: "center" }}>
-                Le foto caricate negli eventi appariranno qui
-              </Text>
             </View>
           )}
         </Animated.View>
@@ -621,44 +910,25 @@ const styles = StyleSheet.create({
     width: 42, alignItems: "center", justifyContent: "center",
     borderRadius: 10, borderWidth: 1,
   },
-  tabBar: {
-    flexDirection: "row", borderBottomWidth: 1, marginHorizontal: 20,
-  },
-  tabItem: {
-    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
-    paddingVertical: 12, gap: 4,
-  },
+  tabBar: { flexDirection: "row", borderBottomWidth: 1, marginHorizontal: 20 },
+  tabItem: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 12 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
   gridEmpty: { alignItems: "center", justifyContent: "center", paddingVertical: 40, paddingHorizontal: 20 },
-  gridEventCard: {
-    flex: 1, alignItems: "center", justifyContent: "center", padding: 10, gap: 6,
-  },
+  gridEventCard: { flex: 1, alignItems: "center", justifyContent: "center", padding: 10, gap: 6 },
   gridEventName: { color: "#fff", fontSize: 11, fontWeight: "600", textAlign: "center", fontFamily: "Inter_600SemiBold" },
   lockBadge: {
     position: "absolute", top: 6, right: 6,
-    backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 6, padding: 3,
+    borderRadius: 6, padding: 3,
   },
   highlightItem: { alignItems: "center", gap: 6, width: 70 },
-  highlightCircle: {
-    width: 64, height: 64, borderRadius: 32,
-    alignItems: "center", justifyContent: "center",
-  },
+  highlightCircle: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center" },
   highlightLabel: { fontSize: 11, fontWeight: "500", textAlign: "center", fontFamily: "Inter_500Medium" },
-  suggestedCard: {
-    width: 130, padding: 14, borderRadius: 16, borderWidth: 1,
-    alignItems: "center", gap: 4,
-  },
+  suggestedCard: { width: 130, padding: 14, borderRadius: 16, borderWidth: 1, alignItems: "center", gap: 4 },
   suggestedAvatar: { width: 48, height: 48, borderRadius: 24, marginBottom: 4 },
   suggestedName: { fontSize: 13, fontWeight: "700", fontFamily: "Inter_700Bold", textAlign: "center" },
   suggestedUsername: { fontSize: 11, fontFamily: "Inter_400Regular", textAlign: "center" },
-  suggestedFollowBtn: {
-    marginTop: 6, paddingVertical: 6, paddingHorizontal: 16,
-    borderRadius: 20, borderWidth: 1,
-  },
-  sectionHeader: {
-    fontSize: 11, fontWeight: "700", letterSpacing: 2,
-    textTransform: "uppercase", marginBottom: 10,
-  },
+  suggestedFollowBtn: { marginTop: 6, paddingVertical: 6, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1 },
+  sectionHeader: { fontSize: 11, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" },
   settingsGroup: { borderWidth: 1, overflow: "hidden" },
   settingRow: {
     flexDirection: "row", alignItems: "center", gap: 14,

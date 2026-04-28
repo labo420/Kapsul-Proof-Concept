@@ -42,11 +42,14 @@ export interface ApiGuest {
 }
 
 export async function apiCreateEvent(
-  payload: Omit<ApiEvent, "coverImagePath" | "isActive" | "createdAt" | "photoCount" | "guestCount">
+  payload: Omit<ApiEvent, "coverImagePath" | "isActive" | "createdAt" | "photoCount" | "guestCount">,
+  authToken?: string | null
 ): Promise<ApiEvent> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
   const res = await fetch(`${API_BASE}/events`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`Create event failed: ${res.status}`);

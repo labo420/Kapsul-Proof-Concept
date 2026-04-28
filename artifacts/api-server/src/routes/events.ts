@@ -5,6 +5,7 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import multer from "multer";
 import { objectStorageClient } from "../lib/objectStorage.js";
+import { optionalAuth } from "../middlewares/auth.js";
 
 const PLAN_MAX_GUESTS: Record<string, number> = { free: 15, party: 50, pro: 9999 };
 
@@ -52,11 +53,12 @@ const CreateEventBody = z.object({
   themeGradientEnd: z.string().default("#EC4899"),
 });
 
-router.post("/events", async (req, res) => {
+router.post("/events", optionalAuth, async (req, res) => {
   try {
     const body = CreateEventBody.parse(req.body);
     const id = body.id ?? randomUUID();
     const hostToken = randomUUID();
+    const creatorId = req.user?.userId ?? null;
     const [event] = await db
       .insert(eventsTable)
       .values({
@@ -69,6 +71,7 @@ router.post("/events", async (req, res) => {
         themeGradientStart: body.themeGradientStart,
         themeGradientEnd: body.themeGradientEnd,
         hostToken,
+        creatorId,
       })
       .onConflictDoUpdate({
         target: eventsTable.id,
@@ -80,6 +83,7 @@ router.post("/events", async (req, res) => {
           plan: body.plan,
           themeGradientStart: body.themeGradientStart,
           themeGradientEnd: body.themeGradientEnd,
+          ...(creatorId ? { creatorId } : {}),
         },
       })
       .returning();

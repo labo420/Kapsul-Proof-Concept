@@ -2,10 +2,12 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { randomUUID } from "crypto";
+import multer from "multer";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { signToken } from "../lib/jwt.js";
 import { requireAuth } from "../middlewares/auth.js";
+import { objectStorageClient } from "../lib/objectStorage.js";
 
 const router = Router();
 
@@ -240,6 +242,56 @@ router.get("/users/:username", async (req, res): Promise<void> => {
     });
   } catch (err) {
     req.log.error(err, "get user error");
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+const avatarUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
+function getAvatarBucket() {
+  const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
+  if (!bucketId) throw new Error("DEFAULT_OBJECT_STORAGE_BUCKET_ID not set");
+  return objectStorageClient.bucket(bucketId);
+}
+
+router.post("/auth/avatar", requireAuth, avatarUpload.single("avatar"), async (req, res): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: "No file uploaded" });
+      return;
+    }
+    const userId = req.user!.userId;
+    const ext = req.file.mimetype.includes("png") ? "png" : "jpg";
+    const objectKey = `avatars/${userId}.${ext}`;
+
+    const bucket = getAvatarBucket();
+    const file = bucket.file(objectKey);
+    await file.save(req.file.buffer, {
+      contentType: req.file.mimetype,
+      metadata: { userId },
+    });
+
+    const avatarUrl = `/api/photos/${objectKey}`;
+    const [updated] = await db
+      .update(usersTable)
+      .set({ avatarUrl })
+      .where(eq(usersTable.id, userId))
+      .returning();
+
+    res.json({
+      id: updated!.id,
+      email: updated!.email,
+      username: updated!.username,
+      displayName: updated!.displayName,
+      bio: updated!.bio,
+      link: updated!.link,
+      avatarUrl: updated!.avatarUrl,
+      isPublic: updated!.isPublic,
+      highlights: updated!.highlights,
+      createdAt: updated!.createdAt,
+    });
+  } catch (err) {
+    req.log.error(err, "avatar upload error");
     res.status(500).json({ error: "Server error" });
   }
 });

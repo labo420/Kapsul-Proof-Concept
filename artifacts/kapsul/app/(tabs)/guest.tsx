@@ -32,6 +32,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useGuest } from "@/contexts/GuestContext";
 import { useEvents } from "@/contexts/EventContext";
 import { PLAN_LIMITS } from "@/contexts/PlanContext";
@@ -49,7 +50,9 @@ export default function GuestScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { setActiveGradient } = useTheme();
+  const { user } = useAuth();
   const { guestId, acceptedTerms, setAcceptedTerms, currentEventId, setCurrentEventId, guestTokens } = useGuest();
+  const uploaderId = user?.id ?? guestId;
   const { events, getEvent, incrementPhotoCount } = useEvents();
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
@@ -218,7 +221,7 @@ export default function GuestScreen() {
   const bottomPad = Platform.OS === "web" ? 34 : 0;
 
   const doUpload = async (fileUri: string, mimeType: string, batchCurrent = 1, batchTotal = 1) => {
-    if (!guestId) return;
+    if (!uploaderId) return;
     setUploadState("uploading");
     setUploadBatchCurrent(batchCurrent);
     setUploadBatchTotal(batchTotal);
@@ -227,7 +230,7 @@ export default function GuestScreen() {
       if (activeEvent) {
         await apiUploadPhoto(
           activeEvent.id,
-          guestId,
+          uploaderId!,
           fileUri,
           mimeType,
           (pct) => setProgress(pct)

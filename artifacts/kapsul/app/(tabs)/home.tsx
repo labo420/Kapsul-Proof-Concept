@@ -27,9 +27,10 @@ interface FeedAuthor {
 }
 
 interface FeedItem {
-  type: string;
+  type: "photo" | "event";
   id: string;
-  objectPath: string;
+  objectPath?: string;
+  title?: string;
   authorId: string;
   eventId: string;
   createdAt: string;
@@ -62,11 +63,13 @@ function FeedCard({ item }: { item: FeedItem }) {
     return `${Math.floor(h / 24)}g fa`;
   };
 
+  const isEvent = item.type === "event";
+
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.cardHeader}>
         {item.author?.avatarUrl ? (
-          <Image source={{ uri: item.author.avatarUrl }} style={styles.feedAvatar} />
+          <Image source={{ uri: photoUrl(item.author.avatarUrl) }} style={styles.feedAvatar} />
         ) : (
           <DefaultAvatar size={36} />
         )}
@@ -78,13 +81,30 @@ function FeedCard({ item }: { item: FeedItem }) {
             @{item.author?.username ?? "..."} · {timeAgo(item.createdAt)}
           </Text>
         </View>
+        {isEvent && (
+          <View style={[styles.eventBadge, { backgroundColor: colors.gradientStart + "22" }]}>
+            <Text style={{ color: colors.gradientStart, fontSize: 11, fontWeight: "600", fontFamily: "Inter_600SemiBold" }}>Evento</Text>
+          </View>
+        )}
       </View>
       <TouchableOpacity activeOpacity={0.9} onPress={() => router.push(`/event/${item.eventId}`)}>
-        <Image
-          source={{ uri: photoUrl(item.objectPath) }}
-          style={styles.feedImage}
-          resizeMode="cover"
-        />
+        {isEvent ? (
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.eventCardContent}
+          >
+            <Calendar size={36} color="rgba(255,255,255,0.9)" />
+            <Text style={styles.eventCardTitle} numberOfLines={2}>{item.title ?? "Evento"}</Text>
+          </LinearGradient>
+        ) : (
+          <Image
+            source={{ uri: photoUrl(item.objectPath ?? "") }}
+            style={styles.feedImage}
+            resizeMode="cover"
+          />
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -223,6 +243,9 @@ const styles = StyleSheet.create({
   feedDisplayName: { fontSize: 14, fontWeight: "700", fontFamily: "Inter_700Bold" },
   feedUsername: { fontSize: 12, fontFamily: "Inter_400Regular" },
   feedImage: { width: "100%", aspectRatio: 1 },
+  eventBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  eventCardContent: { width: "100%", aspectRatio: 1.5, alignItems: "center", justifyContent: "center", gap: 12, padding: 20 },
+  eventCardTitle: { color: "#fff", fontSize: 18, fontWeight: "800", textAlign: "center", letterSpacing: -0.3 },
   emptyState: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40, gap: 12 },
   emptyIcon: { width: 80, height: 80, borderRadius: 40, alignItems: "center", justifyContent: "center", marginBottom: 8 },
   emptyTitle: { fontSize: 20, fontWeight: "800", textAlign: "center" },

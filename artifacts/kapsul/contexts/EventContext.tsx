@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import type { EventPlan } from "@/contexts/PlanContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { apiCreateEvent, apiGetEvent, type ApiEvent } from "@/lib/api";
 
 export type DeliveryMode = "party" | "morning_after" | "vault";
@@ -75,6 +76,7 @@ const EventContext = createContext<EventContextType>({
 });
 
 export function EventProvider({ children }: { children: React.ReactNode }) {
+  const { token } = useAuth();
   const [events, setEvents] = useState<KapsulEvent[]>([]);
 
   useEffect(() => {
@@ -117,7 +119,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
         plan: partial.plan,
         themeGradientStart: partial.themeGradientStart,
         themeGradientEnd: partial.themeGradientEnd,
-      });
+      }, token);
       const local = apiEventToLocal(apiEvent);
       const updated = [local, ...events];
       await saveLocal(updated);

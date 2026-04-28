@@ -169,6 +169,7 @@ router.get("/social/feed", requireAuth, async (req, res): Promise<void> => {
         objectPath: photosTable.objectPath,
         authorId: photosTable.guestId,
         eventId: photosTable.eventId,
+        title: sql<string | null>`null`,
         createdAt: photosTable.createdAt,
       })
       .from(photosTable)
@@ -180,16 +181,39 @@ router.get("/social/feed", requireAuth, async (req, res): Promise<void> => {
       .limit(limit)
       .offset(offset);
 
-    const uniqueAuthorIds = [...new Set(photos.map((p) => p.authorId))];
-    const photoAuthors = uniqueAuthorIds.length > 0
+    const eventRows = await db
+      .select({
+        type: sql<string>`'event'`,
+        id: eventsTable.id,
+        objectPath: eventsTable.coverImagePath,
+        authorId: eventsTable.creatorId,
+        eventId: eventsTable.id,
+        title: eventsTable.name,
+        createdAt: eventsTable.createdAt,
+      })
+      .from(eventsTable)
+      .where(and(
+        eq(eventsTable.isPublic, true),
+        inArray(eventsTable.creatorId, followingIds),
+      ))
+      .orderBy(desc(eventsTable.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const allItems = [...photos, ...eventRows]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit);
+
+    const uniqueAuthorIds = [...new Set(allItems.map((p) => p.authorId).filter(Boolean) as string[])];
+    const itemAuthors = uniqueAuthorIds.length > 0
       ? await db.select().from(usersTable).where(inArray(usersTable.id, uniqueAuthorIds))
       : [];
 
-    const authorMap = Object.fromEntries(photoAuthors.map((u) => [u.id, safeUser(u)]));
+    const authorMap = Object.fromEntries(itemAuthors.map((u) => [u.id, safeUser(u)]));
 
-    const items = photos.map((p) => ({
+    const items = allItems.map((p) => ({
       ...p,
-      author: authorMap[p.authorId] ?? null,
+      author: p.authorId ? (authorMap[p.authorId] ?? null) : null,
     }));
 
     res.json({ items, hasMore: items.length === limit });
@@ -222,12 +246,50 @@ router.patch("/social/photos/:photoId/privacy", requireAuth, async (req, res): P
 
 router.patch("/social/events/:eventId/privacy", requireAuth, async (req, res): Promise<void> => {
   try {
-    const { isPublic } = z.object({ isPublic: z.boolean() }).parse(req.body);
+    const { isPublic, hostToken } = z.object({
+      isPublic: z.boolean(),
+      hostToken: z.string().min(1),
+    }).parse(req.body);
+
     const eventId = req.params.eventId;
+    const currentUserId = req.user!.userId;
+
+    const [event] = await db
+      .select({ id: eventsTable.id, hostToken: eventsTable.hostToken, creatorId: eventsTable.creatorId })
+      .from(eventsTable)
+      .where(eq(eventsTable.id, eventId));
+
+    if (!event) {
+      res.status(404).json({ error: "Event not found" });
+      return;
+    }
+
+    const isOwner = event.creatorId === currentUserId || event.hostToken === hostToken;
+    if (!isOwner) {
+      res.status(403).json({ error: "Not authorized to update this event" });
+      return;
+    }
+
     await db.update(eventsTable).set({ isPublic }).where(eq(eventsTable.id, eventId));
     res.json({ id: eventId, isPublic });
   } catch (err) {
     req.log.error(err, "event privacy error");
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/social/myphotos", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const currentUserId = req.user!.userId;
+    const photos = await db
+      .select()
+      .from(photosTable)
+      .where(eq(photosTable.guestId, currentUserId))
+      .orderBy(desc(photosTable.createdAt))
+      .limit(50);
+    res.json(photos);
+  } catch (err) {
+    req.log.error(err, "myphotos error");
     res.status(500).json({ error: "Server error" });
   }
 });

@@ -17,6 +17,7 @@ export const eventsTable = pgTable("events", {
   isActive: boolean("is_active").notNull().default(true),
   isPublic: boolean("is_public").notNull().default(true),
   hostToken: text("host_token"),
+  creatorId: text("creator_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
