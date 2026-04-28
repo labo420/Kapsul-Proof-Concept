@@ -42,7 +42,7 @@ export interface ApiGuest {
 }
 
 export async function apiCreateEvent(
-  payload: Omit<ApiEvent, "coverImagePath" | "isActive" | "createdAt" | "photoCount" | "guestCount">,
+  payload: Omit<ApiEvent, "id" | "coverImagePath" | "isActive" | "createdAt" | "photoCount" | "guestCount"> & { id?: string },
   authToken?: string | null
 ): Promise<ApiEvent> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -56,9 +56,11 @@ export async function apiCreateEvent(
   return res.json() as Promise<ApiEvent>;
 }
 
-export async function apiGetEvent(id: string, guestToken?: string): Promise<ApiEvent> {
+export async function apiGetEvent(id: string, guestToken?: string, authToken?: string | null): Promise<ApiEvent> {
   const qs = guestToken ? `?guestToken=${encodeURIComponent(guestToken)}` : "";
-  const res = await fetch(`${API_BASE}/events/${encodeURIComponent(id)}${qs}`);
+  const headers: Record<string, string> = {};
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+  const res = await fetch(`${API_BASE}/events/${encodeURIComponent(id)}${qs}`, { headers });
   if (!res.ok) throw new Error(`Get event failed: ${res.status}`);
   return res.json() as Promise<ApiEvent>;
 }
@@ -110,10 +112,13 @@ export async function apiRemoveGuest(
   return res.json() as Promise<{ removed: boolean; photosDeleted: number }>;
 }
 
-export async function apiGetPhotos(eventId: string, guestToken?: string): Promise<ApiPhoto[]> {
+export async function apiGetPhotos(eventId: string, guestToken?: string, authToken?: string | null): Promise<ApiPhoto[]> {
   const params = guestToken ? `?guestToken=${encodeURIComponent(guestToken)}` : "";
+  const headers: Record<string, string> = {};
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
   const res = await fetch(
-    `${API_BASE}/events/${encodeURIComponent(eventId)}/photos${params}`
+    `${API_BASE}/events/${encodeURIComponent(eventId)}/photos${params}`,
+    { headers }
   );
   if (!res.ok) throw new Error(`Get photos failed: ${res.status}`);
   return res.json() as Promise<ApiPhoto[]>;

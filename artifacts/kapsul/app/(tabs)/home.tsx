@@ -1,4 +1,4 @@
-import { Calendar, Camera, Heart, MessageCircle, RefreshCw, Users } from "lucide-react-native";
+import { Calendar, Camera, Heart, MessageCircle, RefreshCw, User, Users } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -191,7 +191,7 @@ function DefaultAvatar({ size = 36 }: { size?: number }) {
       end={{ x: 1, y: 1 }}
       style={{ width: size, height: size, borderRadius: size / 2, alignItems: "center", justifyContent: "center" }}
     >
-      <Camera size={size * 0.4} color="rgba(255,255,255,0.9)" />
+      <User size={size * 0.45} color="rgba(255,255,255,0.9)" />
     </LinearGradient>
   );
 }

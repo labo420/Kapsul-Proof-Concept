@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/contexts/GuestContext";
+import { useAuth } from "@/contexts/AuthContext";
 import PhotoCard from "@/components/PhotoCard";
 import { apiGetPhotos, photoUrl, type ApiPhoto } from "@/lib/api";
 
@@ -44,6 +45,7 @@ export default function WallScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { currentEventId, guestTokens } = useGuest();
+  const { token: authToken } = useAuth();
   const [photos, setPhotos] = useState<WallPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -62,7 +64,7 @@ export default function WallScreen() {
       setError(false);
       try {
         if (currentEventId) {
-          const data = await apiGetPhotos(currentEventId, guestTokens[currentEventId] ?? undefined);
+          const data = await apiGetPhotos(currentEventId, guestTokens[currentEventId] ?? undefined, authToken);
           const wall = toWallPhotos(data);
           setPhotos(wall.length > 0 ? wall : MOCK_PHOTOS);
         } else {

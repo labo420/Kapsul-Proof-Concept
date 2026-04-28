@@ -112,7 +112,6 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   ): Promise<KapsulEvent> => {
     try {
       const apiEvent = await apiCreateEvent({
-        id: undefined as unknown as string,
         name: partial.name,
         date: partial.date,
         deliveryMode: partial.deliveryMode,
@@ -143,7 +142,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
   const refreshEvent = async (id: string, guestToken?: string): Promise<KapsulEvent | null> => {
     try {
-      const apiEvent = await apiGetEvent(id, guestToken);
+      const apiEvent = await apiGetEvent(id, guestToken, token);
       const existingLocal = events.find((e) => e.id === id);
       const local = apiEventToLocal(apiEvent, existingLocal);
       const updated = events.map((e) => (e.id === id ? local : e));

@@ -305,7 +305,7 @@ export default function GuestScreen() {
 
     let myPhotoCount = 0;
     try {
-      const photos = await apiGetPhotos(activeEvent.id, guestTokens[activeEvent.id] ?? undefined);
+      const photos = await apiGetPhotos(activeEvent.id, guestTokens[activeEvent.id] ?? undefined, token ?? undefined);
       myPhotoCount = photos.filter((p) => p.guestId === guestId).length;
     } catch {
     }
