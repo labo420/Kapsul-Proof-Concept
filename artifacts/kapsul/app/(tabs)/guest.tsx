@@ -50,7 +50,7 @@ export default function GuestScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { setActiveGradient } = useTheme();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { guestId, acceptedTerms, setAcceptedTerms, currentEventId, setCurrentEventId, guestTokens } = useGuest();
   const uploaderId = user?.id ?? guestId;
   const { events, getEvent, incrementPhotoCount } = useEvents();
@@ -230,7 +230,8 @@ export default function GuestScreen() {
       if (activeEvent) {
         await apiUploadPhoto(
           activeEvent.id,
-          uploaderId!,
+          token ?? null,
+          token ? null : (guestTokens[activeEvent.id] ?? null),
           fileUri,
           mimeType,
           (pct) => setProgress(pct)
@@ -304,7 +305,7 @@ export default function GuestScreen() {
 
     let myPhotoCount = 0;
     try {
-      const photos = await apiGetPhotos(activeEvent.id);
+      const photos = await apiGetPhotos(activeEvent.id, guestTokens[activeEvent.id] ?? undefined);
       myPhotoCount = photos.filter((p) => p.guestId === guestId).length;
     } catch {
     }

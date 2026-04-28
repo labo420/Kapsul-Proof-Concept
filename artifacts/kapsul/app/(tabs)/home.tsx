@@ -16,7 +16,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/contexts/AuthContext";
-import { API_BASE, photoUrl } from "@/lib/api";
+import { API_BASE, photoUrl, apiLikePhoto, apiUnlikePhoto } from "@/lib/api";
 import GradientButton from "@/components/GradientButton";
 
 interface FeedAuthor {
@@ -51,8 +51,12 @@ function DefaultAvatar({ size = 36 }: { size?: number }) {
   );
 }
 
-function FeedCard({ item }: { item: FeedItem }) {
+function FeedCard({ item, authToken }: { item: FeedItem; authToken: string | null }) {
   const colors = useColors();
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [liking, setLiking] = useState(false);
+
   const timeAgo = (date: string) => {
     const diff = Date.now() - new Date(date).getTime();
     const m = Math.floor(diff / 60000);
@@ -61,6 +65,25 @@ function FeedCard({ item }: { item: FeedItem }) {
     const h = Math.floor(m / 60);
     if (h < 24) return `${h}h fa`;
     return `${Math.floor(h / 24)}g fa`;
+  };
+
+  const handleLike = async () => {
+    if (!authToken || liking) return;
+    setLiking(true);
+    try {
+      if (liked) {
+        const result = await apiUnlikePhoto(item.id, authToken);
+        setLiked(result.liked);
+        setLikeCount(result.likeCount);
+      } else {
+        const result = await apiLikePhoto(item.id, authToken);
+        setLiked(result.liked);
+        setLikeCount(result.likeCount);
+      }
+    } catch {
+    } finally {
+      setLiking(false);
+    }
   };
 
   const isEvent = item.type === "event";
@@ -106,6 +129,22 @@ function FeedCard({ item }: { item: FeedItem }) {
           />
         )}
       </TouchableOpacity>
+      {!isEvent && (
+        <View style={styles.cardActions}>
+          <TouchableOpacity onPress={handleLike} disabled={!authToken || liking} style={styles.likeButton}>
+            <Heart
+              size={22}
+              color={liked ? "#EC4899" : colors.mutedForeground}
+              fill={liked ? "#EC4899" : "none"}
+            />
+            {likeCount > 0 && (
+              <Text style={[styles.likeCount, { color: liked ? "#EC4899" : colors.mutedForeground }]}>
+                {likeCount}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
@@ -209,7 +248,7 @@ export default function HomeScreen() {
         <FlatList
           data={items}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <FeedCard item={item} />}
+          renderItem={({ item }) => <FeedCard item={item} authToken={token} />}
           contentContainerStyle={{ paddingBottom: 120, paddingTop: 8 }}
           showsVerticalScrollIndicator={false}
           refreshing={refreshing}
@@ -246,6 +285,9 @@ const styles = StyleSheet.create({
   eventBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   eventCardContent: { width: "100%", aspectRatio: 1.5, alignItems: "center", justifyContent: "center", gap: 12, padding: 20 },
   eventCardTitle: { color: "#fff", fontSize: 18, fontWeight: "800", textAlign: "center", letterSpacing: -0.3 },
+  cardActions: { flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingVertical: 8 },
+  likeButton: { flexDirection: "row", alignItems: "center", gap: 5 },
+  likeCount: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
   emptyState: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40, gap: 12 },
   emptyIcon: { width: 80, height: 80, borderRadius: 40, alignItems: "center", justifyContent: "center", marginBottom: 8 },
   emptyTitle: { fontSize: 20, fontWeight: "800", textAlign: "center" },

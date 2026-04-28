@@ -109,8 +109,8 @@ export async function apiRemoveGuest(
   return res.json() as Promise<{ removed: boolean; photosDeleted: number }>;
 }
 
-export async function apiGetPhotos(eventId: string, guestId?: string): Promise<ApiPhoto[]> {
-  const params = guestId ? `?guestId=${encodeURIComponent(guestId)}` : "";
+export async function apiGetPhotos(eventId: string, guestToken?: string): Promise<ApiPhoto[]> {
+  const params = guestToken ? `?guestToken=${encodeURIComponent(guestToken)}` : "";
   const res = await fetch(
     `${API_BASE}/events/${encodeURIComponent(eventId)}/photos${params}`
   );
@@ -120,16 +120,23 @@ export async function apiGetPhotos(eventId: string, guestId?: string): Promise<A
 
 export async function apiUploadPhoto(
   eventId: string,
-  guestId: string,
+  authToken: string | null,
+  guestToken: string | null,
   fileUri: string,
   mimeType: string,
   onProgress?: (pct: number) => void
 ): Promise<ApiPhoto> {
+  if (!authToken && !guestToken) {
+    throw new Error("Either authToken or guestToken required to upload");
+  }
+
   const ext = mimeType.includes("png") ? "png" : "jpg";
   const fileName = `photo.${ext}`;
 
   const form = new FormData();
-  form.append("guestId", guestId);
+  if (!authToken && guestToken) {
+    form.append("guestToken", guestToken);
+  }
 
   if (Platform.OS === "web") {
     const response = await fetch(fileUri);
@@ -147,6 +154,9 @@ export async function apiUploadPhoto(
     const xhr = new XMLHttpRequest();
     const url = `${API_BASE}/events/${encodeURIComponent(eventId)}/photos`;
     xhr.open("POST", url);
+    if (authToken) {
+      xhr.setRequestHeader("Authorization", `Bearer ${authToken}`);
+    }
 
     if (xhr.upload && onProgress) {
       xhr.upload.onprogress = (e) => {
@@ -171,6 +181,30 @@ export async function apiUploadPhoto(
 
     xhr.send(form);
   });
+}
+
+export async function apiLikePhoto(
+  photoId: string,
+  authToken: string
+): Promise<{ liked: boolean; likeCount: number }> {
+  const res = await fetch(`${API_BASE}/social/photos/${encodeURIComponent(photoId)}/like`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  if (!res.ok) throw new Error(`Like failed: ${res.status}`);
+  return res.json() as Promise<{ liked: boolean; likeCount: number }>;
+}
+
+export async function apiUnlikePhoto(
+  photoId: string,
+  authToken: string
+): Promise<{ liked: boolean; likeCount: number }> {
+  const res = await fetch(`${API_BASE}/social/photos/${encodeURIComponent(photoId)}/like`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  if (!res.ok) throw new Error(`Unlike failed: ${res.status}`);
+  return res.json() as Promise<{ liked: boolean; likeCount: number }>;
 }
 
 export function photoUrl(objectPath: string): string {

@@ -206,14 +206,23 @@ router.post(
         return;
       }
       const id = param(req.params.id);
-      const { guestId: rawGuestId } = z.object({ guestId: z.string() }).parse(req.body);
-
       const authUserId = req.user?.userId;
-      const guestId = authUserId ?? rawGuestId;
 
-      if (authUserId && rawGuestId !== authUserId) {
-        res.status(403).json({ error: "guestId does not match authenticated user" });
-        return;
+      let guestId: string;
+
+      if (authUserId) {
+        guestId = authUserId;
+      } else {
+        const { guestToken } = z.object({ guestToken: z.string().min(1) }).parse(req.body);
+        const [guestRow] = await db
+          .select({ guestId: guestsTable.guestId })
+          .from(guestsTable)
+          .where(and(eq(guestsTable.eventId, id), eq(guestsTable.token, guestToken)));
+        if (!guestRow) {
+          res.status(403).json({ error: "Invalid guest token" });
+          return;
+        }
+        guestId = guestRow.guestId;
       }
 
       const [event] = await db
@@ -280,7 +289,7 @@ router.post(
 router.get("/events/:id/photos", optionalAuth, async (req, res): Promise<void> => {
   try {
     const id = param(req.params.id);
-    const { hostToken, guestId } = req.query as { hostToken?: string; guestId?: string };
+    const { hostToken, guestToken } = req.query as { hostToken?: string; guestToken?: string };
 
     const [event] = await db
       .select()
@@ -295,11 +304,11 @@ router.get("/events/:id/photos", optionalAuth, async (req, res): Promise<void> =
     const isHost = hostToken && event.hostToken === hostToken;
 
     let isGuest = false;
-    if (guestId) {
+    if (guestToken) {
       const [guestRow] = await db
         .select({ guestId: guestsTable.guestId })
         .from(guestsTable)
-        .where(and(eq(guestsTable.eventId, id), eq(guestsTable.guestId, guestId)));
+        .where(and(eq(guestsTable.eventId, id), eq(guestsTable.token, guestToken)));
       isGuest = !!guestRow;
     }
 

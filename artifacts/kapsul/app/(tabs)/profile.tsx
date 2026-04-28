@@ -386,6 +386,7 @@ function NotificationsModal({ visible, onClose, token, onRead }: {
   const notifLabel = (n: AppNotification) => {
     if (n.type === "follow") return `${n.actor.displayName} ha iniziato a seguirti`;
     if (n.type === "photo") return `${n.actor.displayName} ha caricato una foto`;
+    if (n.type === "like") return `${n.actor.displayName} ha messo like alla tua foto`;
     return `Nuova notifica da ${n.actor.displayName}`;
   };
 

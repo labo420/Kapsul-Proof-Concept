@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { randomUUID } from "crypto";
-import { db, usersTable, followsTable, eventsTable, photosTable, notificationsTable } from "@workspace/db";
+import { db, usersTable, followsTable, eventsTable, photosTable, notificationsTable, photoLikesTable } from "@workspace/db";
 import { eq, and, ne, sql, desc, inArray } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/auth.js";
 
@@ -299,6 +299,91 @@ router.get("/social/myphotos", requireAuth, async (req, res): Promise<void> => {
     res.json(photos);
   } catch (err) {
     req.log.error(err, "myphotos error");
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.post("/social/photos/:photoId/like", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const photoId = req.params.photoId;
+    const userId = req.user!.userId;
+
+    const [photo] = await db.select().from(photosTable).where(eq(photosTable.id, photoId));
+    if (!photo) {
+      res.status(404).json({ error: "Photo not found" });
+      return;
+    }
+
+    await db
+      .insert(photoLikesTable)
+      .values({ id: randomUUID(), photoId, userId })
+      .onConflictDoNothing();
+
+    if (photo.guestId && photo.guestId !== userId) {
+      await db.insert(notificationsTable).values({
+        id: randomUUID(),
+        recipientId: photo.guestId,
+        actorId: userId,
+        type: "like",
+        entityId: photoId,
+      }).onConflictDoNothing();
+    }
+
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(photoLikesTable)
+      .where(eq(photoLikesTable.photoId, photoId));
+
+    res.json({ liked: true, likeCount: count });
+  } catch (err) {
+    req.log.error(err, "like photo error");
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.delete("/social/photos/:photoId/like", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const photoId = req.params.photoId;
+    const userId = req.user!.userId;
+
+    await db
+      .delete(photoLikesTable)
+      .where(and(eq(photoLikesTable.photoId, photoId), eq(photoLikesTable.userId, userId)));
+
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(photoLikesTable)
+      .where(eq(photoLikesTable.photoId, photoId));
+
+    res.json({ liked: false, likeCount: count });
+  } catch (err) {
+    req.log.error(err, "unlike photo error");
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/social/photos/:photoId/likes", optionalAuth, async (req, res): Promise<void> => {
+  try {
+    const photoId = req.params.photoId;
+    const userId = req.user?.userId;
+
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(photoLikesTable)
+      .where(eq(photoLikesTable.photoId, photoId));
+
+    let liked = false;
+    if (userId) {
+      const [existing] = await db
+        .select()
+        .from(photoLikesTable)
+        .where(and(eq(photoLikesTable.photoId, photoId), eq(photoLikesTable.userId, userId)));
+      liked = !!existing;
+    }
+
+    res.json({ likeCount: count, liked });
+  } catch (err) {
+    req.log.error(err, "get likes error");
     res.status(500).json({ error: "Server error" });
   }
 });
