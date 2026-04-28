@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Check, X } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -55,6 +55,7 @@ export default function PlanCard({
 
   const isPro = plan === "pro";
   const isParty = plan === "party";
+  const PlanIcon = limits.icon;
 
   return (
     <TouchableOpacity
@@ -101,8 +102,7 @@ export default function PlanCard({
 
         <View style={styles.header}>
           <View style={styles.titleRow}>
-            <Ionicons
-              name={limits.icon}
+            <PlanIcon
               size={24}
               color={isPro ? colors.gradientEnd : isParty ? colors.gradientStart : colors.primary}
             />
@@ -155,17 +155,14 @@ export default function PlanCard({
                   },
                 ]}
               >
-                <Ionicons
-                  name={f.included ? "checkmark" : "close"}
-                  size={12}
-                  color={
-                    f.included
-                      ? isPro
-                        ? colors.gradientEnd
-                        : colors.gradientStart
-                      : colors.mutedForeground
-                  }
-                />
+                {f.included ? (
+                  <Check
+                    size={12}
+                    color={isPro ? colors.gradientEnd : colors.gradientStart}
+                  />
+                ) : (
+                  <X size={12} color={colors.mutedForeground} />
+                )}
               </View>
               <Text
                 style={[
@@ -190,7 +187,7 @@ export default function PlanCard({
               end={{ x: 1, y: 0 }}
               style={styles.selectedPill}
             >
-              <Ionicons name="checkmark-circle" size={14} color="#fff" />
+              <Check size={14} color="#fff" />
               <Text style={styles.selectedText}>Selezionato</Text>
             </LinearGradient>
           </View>

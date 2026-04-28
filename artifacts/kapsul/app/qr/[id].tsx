@@ -1,4 +1,4 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Check, CheckCheck, Copy, Plus, Rocket, Share2, Users } from "lucide-react-native";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
@@ -103,7 +103,7 @@ export default function QRScreen() {
       >
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.replace("/")} style={styles.navBtn}>
-            <Ionicons name="checkmark-done" size={22} color={colors.primary} />
+            <CheckCheck size={22} color={colors.primary} />
           </TouchableOpacity>
           <Text style={[styles.topTitle, { color: colors.foreground }]}>QR Code</Text>
           <View style={styles.navBtn} />
@@ -157,7 +157,7 @@ export default function QRScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.shareBtn}
           >
-            <Ionicons name="share-social-outline" size={20} color="#fff" />
+            <Share2 size={20} color="#fff" />
             <Text style={styles.shareBtnText}>Condividi con gli ospiti</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -180,11 +180,11 @@ export default function QRScreen() {
                 colors={[colors.gradientStart, colors.gradientEnd]}
                 style={styles.copyBtn}
               >
-                <Ionicons name="checkmark" size={16} color="#fff" />
+                <Check size={16} color="#fff" />
               </LinearGradient>
             ) : (
               <View style={[styles.copyBtn, { backgroundColor: colors.muted }]}>
-                <Feather name="copy" size={15} color={colors.foreground} />
+                <Copy size={15} color={colors.foreground} />
               </View>
             )}
           </TouchableOpacity>
@@ -192,13 +192,13 @@ export default function QRScreen() {
 
         <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
           <View style={styles.infoRow}>
-            <Ionicons name="rocket-outline" size={18} color={colors.mutedForeground} />
+            <Rocket size={18} color={colors.mutedForeground} />
             <Text style={[styles.infoText, { color: colors.mutedForeground }]}>
               Nessun download richiesto — solo scansione e via
             </Text>
           </View>
           <View style={styles.infoRow}>
-            <Ionicons name="people-outline" size={18} color={colors.mutedForeground} />
+            <Users size={18} color={colors.mutedForeground} />
             <Text style={[styles.infoText, { color: colors.mutedForeground }]}>
               Anonimo automatico — zero attrito per gli ospiti
             </Text>
@@ -210,7 +210,7 @@ export default function QRScreen() {
           style={[styles.newEventBtn, { borderColor: colors.border, borderRadius: 999 }]}
           activeOpacity={0.7}
         >
-          <Feather name="plus" size={15} color={colors.mutedForeground} />
+          <Plus size={15} color={colors.mutedForeground} />
           <Text style={[styles.newEventText, { color: colors.mutedForeground }]}>
             Crea un altro evento
           </Text>

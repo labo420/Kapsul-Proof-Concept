@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { ArrowRight, ChevronDown, ChevronUp, Palette } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useRef, useState, useEffect } from "react";
@@ -274,7 +274,7 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
       <View style={styles.swatchRow}>
         <TouchableOpacity style={styles.swatchWrap} onPress={() => openPicker("start")} activeOpacity={0.8}>
           <View style={[styles.swatch, { backgroundColor: colorStart }]}>
-            <Ionicons name="color-palette" size={18} color="#fff" />
+            <Palette size={18} color="#fff" />
           </View>
           <Text style={[styles.swatchLabel, { color: colors.mutedForeground }]}>Colore 1</Text>
         </TouchableOpacity>
@@ -286,12 +286,12 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
             end={{ x: 1, y: 0 }}
             style={styles.arrowLine}
           />
-          <Ionicons name="arrow-forward" size={16} color={colors.mutedForeground} />
+          <ArrowRight size={16} color={colors.mutedForeground} />
         </View>
 
         <TouchableOpacity style={styles.swatchWrap} onPress={() => openPicker("end")} activeOpacity={0.8}>
           <View style={[styles.swatch, { backgroundColor: colorEnd }]}>
-            <Ionicons name="color-palette" size={18} color="#fff" />
+            <Palette size={18} color="#fff" />
           </View>
           <Text style={[styles.swatchLabel, { color: colors.mutedForeground }]}>Colore 2</Text>
         </TouchableOpacity>
@@ -303,7 +303,11 @@ export default function GradientPicker({ colorStart, colorEnd, onChangeStart, on
         activeOpacity={0.7}
       >
         <Text style={[styles.presetsToggleText, { color: colors.mutedForeground }]}>Suggerimenti rapidi</Text>
-        <Ionicons name={showPresets ? "chevron-up" : "chevron-down"} size={14} color={colors.mutedForeground} />
+        {showPresets ? (
+          <ChevronUp size={14} color={colors.mutedForeground} />
+        ) : (
+          <ChevronDown size={14} color={colors.mutedForeground} />
+        )}
       </TouchableOpacity>
 
       {showPresets && (

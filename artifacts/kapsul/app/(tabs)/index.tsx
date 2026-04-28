@@ -1,4 +1,4 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Camera, Plus, QrCode } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,18 +27,10 @@ import { PLAN_LIMITS } from "@/contexts/PlanContext";
 import GradientButton from "@/components/GradientButton";
 import GradientBadge from "@/components/GradientBadge";
 
-type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
-
 const DELIVERY_LABELS: Record<string, string> = {
   party: "Party",
   morning_after: "Morning After",
   vault: "Vault",
-};
-
-const DELIVERY_ICONS: Record<string, IoniconsName> = {
-  party: "flash",
-  morning_after: "sunny",
-  vault: "lock-closed",
 };
 
 const SPRING = { damping: 20, stiffness: 200, mass: 0.9 } as const;
@@ -135,7 +127,7 @@ export default function HostScreen() {
                 end={{ x: 1, y: 0 }}
                 style={styles.createBtn}
               >
-                <Feather name="plus" size={18} color="#fff" />
+                <Plus size={18} color="#fff" />
                 <Text style={styles.createBtnText}>Nuovo</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -148,7 +140,7 @@ export default function HostScreen() {
               colors={[colors.gradientStart + "30", colors.gradientEnd + "30"]}
               style={[styles.emptyIcon, { borderRadius: 28 }]}
             >
-              <Ionicons name="camera-outline" size={44} color={colors.gradientStart} />
+              <Camera size={44} color={colors.gradientStart} />
             </LinearGradient>
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
               Crea il tuo primo{"\n"}evento
@@ -298,7 +290,7 @@ export default function HostScreen() {
                           end={{ x: 1, y: 0 }}
                           style={styles.qrBtn}
                         >
-                          <Ionicons name="qr-code-outline" size={14} color="#fff" />
+                          <QrCode size={14} color="#fff" />
                           <Text style={styles.qrBtnText}>QR</Text>
                         </LinearGradient>
                       </TouchableOpacity>

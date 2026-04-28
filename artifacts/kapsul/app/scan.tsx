@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { AlertTriangle, Ban, Check, CheckCircle, QrCode, RefreshCw, X, XCircle } from "lucide-react-native";
 import { Camera, CameraView } from "expo-camera";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -197,7 +197,7 @@ export default function ScanScreen() {
 
       <View style={[styles.topBar, { paddingTop: topPad + 8 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="close" size={24} color="#fff" />
+          <X size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.topTitle}>Partecipa</Text>
         <View style={styles.backBtn} />
@@ -247,13 +247,13 @@ export default function ScanScreen() {
 
                   {scanState === "success" && (
                     <Animated.View style={[styles.statusIcon, successScaleStyle]}>
-                      <Ionicons name="checkmark-circle" size={64} color={colors.gradientStart} />
+                      <CheckCircle size={64} color={colors.gradientStart} />
                     </Animated.View>
                   )}
 
                   {scanState === "error" && (
                     <View style={styles.statusIcon}>
-                      <Ionicons name="close-circle" size={64} color="#FF4466" />
+                      <XCircle size={64} color="#FF4466" />
                     </View>
                   )}
                 </Animated.View>
@@ -271,14 +271,14 @@ export default function ScanScreen() {
 
             {cameraPermission === "denied" && Platform.OS !== "web" ? (
               <View style={styles.permissionContent}>
-                <Ionicons name="ban-outline" size={48} color="rgba(255,255,255,0.4)" />
+                <Ban size={48} color="rgba(255,255,255,0.4)" />
                 <Text style={styles.permissionText}>Accesso fotocamera negato</Text>
                 <Text style={styles.permissionSub}>Abilita la fotocamera nelle impostazioni</Text>
               </View>
             ) : (
               <>
                 <Animated.View style={[styles.scanLine, { backgroundColor: colors.primary + "88" }, scanLineStyle]} />
-                <Ionicons name="qr-code-outline" size={60} color={colors.mutedForeground + "66"} />
+                <QrCode size={60} color={colors.mutedForeground + "66"} />
               </>
             )}
           </View>
@@ -286,7 +286,7 @@ export default function ScanScreen() {
 
         {scanState === "error" && (
           <View style={[styles.feedbackCard, { backgroundColor: "#FF4466" + "18", borderColor: "#FF4466" + "44" }]}>
-            <Ionicons name="warning-outline" size={20} color="#FF4466" />
+            <AlertTriangle size={20} color="#FF4466" />
             <View style={styles.feedbackCardText}>
               <Text style={[styles.feedbackTitle, { color: "#FF4466" }]}>
                 {errorMessages[errorKind].title}
@@ -300,7 +300,7 @@ export default function ScanScreen() {
 
         {scanState === "success" && (
           <View style={[styles.feedbackCard, { backgroundColor: colors.gradientStart + "18", borderColor: colors.gradientStart + "44" }]}>
-            <Ionicons name="checkmark-circle-outline" size={20} color={colors.gradientStart} />
+            <Check size={20} color={colors.gradientStart} />
             <Text style={[styles.feedbackTitle, { color: colors.gradientStart }]}>
               Evento trovato! Accesso in corso…
             </Text>
@@ -322,7 +322,7 @@ export default function ScanScreen() {
             style={[styles.actionBtn, { borderColor: colors.primary + "44" }]}
             activeOpacity={0.7}
           >
-            <Ionicons name="refresh" size={16} color={colors.primary} />
+            <RefreshCw size={16} color={colors.primary} />
             <Text style={[styles.actionBtnText, { color: colors.primary }]}>Riprova</Text>
           </TouchableOpacity>
         )}

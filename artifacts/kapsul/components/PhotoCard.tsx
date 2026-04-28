@@ -1,4 +1,4 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Flag } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -63,12 +63,12 @@ export default function PhotoCard({ uri, height, width }: PhotoCardProps) {
             tint="dark"
             style={[styles.reportedOverlay, { height }]}
           >
-            <Ionicons name="flag" size={24} color="rgba(255,255,255,0.6)" />
+            <Flag size={24} color="rgba(255,255,255,0.6)" />
             <Text style={styles.reportedText}>Segnalata</Text>
           </BlurView>
         ) : (
           <View style={[styles.reportedOverlay, styles.reportedFallback, { height }]}>
-            <Ionicons name="flag" size={24} color="rgba(255,255,255,0.6)" />
+            <Flag size={24} color="rgba(255,255,255,0.6)" />
             <Text style={styles.reportedText}>Segnalata</Text>
           </View>
         )
@@ -98,7 +98,7 @@ export default function PhotoCard({ uri, height, width }: PhotoCardProps) {
           </View>
           {!reported && (
             <TouchableOpacity onPress={handleReport} style={styles.reportBtn} activeOpacity={0.7}>
-              <Feather name="flag" size={13} color="rgba(255,255,255,0.5)" />
+              <Flag size={13} color="rgba(255,255,255,0.5)" />
             </TouchableOpacity>
           )}
         </View>

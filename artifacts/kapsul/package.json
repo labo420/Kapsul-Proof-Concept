@@ -59,6 +59,7 @@
     "@expo-google-fonts/space-mono": "^0.4.2",
     "expo-camera": "~17.0.10",
     "expo-clipboard": "^8.0.8",
+    "lucide-react-native": "^1.11.0",
     "react-native-qrcode-svg": "^6.3.21"
   }
 }

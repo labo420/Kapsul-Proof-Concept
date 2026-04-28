@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { ChevronLeft } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
@@ -109,7 +109,7 @@ export default function WallScreen() {
       >
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+            <ChevronLeft size={24} color={colors.foreground} />
           </TouchableOpacity>
           <View style={styles.titleWrap}>
             <Text style={[styles.title, { color: colors.foreground }]}>

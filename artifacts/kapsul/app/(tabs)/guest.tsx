@@ -1,4 +1,4 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Camera as CameraIcon, Check, ChevronRight, Film, Images, Lock, LogOut, QrCode } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
@@ -373,7 +373,7 @@ export default function GuestScreen() {
             style={[styles.scanBtn, { backgroundColor: colors.muted, borderRadius: 999, borderWidth: 1, borderColor: colors.border }]}
             activeOpacity={0.7}
           >
-            <Ionicons name="qr-code-outline" size={18} color={colors.foreground} />
+            <QrCode size={18} color={colors.foreground} />
             <Text style={[styles.scanBtnText, { color: colors.foreground }]}>Partecipa</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -402,7 +402,7 @@ export default function GuestScreen() {
                 end={{ x: 1, y: 0 }}
                 style={styles.limitIcon}
               >
-                <Ionicons name="lock-closed" size={16} color="#fff" />
+                <Lock size={16} color="#fff" />
               </LinearGradient>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={[styles.limitTitle, { color: colors.foreground }]}>
@@ -439,7 +439,7 @@ export default function GuestScreen() {
                 colors={[colors.gradientStart, colors.gradientEnd]}
                 style={styles.cameraBtn}
               >
-                <Ionicons name="camera" size={42} color="#fff" />
+                <CameraIcon size={42} color="#fff" />
               </LinearGradient>
             </Animated.View>
           </Pressable>
@@ -458,11 +458,11 @@ export default function GuestScreen() {
             style={[styles.galleryBtn, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}
             activeOpacity={0.8}
           >
-            <Ionicons name="images" size={22} color={colors.primary} />
+            <Images size={22} color={colors.primary} />
             <Text style={[styles.galleryBtnText, { color: colors.foreground }]}>
               Carica dal rullino
             </Text>
-            <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+            <ChevronRight size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
         </Animated.View>
 
@@ -489,7 +489,7 @@ export default function GuestScreen() {
                   colors={[colors.gradientStart, colors.gradientEnd]}
                   style={styles.doneIcon}
                 >
-                  <Ionicons name="checkmark" size={14} color="#fff" />
+                  <Check size={14} color="#fff" />
                 </LinearGradient>
                 <Text style={[styles.doneText, { color: colors.foreground }]}>
                   Foto aggiunta al vault
@@ -505,11 +505,11 @@ export default function GuestScreen() {
             style={[styles.wallLink, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}
             activeOpacity={0.7}
           >
-            <Ionicons name="film-outline" size={20} color={colors.foreground} />
+            <Film size={20} color={colors.foreground} />
             <Text style={[styles.wallLinkText, { color: colors.foreground }]}>
               Guarda il Guest Wall
             </Text>
-            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+            <ChevronRight size={16} color={colors.mutedForeground} />
           </TouchableOpacity>
         </Animated.View>
 
@@ -520,7 +520,7 @@ export default function GuestScreen() {
               style={[styles.leaveBtn, { borderColor: "#FF4466" + "44", borderRadius: colors.radius }]}
               activeOpacity={0.7}
             >
-              <Ionicons name="exit-outline" size={18} color="#FF4466" />
+              <LogOut size={18} color="#FF4466" />
               <Text style={styles.leaveBtnText}>Lascia evento</Text>
             </TouchableOpacity>
           </Animated.View>
@@ -550,7 +550,7 @@ export default function GuestScreen() {
                 colors={[colors.gradientStart + "20", colors.gradientEnd + "20"]}
                 style={styles.modalHeader}
               >
-                <Ionicons name="camera-outline" size={48} color={colors.gradientStart} />
+                <CameraIcon size={48} color={colors.gradientStart} />
               </LinearGradient>
               <Text style={[styles.modalTitle, { color: colors.foreground }]}>
                 Prima di caricare
@@ -579,7 +579,7 @@ export default function GuestScreen() {
                       colors={[colors.gradientStart, colors.gradientEnd]}
                       style={[StyleSheet.absoluteFill, { borderRadius: 6, alignItems: "center", justifyContent: "center" }]}
                     >
-                      <Ionicons name="checkmark" size={14} color="#fff" />
+                      <Check size={14} color="#fff" />
                     </LinearGradient>
                   ) : null}
                 </View>

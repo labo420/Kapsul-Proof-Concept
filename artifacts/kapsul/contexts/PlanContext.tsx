@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
+import { Gift, Zap, Star, type LucideIcon } from "lucide-react-native";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 export type EventPlan = "free" | "party" | "pro";
@@ -12,7 +12,7 @@ export interface PlanLimits {
   hasHdDownload: boolean;
   label: string;
   price: string;
-  icon: React.ComponentProps<typeof Ionicons>["name"];
+  icon: LucideIcon;
 }
 
 export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
@@ -24,7 +24,7 @@ export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
     hasHdDownload: false,
     label: "Free Trial",
     price: "Gratis",
-    icon: "gift-outline",
+    icon: Gift,
   },
   party: {
     maxPhotos: 500,
@@ -34,7 +34,7 @@ export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
     hasHdDownload: false,
     label: "Party",
     price: "1,99 €",
-    icon: "flash-outline",
+    icon: Zap,
   },
   pro: {
     maxPhotos: 5000,
@@ -44,7 +44,7 @@ export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
     hasHdDownload: true,
     label: "Kapsul Pro",
     price: "9,99 €",
-    icon: "star-outline",
+    icon: Star,
   },
 };
 

@@ -2,7 +2,7 @@ import { BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Calendar, Camera, User } from "lucide-react-native";
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 
@@ -68,7 +68,7 @@ function ClassicTabLayout() {
         options={{
           title: "Crea",
           tabBarIcon: ({ color }) => (
-            <Feather name="calendar" size={22} color={color} />
+            <Calendar size={22} color={color} />
           ),
         }}
       />
@@ -77,7 +77,7 @@ function ClassicTabLayout() {
         options={{
           title: "Guest",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="camera-outline" size={22} color={color} />
+            <Camera size={22} color={color} />
           ),
         }}
       />
@@ -86,7 +86,7 @@ function ClassicTabLayout() {
         options={{
           title: "Profilo",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="person-outline" size={22} color={color} />
+            <User size={22} color={color} />
           ),
         }}
       />

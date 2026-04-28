@@ -1,4 +1,4 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Award, Bell, Calendar, Camera, Check, ChevronRight, FileText, Gift, Info, Save, ShieldCheck, Trash2, Zap } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
@@ -91,7 +91,7 @@ function SettingRow({
       </Text>
       <View style={styles.settingRight}>
         {right ?? (
-          <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+          <ChevronRight size={16} color={colors.mutedForeground} />
         )}
       </View>
     </TouchableOpacity>
@@ -149,12 +149,12 @@ export default function ProfileScreen() {
     );
   };
 
-  type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
-  const stats: { label: string; value: string; icon: IoniconsName }[] = [
-    { label: "Eventi creati", value: String(events.length), icon: "calendar-outline" },
-    { label: "Foto raccolte", value: String(totalPhotos), icon: "camera-outline" },
-    { label: "Eventi Party", value: String(partyEvents), icon: "flash-outline" },
-    { label: "Eventi Pro", value: String(proEvents), icon: "ribbon-outline" },
+  type LucideIcon = typeof Calendar;
+  const stats: { label: string; value: string; Icon: LucideIcon }[] = [
+    { label: "Eventi creati", value: String(events.length), Icon: Calendar },
+    { label: "Foto raccolte", value: String(totalPhotos), Icon: Camera },
+    { label: "Eventi Party", value: String(partyEvents), Icon: Zap },
+    { label: "Eventi Pro", value: String(proEvents), Icon: Award },
   ];
 
   return (
@@ -225,11 +225,7 @@ export default function ProfileScreen() {
                   { borderColor: colors.border, borderRadius: colors.radius },
                 ]}
               >
-                <Ionicons
-                  name={s.icon}
-                  size={22}
-                  color={colors.gradientStart}
-                />
+                <s.Icon size={22} color={colors.gradientStart} />
                 <Text
                   style={[
                     styles.statValue,
@@ -275,11 +271,10 @@ export default function ProfileScreen() {
                 },
               ]}
             >
-              <Ionicons
-                name={hasUsedFreeTrial ? "checkmark" : "gift-outline"}
-                size={22}
-                color={hasUsedFreeTrial ? colors.mutedForeground : colors.gradientStart}
-              />
+              {hasUsedFreeTrial
+                ? <Check size={22} color={colors.mutedForeground} />
+                : <Gift size={22} color={colors.gradientStart} />
+              }
             </View>
             <View style={{ flex: 1, gap: 3 }}>
               <Text style={[styles.trialTitle, { color: colors.foreground }]}>
@@ -309,7 +304,7 @@ export default function ProfileScreen() {
           >
             <SettingRow
               icon={
-                <Ionicons name="notifications-outline" size={16} color={colors.gradientStart} />
+                <Bell size={16} color={colors.gradientStart} />
               }
               label="Notifiche"
               right={
@@ -329,7 +324,7 @@ export default function ProfileScreen() {
             />
             <SettingRow
               icon={
-                <Ionicons name="save-outline" size={16} color={colors.gradientStart} />
+                <Save size={16} color={colors.gradientStart} />
               }
               label="Salvataggio automatico foto"
               isLast
@@ -362,7 +357,7 @@ export default function ProfileScreen() {
           >
             <SettingRow
               icon={
-                <Ionicons name="document-text-outline" size={16} color={colors.gradientStart} />
+                <FileText size={16} color={colors.gradientStart} />
               }
               label="Termini di Servizio"
               onPress={() => {
@@ -372,7 +367,7 @@ export default function ProfileScreen() {
             />
             <SettingRow
               icon={
-                <Ionicons name="shield-checkmark-outline" size={16} color={colors.gradientStart} />
+                <ShieldCheck size={16} color={colors.gradientStart} />
               }
               label="Privacy Policy"
               isLast
@@ -395,7 +390,7 @@ export default function ProfileScreen() {
           >
             <SettingRow
               icon={
-                <Ionicons name="information-circle-outline" size={16} color={colors.gradientStart} />
+                <Info size={16} color={colors.gradientStart} />
               }
               label="Versione"
               isLast={false}
@@ -422,8 +417,7 @@ export default function ProfileScreen() {
                   { backgroundColor: colors.destructive + "22" },
                 ]}
               >
-                <Ionicons
-                  name="trash-outline"
+                <Trash2
                   size={16}
                   color={colors.destructive}
                 />

@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { ChevronLeft, Images, QrCode, Users, UserX } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -98,13 +98,13 @@ export default function EventDetailScreen() {
       >
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+            <ChevronLeft size={24} color={colors.foreground} />
           </TouchableOpacity>
           <Text style={[styles.topTitle, { color: colors.foreground }]} numberOfLines={1}>
             {event.name}
           </Text>
           <TouchableOpacity onPress={() => router.push(`/qr/${event.id}`)} style={styles.backBtn}>
-            <Ionicons name="qr-code-outline" size={22} color={colors.primary} />
+            <QrCode size={22} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -150,7 +150,7 @@ export default function EventDetailScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.wallBtn}
           >
-            <Ionicons name="images-outline" size={20} color="#fff" />
+            <Images size={20} color="#fff" />
             <Text style={styles.wallBtnText}>Vedi Guest Wall</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -160,7 +160,7 @@ export default function EventDetailScreen() {
           style={[styles.qrBtn, { borderColor: colors.border, borderRadius: 999 }]}
           activeOpacity={0.7}
         >
-          <Ionicons name="qr-code-outline" size={20} color={colors.foreground} />
+          <QrCode size={20} color={colors.foreground} />
           <Text style={[styles.qrBtnText, { color: colors.foreground }]}>Mostra QR Code</Text>
         </TouchableOpacity>
 
@@ -172,7 +172,7 @@ export default function EventDetailScreen() {
 
           {guests.length === 0 ? (
             <View style={[styles.emptyGuests, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
-              <Ionicons name="people-outline" size={32} color={colors.mutedForeground} />
+              <Users size={32} color={colors.mutedForeground} />
               <Text style={[styles.emptyGuestsText, { color: colors.mutedForeground }]}>
                 Nessun ospite ancora
               </Text>
@@ -205,7 +205,7 @@ export default function EventDetailScreen() {
                         style={[styles.removeBtn, { opacity: isRemoving ? 0.4 : 1 }]}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
-                        <Ionicons name="person-remove-outline" size={18} color="#FF4466" />
+                        <UserX size={18} color="#FF4466" />
                       </TouchableOpacity>
                     </View>
                   </View>

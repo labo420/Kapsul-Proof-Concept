@@ -1,12 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Check, Zap, Sun, Lock, type LucideIcon } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import type { DeliveryMode } from "@/contexts/EventContext";
-
-type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
 interface DeliveryModeSelectorProps {
   selected: DeliveryMode;
@@ -15,22 +13,22 @@ interface DeliveryModeSelectorProps {
   onVaultHoursChange: (h: number) => void;
 }
 
-const MODES: { id: DeliveryMode; icon: IoniconsName; title: string; subtitle: string }[] = [
+const MODES: { id: DeliveryMode; icon: LucideIcon; title: string; subtitle: string }[] = [
   {
     id: "party",
-    icon: "flash-outline",
+    icon: Zap,
     title: "Party Mode",
     subtitle: "Foto visibili in tempo reale",
   },
   {
     id: "morning_after",
-    icon: "sunny-outline",
+    icon: Sun,
     title: "Morning After",
     subtitle: "Sbloccate alle 06:00 del mattino",
   },
   {
     id: "vault",
-    icon: "lock-closed-outline",
+    icon: Lock,
     title: "Vault Mode",
     subtitle: "Sbloccate dopo X ore",
   },
@@ -138,6 +136,7 @@ function ModeCardContent({
   isSelected: boolean;
   colors: ReturnType<typeof import("@/hooks/useColors").useColors>;
 }) {
+  const ModeIcon = mode.icon;
   return (
     <View style={styles.modeInner}>
       <View style={styles.modeLeft}>
@@ -146,11 +145,11 @@ function ModeCardContent({
             colors={[colors.gradientStart, colors.gradientEnd]}
             style={styles.iconWrap}
           >
-            <Ionicons name={mode.icon} size={22} color="#fff" />
+            <ModeIcon size={22} color="#fff" />
           </LinearGradient>
         ) : (
           <View style={[styles.iconWrap, { backgroundColor: colors.muted }]}>
-            <Ionicons name={mode.icon} size={22} color={colors.foreground} />
+            <ModeIcon size={22} color={colors.foreground} />
           </View>
         )}
         <View style={styles.modeText}>
@@ -167,7 +166,7 @@ function ModeCardContent({
           colors={[colors.gradientStart, colors.gradientEnd]}
           style={styles.checkCircle}
         >
-          <Ionicons name="checkmark" size={12} color="#fff" />
+          <Check size={12} color="#fff" />
         </LinearGradient>
       )}
     </View>

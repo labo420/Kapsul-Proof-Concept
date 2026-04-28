@@ -1,4 +1,4 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { ArrowRight, Camera as CameraIcon, Check, ChevronLeft, ChevronRight, ImageIcon, Images, Lock, X } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
@@ -156,7 +156,7 @@ export default function CreateEventScreen() {
             style={styles.backBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+            <ChevronLeft size={24} color={colors.foreground} />
           </TouchableOpacity>
           <Text style={[styles.topTitle, { color: colors.foreground }]}>
             Nuovo evento
@@ -175,7 +175,7 @@ export default function CreateEventScreen() {
                   style={[styles.stepDot, { borderRadius: 999 }]}
                 >
                   {i < step ? (
-                    <Ionicons name="checkmark" size={11} color="#fff" />
+                    <Check size={11} color="#fff" />
                   ) : (
                     <Text style={styles.stepNum}>{i + 1}</Text>
                   )}
@@ -354,7 +354,7 @@ export default function CreateEventScreen() {
                       onPress={() => setCoverImageUri(null)}
                       style={[styles.coverRemoveBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
                     >
-                      <Ionicons name="close" size={16} color={colors.foreground} />
+                      <X size={16} color={colors.foreground} />
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -374,7 +374,7 @@ export default function CreateEventScreen() {
                       colors={[colors.gradientStart + "30", colors.gradientEnd + "30"]}
                       style={styles.coverPickerIcon}
                     >
-                      <Ionicons name="image" size={22} color={colors.primary} />
+                      <ImageIcon size={22} color={colors.primary} />
                     </LinearGradient>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.coverPickerTitle, { color: colors.foreground }]}>
@@ -384,7 +384,7 @@ export default function CreateEventScreen() {
                         Visibile agli ospiti quando entrano
                       </Text>
                     </View>
-                    <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+                    <ChevronRight size={16} color={colors.mutedForeground} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -458,8 +458,7 @@ export default function CreateEventScreen() {
                   { backgroundColor: colors.muted, borderColor: colors.border },
                 ]}
               >
-                <Ionicons
-                  name="lock-closed"
+                <Lock
                   size={14}
                   color={colors.mutedForeground}
                 />
@@ -506,11 +505,11 @@ export default function CreateEventScreen() {
                     : `Paga ${PLAN_LIMITS[selectedPlan].price} e crea evento`
                   : "Avanti"}
               </Text>
-              <Feather
-                name={step === LAST_STEP ? "check" : "arrow-right"}
-                size={18}
-                color="#fff"
-              />
+              {step === LAST_STEP ? (
+                <Check size={18} color="#fff" />
+              ) : (
+                <ArrowRight size={18} color="#fff" />
+              )}
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -543,12 +542,12 @@ export default function CreateEventScreen() {
               colors={[colors.gradientStart + "30", colors.gradientEnd + "30"]}
               style={styles.sheetOptionIcon}
             >
-              <Ionicons name="camera-outline" size={22} color={colors.primary} />
+              <CameraIcon size={22} color={colors.primary} />
             </LinearGradient>
             <Text style={[styles.sheetOptionText, { color: colors.foreground }]}>
               Fotocamera
             </Text>
-            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+            <ChevronRight size={16} color={colors.mutedForeground} />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.sheetOption, { borderColor: colors.border }]}
@@ -562,12 +561,12 @@ export default function CreateEventScreen() {
               colors={[colors.gradientStart + "30", colors.gradientEnd + "30"]}
               style={styles.sheetOptionIcon}
             >
-              <Ionicons name="images-outline" size={22} color={colors.primary} />
+              <Images size={22} color={colors.primary} />
             </LinearGradient>
             <Text style={[styles.sheetOptionText, { color: colors.foreground }]}>
               Scegli dalla galleria
             </Text>
-            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+            <ChevronRight size={16} color={colors.mutedForeground} />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.sheetCancel, { backgroundColor: colors.muted }]}
