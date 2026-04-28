@@ -257,7 +257,7 @@ router.patch("/social/events/:eventId/privacy", requireAuth, async (req, res): P
   try {
     const { isPublic, hostToken } = z.object({
       isPublic: z.boolean(),
-      hostToken: z.string().min(1),
+      hostToken: z.string().optional(),
     }).parse(req.body);
 
     const eventId = req.params.eventId;

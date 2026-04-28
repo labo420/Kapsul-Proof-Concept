@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, eventsTable, photosTable, guestsTable } from "@workspace/db";
+import { db, eventsTable, photosTable, guestsTable, notificationsTable } from "@workspace/db";
 import { eq, and, or } from "drizzle-orm";
 import { z } from "zod";
 import { randomUUID } from "crypto";
@@ -197,6 +197,7 @@ router.post("/events/:id/join", async (req, res): Promise<void> => {
 
 router.post(
   "/events/:id/photos",
+  optionalAuth,
   upload.single("photo"),
   async (req, res): Promise<void> => {
     try {
@@ -205,7 +206,15 @@ router.post(
         return;
       }
       const id = param(req.params.id);
-      const { guestId } = z.object({ guestId: z.string() }).parse(req.body);
+      const { guestId: rawGuestId } = z.object({ guestId: z.string() }).parse(req.body);
+
+      const authUserId = req.user?.userId;
+      const guestId = authUserId ?? rawGuestId;
+
+      if (authUserId && rawGuestId !== authUserId) {
+        res.status(403).json({ error: "guestId does not match authenticated user" });
+        return;
+      }
 
       const [event] = await db
         .select()
@@ -249,6 +258,16 @@ router.post(
             eq(guestsTable.guestId, guestId),
           )
         );
+
+      if (authUserId && event.creatorId && authUserId !== event.creatorId) {
+        await db.insert(notificationsTable).values({
+          id: randomUUID(),
+          recipientId: event.creatorId,
+          actorId: authUserId,
+          type: "photo",
+          entityId: photoId,
+        }).onConflictDoNothing();
+      }
 
       res.json({ id: photoId, objectPath, eventId: id });
     } catch (err) {

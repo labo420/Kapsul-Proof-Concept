@@ -38,17 +38,11 @@ router.get("/notifications/unread-count", requireAuth, async (req, res): Promise
   try {
     const userId = req.user!.userId;
     const rows = await db
-      .select({ id: notificationsTable.id })
-      .from(notificationsTable)
-      .where(eq(notificationsTable.recipientId, userId));
-    const unread = rows.filter((r) => !r.id).length;
-    const total = rows.length;
-    const readRows = await db
       .select({ id: notificationsTable.id, read: notificationsTable.read })
       .from(notificationsTable)
       .where(eq(notificationsTable.recipientId, userId));
-    const unreadCount = readRows.filter((r) => !r.read).length;
-    res.json({ unreadCount, total: readRows.length });
+    const unreadCount = rows.filter((r) => !r.read).length;
+    res.json({ unreadCount, total: rows.length });
   } catch {
     res.status(500).json({ error: "Server error" });
   }
