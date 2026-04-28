@@ -22,7 +22,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 MVP of Kapsul, a mobile-first event photo collection app.
 - **Theme**: Social/Viral — Deep violet-black (#08060F) + Indigo→Pink gradient (#6366F1→#EC4899), glassmorphic cards
 - **Fonts**: Inter (UI) + Space Mono (counters only)
-- **Screens**: Host Home, Create Event (2-step wizard), QR Code, Guest Upload Dashboard, Guest Wall (masonry), Scan QR, Event Detail
+- **Screens**: Login (CenteredCard design — glass card, indigo/pink gradient), Host Home, Create Event (2-step wizard), QR Code, Guest Upload Dashboard, Guest Wall (masonry), Scan QR, Event Detail
 - **Components**: GradientButton, GradientBadge, NeonProgressBar (gradient fill), PhotoCard (gradient overlay + reactions), DeliveryModeSelector (gradient chips)
 - **State**: EventContext (API-first, AsyncStorage as cache) + GuestContext (AsyncStorage-backed)
 - **Backend**: Real API via `artifacts/kapsul/lib/api.ts` — creates events in DB, uploads photos to object storage, join event via QR scan

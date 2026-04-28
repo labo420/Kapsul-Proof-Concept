@@ -37,6 +37,7 @@ function RootLayoutNav() {
         animationDuration: 220,
       }}
     >
+      <Stack.Screen name="login" options={{ animation: "fade" }} />
       <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
       <Stack.Screen name="create-event" options={{ animation: "fade" }} />
       <Stack.Screen name="qr/[id]" options={{ animation: "fade" }} />
