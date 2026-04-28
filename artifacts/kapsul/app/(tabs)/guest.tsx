@@ -59,7 +59,7 @@ export default function GuestScreen() {
   const [termsVisible, setTermsVisible] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
 
-  const activeEvent = currentEventId ? getEvent(currentEventId) : events[0];
+  const activeEvent = currentEventId ? getEvent(currentEventId) : null;
 
   useFocusEffect(
     useCallback(() => {
@@ -329,6 +329,40 @@ export default function GuestScreen() {
           },
         },
       ]
+    );
+  }
+
+  if (!currentEventId) {
+    return (
+      <View style={[styles.root, { backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }]}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+        <View style={{ alignItems: "center", paddingHorizontal: 40, gap: 16 }}>
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            style={{ width: 80, height: 80, borderRadius: 40, alignItems: "center", justifyContent: "center" }}
+          >
+            <QrCode size={38} color="#fff" />
+          </LinearGradient>
+          <Text style={[styles.logo, { color: colors.foreground, marginTop: 8 }]}>Nessun evento attivo</Text>
+          <Text style={{ color: colors.mutedForeground, textAlign: "center", fontSize: 15, lineHeight: 22 }}>
+            Scansiona il QR code dell'evento o inserisci il codice manualmente per partecipare.
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/scan")}
+            style={{ borderRadius: 999, overflow: "hidden", marginTop: 8, width: "100%" }}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ paddingVertical: 16, alignItems: "center", borderRadius: 999 }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>Partecipa a un evento</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </View>
     );
   }
 
