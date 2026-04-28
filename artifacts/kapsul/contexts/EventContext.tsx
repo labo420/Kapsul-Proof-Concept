@@ -19,6 +19,7 @@ export interface KapsulEvent {
   themeGradientEnd: string;
   coverImageUri: string | null;
   hostToken?: string | null;
+  isPublic?: boolean;
 }
 
 function apiEventToLocal(e: ApiEvent, existingLocal?: KapsulEvent): KapsulEvent {
@@ -112,7 +113,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
         name: partial.name,
         date: partial.date,
         deliveryMode: partial.deliveryMode,
-        vaultHours: partial.vaultHours,
+        vaultHours: partial.vaultHours ?? 0,
         plan: partial.plan,
         themeGradientStart: partial.themeGradientStart,
         themeGradientEnd: partial.themeGradientEnd,

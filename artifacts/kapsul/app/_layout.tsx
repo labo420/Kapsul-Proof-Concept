@@ -22,6 +22,7 @@ import { GuestProvider } from "@/contexts/GuestContext";
 import { EventProvider } from "@/contexts/EventContext";
 import { PlanProvider } from "@/contexts/PlanContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,6 +39,7 @@ function RootLayoutNav() {
       }}
     >
       <Stack.Screen name="login" options={{ animation: "fade" }} />
+      <Stack.Screen name="register" options={{ animation: "fade" }} />
       <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
       <Stack.Screen name="create-event" options={{ animation: "fade" }} />
       <Stack.Screen name="qr/[id]" options={{ animation: "fade" }} />
@@ -83,13 +85,15 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
               <ThemeProvider>
-                <PlanProvider>
-                  <EventProvider>
-                    <GuestProvider>
-                      <RootLayoutNav />
-                    </GuestProvider>
-                  </EventProvider>
-                </PlanProvider>
+                <AuthProvider>
+                  <PlanProvider>
+                    <EventProvider>
+                      <GuestProvider>
+                        <RootLayoutNav />
+                      </GuestProvider>
+                    </EventProvider>
+                  </PlanProvider>
+                </AuthProvider>
               </ThemeProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>

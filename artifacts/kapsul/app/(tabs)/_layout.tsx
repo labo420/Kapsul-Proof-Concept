@@ -2,7 +2,7 @@ import { BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
-import { Calendar, Camera, User } from "lucide-react-native";
+import { Calendar, Camera, Home, User } from "lucide-react-native";
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 
@@ -11,8 +11,12 @@ import { useColors } from "@/hooks/useColors";
 function NativeTabLayout() {
   return (
     <NativeTabs>
-      <NativeTabs.Trigger name="index">
+      <NativeTabs.Trigger name="home">
         <Icon sf={{ default: "house", selected: "house.fill" }} />
+        <Label>Home</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="index">
+        <Icon sf={{ default: "calendar", selected: "calendar" }} />
         <Label>Crea</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="guest">
@@ -48,46 +52,38 @@ function ClassicTabLayout() {
         },
         tabBarBackground: () =>
           isIOS ? (
-            <BlurView
-              intensity={80}
-              tint="dark"
-              style={StyleSheet.absoluteFill}
-            />
+            <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
           ) : isWeb ? (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: colors.card },
-              ]}
-            />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
           ) : null,
       }}
     >
       <Tabs.Screen
+        name="home"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color }) => <Home size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
           title: "Crea",
-          tabBarIcon: ({ color }) => (
-            <Calendar size={22} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <Calendar size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="guest"
         options={{
           title: "Guest",
-          tabBarIcon: ({ color }) => (
-            <Camera size={22} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <Camera size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profilo",
-          tabBarIcon: ({ color }) => (
-            <User size={22} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <User size={22} color={color} />,
         }}
       />
     </Tabs>
