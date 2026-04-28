@@ -1,7 +1,8 @@
-const devDomain = process.env.REPLIT_EXPO_DEV_DOMAIN ?? "";
-const origin = devDomain
-  ? `https://${devDomain}/`
-  : "https://kapsul.app/";
+const devDomain =
+  process.env.REPLIT_EXPO_DEV_DOMAIN ??
+  process.env.EXPO_PUBLIC_DOMAIN ??
+  "";
+const origin = devDomain ? `https://${devDomain}/` : "http://localhost:8081/";
 
 export default {
   expo: {

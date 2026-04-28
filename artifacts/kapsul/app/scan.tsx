@@ -360,7 +360,7 @@ export default function ScanScreen() {
                 end={{ x: 1, y: 0 }}
                 style={styles.manualBtn}
               >
-                <ArrowRight size={20} color="#fff" />
+                <Text style={styles.manualBtnText}>Partecipa</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -566,10 +566,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#1C1726",
   },
   manualBtn: {
-    width: 50,
     height: 50,
+    paddingHorizontal: 20,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
+  },
+  manualBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#fff",
   },
 });
