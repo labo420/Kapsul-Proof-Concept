@@ -352,6 +352,13 @@ router.get("/events/:id/photos", optionalAuth, async (req, res): Promise<void> =
         .where(and(eq(guestsTable.eventId, id), eq(guestsTable.token, guestToken)));
       isGuest = !!guestRow;
     }
+    if (!isGuest && req.user) {
+      const [memberRow] = await db
+        .select({ id: guestsTable.id })
+        .from(guestsTable)
+        .where(and(eq(guestsTable.eventId, id), eq(guestsTable.guestId, req.user.userId)));
+      isGuest = !!memberRow;
+    }
 
     const isMember = isCreator || isHost || isGuest;
 

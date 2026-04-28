@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, notificationsTable, usersTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth.js";
 
 const router = Router();
@@ -41,12 +41,11 @@ router.get("/notifications", requireAuth, async (req, res): Promise<void> => {
 router.get("/notifications/unread-count", requireAuth, async (req, res): Promise<void> => {
   try {
     const userId = req.user!.userId;
-    const rows = await db
-      .select({ id: notificationsTable.id, read: notificationsTable.read })
+    const [row] = await db
+      .select({ count: sql<number>`count(*)::int` })
       .from(notificationsTable)
-      .where(eq(notificationsTable.recipientId, userId));
-    const unreadCount = rows.filter((r) => !r.read).length;
-    res.json({ unreadCount, total: rows.length });
+      .where(and(eq(notificationsTable.recipientId, userId), eq(notificationsTable.read, false)));
+    res.json({ unreadCount: row?.count ?? 0 });
   } catch {
     res.status(500).json({ error: "Server error" });
   }
