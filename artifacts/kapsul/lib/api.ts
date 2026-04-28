@@ -56,8 +56,9 @@ export async function apiCreateEvent(
   return res.json() as Promise<ApiEvent>;
 }
 
-export async function apiGetEvent(id: string): Promise<ApiEvent> {
-  const res = await fetch(`${API_BASE}/events/${encodeURIComponent(id)}`);
+export async function apiGetEvent(id: string, guestToken?: string): Promise<ApiEvent> {
+  const qs = guestToken ? `?guestToken=${encodeURIComponent(guestToken)}` : "";
+  const res = await fetch(`${API_BASE}/events/${encodeURIComponent(id)}${qs}`);
   if (!res.ok) throw new Error(`Get event failed: ${res.status}`);
   return res.json() as Promise<ApiEvent>;
 }
@@ -134,7 +135,7 @@ export async function apiUploadPhoto(
   const fileName = `photo.${ext}`;
 
   const form = new FormData();
-  if (!authToken && guestToken) {
+  if (guestToken) {
     form.append("guestToken", guestToken);
   }
 

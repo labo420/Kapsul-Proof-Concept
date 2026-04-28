@@ -48,7 +48,7 @@ interface EventContextType {
     event: Omit<KapsulEvent, "id" | "photoCount" | "guestCount" | "createdAt">
   ) => Promise<KapsulEvent>;
   getEvent: (id: string) => KapsulEvent | undefined;
-  refreshEvent: (id: string) => Promise<KapsulEvent | null>;
+  refreshEvent: (id: string, guestToken?: string) => Promise<KapsulEvent | null>;
   incrementPhotoCount: (id: string) => void;
   incrementGuestCount: (id: string) => void;
   resetEvents: () => Promise<void>;
@@ -141,9 +141,9 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
   const getEvent = (id: string) => events.find((e) => e.id === id);
 
-  const refreshEvent = async (id: string): Promise<KapsulEvent | null> => {
+  const refreshEvent = async (id: string, guestToken?: string): Promise<KapsulEvent | null> => {
     try {
-      const apiEvent = await apiGetEvent(id);
+      const apiEvent = await apiGetEvent(id, guestToken);
       const existingLocal = events.find((e) => e.id === id);
       const local = apiEventToLocal(apiEvent, existingLocal);
       const updated = events.map((e) => (e.id === id ? local : e));

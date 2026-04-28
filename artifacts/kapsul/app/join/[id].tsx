@@ -87,7 +87,7 @@ export default function JoinScreen() {
         return;
       }
       if (guestToken) await setGuestToken(eventId, guestToken);
-      await refreshEvent(eventId);
+      await refreshEvent(eventId, guestToken);
       await setCurrentEventId(eventId);
       setJoinState("success");
       setTimeout(() => {

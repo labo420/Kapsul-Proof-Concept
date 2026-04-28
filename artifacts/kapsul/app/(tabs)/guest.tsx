@@ -231,7 +231,7 @@ export default function GuestScreen() {
         await apiUploadPhoto(
           activeEvent.id,
           token ?? null,
-          token ? null : (guestTokens[activeEvent.id] ?? null),
+          guestTokens[activeEvent.id] ?? null,
           fileUri,
           mimeType,
           (pct) => setProgress(pct)

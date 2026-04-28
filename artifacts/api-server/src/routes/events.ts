@@ -117,7 +117,7 @@ router.get("/events", optionalAuth, async (req, res) => {
 router.get("/events/:id", optionalAuth, async (req, res): Promise<void> => {
   try {
     const id = param(req.params.id);
-    const { hostToken } = req.query as { hostToken?: string };
+    const { hostToken, guestToken } = req.query as { hostToken?: string; guestToken?: string };
     const [full] = await db
       .select()
       .from(eventsTable)
@@ -129,7 +129,22 @@ router.get("/events/:id", optionalAuth, async (req, res): Promise<void> => {
     if (!full.isPublic) {
       const isCreator = req.user && req.user.userId === full.creatorId;
       const hasHostToken = hostToken && full.hostToken === hostToken;
-      if (!isCreator && !hasHostToken) {
+      let isGuest = false;
+      if (guestToken) {
+        const [guestRow] = await db
+          .select({ id: guestsTable.id })
+          .from(guestsTable)
+          .where(and(eq(guestsTable.eventId, id), eq(guestsTable.token, guestToken)));
+        isGuest = !!guestRow;
+      }
+      if (!isGuest && req.user) {
+        const [memberRow] = await db
+          .select({ id: guestsTable.id })
+          .from(guestsTable)
+          .where(and(eq(guestsTable.eventId, id), eq(guestsTable.guestId, req.user.userId)));
+        isGuest = !!memberRow;
+      }
+      if (!isCreator && !hasHostToken && !isGuest) {
         res.status(403).json({ error: "Private event" });
         return;
       }
@@ -208,16 +223,18 @@ router.post(
       const id = param(req.params.id);
       const authUserId = req.user?.userId;
 
+      const bodyGuestToken = typeof req.body?.guestToken === "string" ? (req.body.guestToken as string) : undefined;
+
       let guestId: string;
 
       if (authUserId) {
         guestId = authUserId;
       } else {
-        const { guestToken } = z.object({ guestToken: z.string().min(1) }).parse(req.body);
+        const { guestToken: requiredToken } = z.object({ guestToken: z.string().min(1) }).parse(req.body);
         const [guestRow] = await db
           .select({ guestId: guestsTable.guestId })
           .from(guestsTable)
-          .where(and(eq(guestsTable.eventId, id), eq(guestsTable.token, guestToken)));
+          .where(and(eq(guestsTable.eventId, id), eq(guestsTable.token, requiredToken)));
         if (!guestRow) {
           res.status(403).json({ error: "Invalid guest token" });
           return;
@@ -237,13 +254,23 @@ router.post(
       if (!event.isPublic && authUserId) {
         const isCreator = event.creatorId === authUserId;
         if (!isCreator) {
-          const [membership] = await db
+          const [memberByUserId] = await db
             .select({ id: guestsTable.id })
             .from(guestsTable)
             .where(and(eq(guestsTable.eventId, id), eq(guestsTable.guestId, authUserId)));
-          if (!membership) {
-            res.status(403).json({ error: "Not a member of this event" });
-            return;
+          if (!memberByUserId) {
+            let isGuestViaToken = false;
+            if (bodyGuestToken) {
+              const [tokenRow] = await db
+                .select({ id: guestsTable.id })
+                .from(guestsTable)
+                .where(and(eq(guestsTable.eventId, id), eq(guestsTable.token, bodyGuestToken)));
+              isGuestViaToken = !!tokenRow;
+            }
+            if (!isGuestViaToken) {
+              res.status(403).json({ error: "Not a member of this event" });
+              return;
+            }
           }
         }
       }

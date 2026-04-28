@@ -136,7 +136,7 @@ export default function ScanScreen() {
         return;
       }
       if (guestToken) await setGuestToken(eventId, guestToken);
-      await refreshEvent(eventId);
+      await refreshEvent(eventId, guestToken);
       await setCurrentEventId(eventId);
       setScanState("success");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
