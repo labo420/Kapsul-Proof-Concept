@@ -3,10 +3,10 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import multer from "multer";
-import { db, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, usersTable, followsTable } from "@workspace/db";
+import { eq, and } from "drizzle-orm";
 import { signToken } from "../lib/jwt.js";
-import { requireAuth } from "../middlewares/auth.js";
+import { requireAuth, optionalAuth } from "../middlewares/auth.js";
 import { objectStorageClient } from "../lib/objectStorage.js";
 
 const router = Router();
@@ -218,9 +218,9 @@ router.get("/users/check-username", async (req, res): Promise<void> => {
   }
 });
 
-router.get("/users/:username", async (req, res): Promise<void> => {
+router.get("/users/:username", optionalAuth, async (req, res): Promise<void> => {
   try {
-    const username = req.params.username?.toLowerCase() ?? "";
+    const username = (Array.isArray(req.params.username) ? req.params.username[0]! : req.params.username)?.toLowerCase() ?? "";
     const [user] = await db
       .select()
       .from(usersTable)
@@ -229,17 +229,34 @@ router.get("/users/:username", async (req, res): Promise<void> => {
       res.status(404).json({ error: "User not found" });
       return;
     }
-    res.json({
+
+    const requesterId = req.user?.userId;
+    const isOwner = requesterId === user.id;
+
+    let canSeeFullProfile = user.isPublic || isOwner;
+    if (!canSeeFullProfile && requesterId) {
+      const [follow] = await db
+        .select({ id: followsTable.id })
+        .from(followsTable)
+        .where(and(eq(followsTable.followerId, requesterId), eq(followsTable.followedId, user.id)));
+      canSeeFullProfile = !!follow;
+    }
+
+    const publicFields = {
       id: user.id,
       username: user.username,
       displayName: user.displayName,
-      bio: user.bio,
-      link: user.link,
       avatarUrl: user.avatarUrl,
       isPublic: user.isPublic,
+    };
+
+    res.json(canSeeFullProfile ? {
+      ...publicFields,
+      bio: user.bio,
+      link: user.link,
       highlights: user.highlights,
       createdAt: user.createdAt,
-    });
+    } : publicFields);
   } catch (err) {
     req.log.error(err, "get user error");
     res.status(500).json({ error: "Server error" });

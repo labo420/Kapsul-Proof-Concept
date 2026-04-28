@@ -5,6 +5,10 @@ import { requireAuth } from "../middlewares/auth.js";
 
 const router = Router();
 
+function param(p: string | string[]): string {
+  return Array.isArray(p) ? p[0]! : p;
+}
+
 router.get("/notifications", requireAuth, async (req, res): Promise<void> => {
   try {
     const userId = req.user!.userId;
@@ -64,7 +68,7 @@ router.patch("/notifications/read-all", requireAuth, async (req, res): Promise<v
 router.patch("/notifications/:id/read", requireAuth, async (req, res): Promise<void> => {
   try {
     const userId = req.user!.userId;
-    const id = req.params.id;
+    const id = param(req.params.id);
     const [row] = await db
       .select({ recipientId: notificationsTable.recipientId })
       .from(notificationsTable)

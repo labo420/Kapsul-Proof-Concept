@@ -1,11 +1,15 @@
 import { Router } from "express";
 import { z } from "zod";
 import { randomUUID } from "crypto";
-import { db, usersTable, followsTable, eventsTable, photosTable, notificationsTable, photoLikesTable } from "@workspace/db";
+import { db, usersTable, followsTable, eventsTable, photosTable, notificationsTable, photoLikesTable, guestsTable } from "@workspace/db";
 import { eq, and, ne, sql, desc, inArray } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/auth.js";
 
 const router = Router();
+
+function param(p: string | string[]): string {
+  return Array.isArray(p) ? p[0]! : p;
+}
 
 const safeUser = (u: typeof usersTable.$inferSelect) => ({
   id: u.id,
@@ -21,7 +25,7 @@ const safeUser = (u: typeof usersTable.$inferSelect) => ({
 
 router.post("/social/follow/:userId", requireAuth, async (req, res): Promise<void> => {
   try {
-    const followedId = req.params.userId;
+    const followedId = param(req.params.userId);
     const followerId = req.user!.userId;
     if (followedId === followerId) {
       res.status(400).json({ error: "Cannot follow yourself" });
@@ -51,7 +55,7 @@ router.post("/social/follow/:userId", requireAuth, async (req, res): Promise<voi
 
 router.delete("/social/follow/:userId", requireAuth, async (req, res): Promise<void> => {
   try {
-    const followedId = req.params.userId;
+    const followedId = param(req.params.userId);
     const followerId = req.user!.userId;
     await db
       .delete(followsTable)
@@ -65,7 +69,7 @@ router.delete("/social/follow/:userId", requireAuth, async (req, res): Promise<v
 
 router.get("/social/followers/:userId", optionalAuth, async (req, res): Promise<void> => {
   try {
-    const userId = req.params.userId;
+    const userId = param(req.params.userId);
     const rows = await db
       .select({ user: usersTable })
       .from(followsTable)
@@ -79,7 +83,7 @@ router.get("/social/followers/:userId", optionalAuth, async (req, res): Promise<
 
 router.get("/social/following/:userId", optionalAuth, async (req, res): Promise<void> => {
   try {
-    const userId = req.params.userId;
+    const userId = param(req.params.userId);
     const rows = await db
       .select({ user: usersTable })
       .from(followsTable)
@@ -93,7 +97,7 @@ router.get("/social/following/:userId", optionalAuth, async (req, res): Promise<
 
 router.get("/social/counts/:userId", optionalAuth, async (req, res): Promise<void> => {
   try {
-    const userId = req.params.userId;
+    const userId = param(req.params.userId);
     const [followers] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(followsTable)
@@ -171,47 +175,33 @@ router.get("/social/feed", requireAuth, async (req, res): Promise<void> => {
       return;
     }
 
-    const photos = await db
-      .select({
-        type: sql<string>`'photo'`,
-        id: photosTable.id,
-        objectPath: photosTable.objectPath,
-        authorId: photosTable.guestId,
-        eventId: photosTable.eventId,
-        title: sql<string | null>`null`,
-        createdAt: photosTable.createdAt,
-      })
-      .from(photosTable)
-      .where(and(
-        eq(photosTable.isPublic, true),
-        inArray(photosTable.guestId, followingIds),
-      ))
-      .orderBy(desc(photosTable.createdAt))
-      .limit(limit)
-      .offset(offset);
+    const idList = sql.join(followingIds.map((id) => sql`${id}`), sql`, `);
 
-    const eventRows = await db
-      .select({
-        type: sql<string>`'event'`,
-        id: eventsTable.id,
-        objectPath: eventsTable.coverImagePath,
-        authorId: eventsTable.creatorId,
-        eventId: eventsTable.id,
-        title: eventsTable.name,
-        createdAt: eventsTable.createdAt,
-      })
-      .from(eventsTable)
-      .where(and(
-        eq(eventsTable.isPublic, true),
-        inArray(eventsTable.creatorId, followingIds),
-      ))
-      .orderBy(desc(eventsTable.createdAt))
-      .limit(limit)
-      .offset(offset);
+    const rawRows = await db.execute(sql`
+      SELECT 'photo' AS type, id, object_path AS "objectPath",
+             guest_id AS "authorId", event_id AS "eventId",
+             NULL::text AS title, created_at AS "createdAt"
+      FROM photos
+      WHERE is_public = true AND guest_id IN (${idList})
+      UNION ALL
+      SELECT 'event' AS type, id, cover_image_path AS "objectPath",
+             creator_id AS "authorId", id AS "eventId",
+             name AS title, created_at AS "createdAt"
+      FROM events
+      WHERE is_public = true AND creator_id IN (${idList})
+      ORDER BY "createdAt" DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `);
 
-    const allItems = [...photos, ...eventRows]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, limit);
+    const allItems = rawRows.rows as Array<{
+      type: string;
+      id: string;
+      objectPath: string | null;
+      authorId: string;
+      eventId: string;
+      title: string | null;
+      createdAt: Date;
+    }>;
 
     const uniqueAuthorIds = [...new Set(allItems.map((p) => p.authorId).filter(Boolean) as string[])];
     const itemAuthors = uniqueAuthorIds.length > 0
@@ -235,7 +225,7 @@ router.get("/social/feed", requireAuth, async (req, res): Promise<void> => {
 router.patch("/social/photos/:photoId/privacy", requireAuth, async (req, res): Promise<void> => {
   try {
     const { isPublic } = z.object({ isPublic: z.boolean() }).parse(req.body);
-    const photoId = req.params.photoId;
+    const photoId = param(req.params.photoId);
     const currentUserId = req.user!.userId;
     const [photo] = await db
       .select()
@@ -260,7 +250,7 @@ router.patch("/social/events/:eventId/privacy", requireAuth, async (req, res): P
       hostToken: z.string().optional(),
     }).parse(req.body);
 
-    const eventId = req.params.eventId;
+    const eventId = param(req.params.eventId);
     const currentUserId = req.user!.userId;
 
     const [event] = await db
@@ -303,23 +293,48 @@ router.get("/social/myphotos", requireAuth, async (req, res): Promise<void> => {
   }
 });
 
+async function canAccessPhoto(photoId: string, userId: string | undefined): Promise<boolean> {
+  const [photo] = await db
+    .select({ eventId: photosTable.eventId, isPublic: photosTable.isPublic })
+    .from(photosTable)
+    .where(eq(photosTable.id, photoId));
+  if (!photo) return false;
+
+  const [event] = await db
+    .select({ isPublic: eventsTable.isPublic, creatorId: eventsTable.creatorId })
+    .from(eventsTable)
+    .where(eq(eventsTable.id, photo.eventId));
+  if (!event) return false;
+
+  if (event.isPublic) return true;
+  if (!userId) return false;
+  if (event.creatorId === userId) return true;
+
+  const [membership] = await db
+    .select({ id: guestsTable.id })
+    .from(guestsTable)
+    .where(and(eq(guestsTable.eventId, photo.eventId), eq(guestsTable.guestId, userId)));
+  return !!membership;
+}
+
 router.post("/social/photos/:photoId/like", requireAuth, async (req, res): Promise<void> => {
   try {
-    const photoId = req.params.photoId;
+    const photoId = param(req.params.photoId);
     const userId = req.user!.userId;
 
-    const [photo] = await db.select().from(photosTable).where(eq(photosTable.id, photoId));
-    if (!photo) {
-      res.status(404).json({ error: "Photo not found" });
+    if (!(await canAccessPhoto(photoId, userId))) {
+      res.status(403).json({ error: "Cannot access this photo" });
       return;
     }
+
+    const [photo] = await db.select({ guestId: photosTable.guestId }).from(photosTable).where(eq(photosTable.id, photoId));
 
     await db
       .insert(photoLikesTable)
       .values({ id: randomUUID(), photoId, userId })
       .onConflictDoNothing();
 
-    if (photo.guestId && photo.guestId !== userId) {
+    if (photo?.guestId && photo.guestId !== userId) {
       await db.insert(notificationsTable).values({
         id: randomUUID(),
         recipientId: photo.guestId,
@@ -343,8 +358,13 @@ router.post("/social/photos/:photoId/like", requireAuth, async (req, res): Promi
 
 router.delete("/social/photos/:photoId/like", requireAuth, async (req, res): Promise<void> => {
   try {
-    const photoId = req.params.photoId;
+    const photoId = param(req.params.photoId);
     const userId = req.user!.userId;
+
+    if (!(await canAccessPhoto(photoId, userId))) {
+      res.status(403).json({ error: "Cannot access this photo" });
+      return;
+    }
 
     await db
       .delete(photoLikesTable)
@@ -364,8 +384,13 @@ router.delete("/social/photos/:photoId/like", requireAuth, async (req, res): Pro
 
 router.get("/social/photos/:photoId/likes", optionalAuth, async (req, res): Promise<void> => {
   try {
-    const photoId = req.params.photoId;
+    const photoId = param(req.params.photoId);
     const userId = req.user?.userId;
+
+    if (!(await canAccessPhoto(photoId, userId))) {
+      res.status(403).json({ error: "Cannot access this photo" });
+      return;
+    }
 
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)::int` })
