@@ -2,6 +2,7 @@ import { Check, CheckCheck, Copy, Plus, Rocket, Share2, Users } from "lucide-rea
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
+import * as Linking from "expo-linking";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import QRCode from "react-native-qrcode-svg";
@@ -40,7 +41,7 @@ export default function QRScreen() {
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
 
   const event = getEvent(id ?? "");
-  const eventLink = `https://kapsul.app/join/${id}`;
+  const eventLink = Linking.createURL(`/join/${id ?? ""}`);
 
   useFocusEffect(
     useCallback(() => {

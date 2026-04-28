@@ -1,6 +1,7 @@
-import { AlertTriangle, Ban, Check, CheckCircle, QrCode, RefreshCw, X, XCircle } from "lucide-react-native";
+import { AlertTriangle, ArrowRight, Ban, Check, CheckCircle, QrCode, RefreshCw, X, XCircle } from "lucide-react-native";
 import { Camera, CameraView } from "expo-camera";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -9,6 +10,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -32,13 +34,14 @@ const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
 
 function extractEventId(raw: string): string | null {
   try {
+    const trimmed = raw.trim();
     const patterns = [
-      /kapsul\.app\/join\/([^/?#]+)/i,
-      /kapsul:\/\/event\/([^/?#]+)/i,
-      /^([a-zA-Z0-9]{10,})$/,
+      /\/join\/([^/?#\s]+)/i,
+      /kapsul:\/\/(?:event|join)\/([^/?#\s]+)/i,
+      /^([a-zA-Z0-9_-]{10,})$/,
     ];
     for (const pattern of patterns) {
-      const match = raw.match(pattern);
+      const match = trimmed.match(pattern);
       if (match) return match[1];
     }
     return null;
@@ -57,6 +60,7 @@ export default function ScanScreen() {
   const [scanState, setScanState] = useState<ScanState>("scanning");
   const [errorKind, setErrorKind] = useState<ErrorKind>("unknown");
   const [cameraPermission, setCameraPermission] = useState<"granted" | "denied" | "pending">("pending");
+  const [manualCode, setManualCode] = useState("");
   const scanLock = useRef(false);
 
   const scanLineY = useSharedValue(0);
@@ -157,6 +161,13 @@ export default function ScanScreen() {
         triggerError("unknown");
       }
     }
+  }
+
+  async function handleManualSubmit() {
+    const trimmed = manualCode.trim();
+    if (!trimmed) return;
+    setManualCode("");
+    await handleScanResult(trimmed);
   }
 
   function handleSkip() {
@@ -309,11 +320,50 @@ export default function ScanScreen() {
 
         {scanState === "scanning" && (
           <>
-            <Text style={styles.hint}>Inquadra il QR code dell'evento</Text>
+            <Text style={styles.hint}>
+              {Platform.OS === "web"
+                ? "Incolla il link o il codice evento"
+                : "Inquadra il QR code dell'evento"}
+            </Text>
             <Text style={styles.subHint}>
-              Il codice si trova sulla schermata dell'organizzatore
+              {Platform.OS === "web"
+                ? "Oppure scansiona il QR con la fotocamera del tuo telefono"
+                : "Il codice si trova sulla schermata dell'organizzatore"}
             </Text>
           </>
+        )}
+
+        {Platform.OS === "web" && scanState === "scanning" && (
+          <View style={styles.manualRow}>
+            <TextInput
+              value={manualCode}
+              onChangeText={setManualCode}
+              placeholder="https://…/join/abc123  oppure  abc123"
+              placeholderTextColor="rgba(255,255,255,0.28)"
+              style={[
+                styles.manualInput,
+                { borderColor: colors.primary + "44", color: "#fff" },
+              ]}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="go"
+              onSubmitEditing={handleManualSubmit}
+            />
+            <TouchableOpacity
+              onPress={handleManualSubmit}
+              activeOpacity={0.8}
+              style={{ borderRadius: 999, overflow: "hidden" }}
+            >
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.manualBtn}
+              >
+                <ArrowRight size={20} color="#fff" />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         )}
 
         {scanState === "error" && (
@@ -498,5 +548,28 @@ const styles = StyleSheet.create({
   skipBtnText: {
     fontSize: 14,
     fontWeight: "600",
+  },
+  manualRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    width: "100%",
+    maxWidth: 360,
+  },
+  manualInput: {
+    flex: 1,
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    fontSize: 13,
+    backgroundColor: "#1C1726",
+  },
+  manualBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

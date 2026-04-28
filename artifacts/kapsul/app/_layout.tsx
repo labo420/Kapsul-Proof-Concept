@@ -43,6 +43,7 @@ function RootLayoutNav() {
       <Stack.Screen name="qr/[id]" options={{ animation: "fade" }} />
       <Stack.Screen name="event/[id]" options={{ animation: "fade" }} />
       <Stack.Screen name="wall" options={{ animation: "fade" }} />
+      <Stack.Screen name="join/[id]" options={{ animation: "fade" }} />
       <Stack.Screen
         name="scan"
         options={{ presentation: "modal", animation: "slide_from_bottom" }}
