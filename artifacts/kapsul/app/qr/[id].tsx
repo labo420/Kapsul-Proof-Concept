@@ -67,7 +67,7 @@ export default function QRScreen() {
   const handleShare = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      await Share.share({ message: `Partecipa a ${event?.name ?? "Kapsul"}!\n${eventLink}` });
+      await Share.share({ message: `Partecipa a ${event?.name ?? "Piclo"}!\n${eventLink}` });
     } catch {}
   };
 

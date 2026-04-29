@@ -393,7 +393,7 @@ export default function GuestScreen() {
         ) : null}
         <Animated.View style={[styles.header, enterStyle0]}>
           <View>
-            <Text style={[styles.logo, { color: colors.foreground }]}>Kapsul</Text>
+            <Text style={[styles.logo, { color: colors.foreground }]}>Piclo</Text>
             <Text style={[styles.guestId, { color: colors.mutedForeground }]}>
               {guestId ?? "---"}
             </Text>
@@ -439,7 +439,7 @@ export default function GuestScreen() {
                   Limite raggiunto ({planLimits.maxPhotos} foto)
                 </Text>
                 <Text style={[styles.limitSub, { color: colors.mutedForeground }]}>
-                  Passa a {activePlan === "free" ? "Party (1,99€)" : "Kapsul Pro (9,99€)"} per continuare
+                  Passa a {activePlan === "free" ? "Party (1,99€)" : "Piclo Pro (9,99€)"} per continuare
                 </Text>
               </View>
             </View>
@@ -586,7 +586,7 @@ export default function GuestScreen() {
                 Prima di caricare
               </Text>
               <Text style={[styles.modalBody, { color: colors.mutedForeground }]}>
-                Le foto caricate su Kapsul saranno visibili agli altri partecipanti. Non caricare contenuti inappropriati.
+                Le foto caricate su Piclo saranno visibili agli altri partecipanti. Non caricare contenuti inappropriati.
               </Text>
               <TouchableOpacity
                 onPress={() => {
@@ -675,8 +675,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: -0.5,
+    fontFamily: "LilitaOne_400Regular",
   },
   guestId: {
     fontSize: 12,

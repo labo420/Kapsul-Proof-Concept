@@ -42,7 +42,7 @@ export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
     hasWatermark: false,
     hasAiRecap: true,
     hasHdDownload: true,
-    label: "Kapsul Pro",
+    label: "Piclo Pro",
     price: "9,99 €",
     icon: Star,
   },

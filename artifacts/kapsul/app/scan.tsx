@@ -37,7 +37,7 @@ function extractEventId(raw: string): string | null {
     const trimmed = raw.trim();
     const patterns = [
       /\/join\/([^/?#\s]+)/i,
-      /kapsul:\/\/(?:event|join)\/([^/?#\s]+)/i,
+      /piclo:\/\/(?:event|join)\/([^/?#\s]+)/i,
       /^([a-zA-Z0-9_-]{10,})$/,
     ];
     for (const pattern of patterns) {
@@ -184,7 +184,7 @@ export default function ScanScreen() {
   const errorMessages: Record<ErrorKind, { title: string; body: string }> = {
     invalid: {
       title: "QR non valido",
-      body: "Questo QR code non è un evento Kapsul. Chiedi all'organizzatore il codice corretto.",
+      body: "Questo QR code non è un evento Piclo. Chiedi all'organizzatore il codice corretto.",
     },
     expired: {
       title: "Evento scaduto",

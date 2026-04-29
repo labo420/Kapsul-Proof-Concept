@@ -386,7 +386,7 @@ export default function HomeScreen() {
           end={{ x: 1, y: 0 }}
           style={styles.logoGradient}
         >
-          <Text style={styles.logoText}>Kapsul</Text>
+          <Text style={styles.logoText}>Piclo</Text>
         </LinearGradient>
         {token && (
           <TouchableOpacity onPress={() => fetchFeed(true)} style={{ padding: 4 }}>
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   logoGradient: { borderRadius: 8, paddingHorizontal: 2, paddingVertical: 1, alignSelf: "flex-start" },
-  logoText: { fontSize: 26, fontWeight: "800", color: "#fff", letterSpacing: -0.5 },
+  logoText: { fontSize: 26, fontFamily: "LilitaOne_400Regular", color: "#fff" },
   card: {
     marginHorizontal: 16,
     marginVertical: 6,

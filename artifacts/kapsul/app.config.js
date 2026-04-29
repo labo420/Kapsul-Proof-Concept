@@ -6,12 +6,12 @@ const origin = devDomain ? `https://${devDomain}/` : "http://localhost:8081/";
 
 export default {
   expo: {
-    name: "Kapsul",
-    slug: "kapsul",
+    name: "Piclo",
+    slug: "piclo",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: "kapsul",
+    scheme: "piclo",
     userInterfaceStyle: "dark",
     newArchEnabled: true,
     splash: {

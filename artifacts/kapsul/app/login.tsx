@@ -116,7 +116,7 @@ export default function LoginScreen() {
                 >
                   <Camera size={24} color="#fff" />
                 </LinearGradient>
-                <Text style={styles.logoText}>KAPSUL</Text>
+                <Text style={styles.logoText}>Piclo</Text>
                 <Text style={[styles.logoSub, { color: colors.mutedForeground }]}>Capture the moment</Text>
               </View>
 
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   cardInner: { borderRadius: 28, borderWidth: 1, padding: 28 },
   logoSection: { alignItems: "center", marginBottom: 28 },
   logoIcon: { width: 52, height: 52, borderRadius: 18, alignItems: "center", justifyContent: "center", marginBottom: 14 },
-  logoText: { fontSize: 22, fontWeight: "700", color: "#fff", letterSpacing: 4, fontFamily: "Inter_700Bold" },
+  logoText: { fontSize: 24, color: "#fff", fontFamily: "LilitaOne_400Regular" },
   logoSub: { fontSize: 13, marginTop: 4, letterSpacing: 0.4, fontFamily: "Inter_400Regular" },
   form: { gap: 16 },
   fieldGroup: { gap: 6 },

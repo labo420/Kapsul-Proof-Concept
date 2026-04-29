@@ -9,6 +9,10 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
+import {
+  LilitaOne_400Regular,
+  useFonts as useLilitaFonts,
+} from "@expo-google-fonts/lilita-one";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -66,9 +70,14 @@ export default function RootLayout() {
     SpaceMono_400Regular,
   });
 
+  const [lilitaLoaded, lilitaError] = useLilitaFonts({
+    LilitaOne_400Regular,
+  });
+
   const allLoaded =
     (fontsLoaded || fontError) &&
-    (monoLoaded || monoError);
+    (monoLoaded || monoError) &&
+    (lilitaLoaded || lilitaError);
 
   useEffect(() => {
     if (allLoaded) {

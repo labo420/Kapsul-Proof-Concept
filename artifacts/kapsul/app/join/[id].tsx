@@ -130,7 +130,7 @@ export default function JoinScreen() {
         >
           <Users size={22} color="#fff" />
         </LinearGradient>
-        <Text style={styles.logoText}>Kapsul</Text>
+        <Text style={styles.logoText}>Piclo</Text>
       </View>
 
       <View style={styles.center}>
@@ -226,9 +226,8 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontSize: 18,
-    fontWeight: "800",
+    fontFamily: "LilitaOne_400Regular",
     color: "#fff",
-    letterSpacing: -0.3,
   },
   center: {
     flex: 1,

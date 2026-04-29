@@ -242,6 +242,9 @@ importers:
 
   artifacts/kapsul:
     dependencies:
+      '@expo-google-fonts/lilita-one':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@expo-google-fonts/space-mono':
         specifier: ^0.4.2
         version: 0.4.2
@@ -1165,6 +1168,9 @@ packages:
 
   '@expo-google-fonts/inter@0.4.2':
     resolution: {integrity: sha512-syfiImMaDmq7cFi0of+waE2M4uSCyd16zgyWxdPOY7fN2VBmSLKEzkfbZgeOjJq61kSqPBNNtXjggiQiSD6gMQ==}
+
+  '@expo-google-fonts/lilita-one@0.4.1':
+    resolution: {integrity: sha512-/qkaTVWNivWLsdJvPUZ/XNr/azhKEUCE0OYrBZMj33ErtdHJCfuUh69XKm1FhoOTNVjNtyEvEUB0uerModvbEQ==}
 
   '@expo-google-fonts/space-mono@0.4.2':
     resolution: {integrity: sha512-soYY/qcKcnY7xjIhuMAVzJYxSdJ3Z8TjrtFHOB5SK7/4MEMGpoaw+CAVyvXnA3fsO7J7waIW+/5Z0Y0i/CfSeg==}
@@ -6703,6 +6709,8 @@ snapshots:
     optional: true
 
   '@expo-google-fonts/inter@0.4.2': {}
+
+  '@expo-google-fonts/lilita-one@0.4.1': {}
 
   '@expo-google-fonts/space-mono@0.4.2': {}
 

@@ -16,7 +16,7 @@ import { useColors } from "@/hooks/useColors";
 type TwoOrMoreColors = [string, string, ...string[]];
 
 const QUICK_PRESETS = [
-  { name: "Kapsul", start: "#6366F1", end: "#EC4899" },
+  { name: "Piclo", start: "#6366F1", end: "#EC4899" },
   { name: "Oro & Rosa", start: "#D4AF37", end: "#F4A0B5" },
   { name: "Fuoco", start: "#F59E0B", end: "#F97316" },
   { name: "Oceano", start: "#06B6D4", end: "#84CC16" },
