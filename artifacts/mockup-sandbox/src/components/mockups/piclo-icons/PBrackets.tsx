@@ -24,12 +24,12 @@ export function PBrackets() {
         <span
           style={{
             fontFamily: "'Lilita One', cursive",
-            fontSize: '160px',
+            fontSize: '148px',
             color: 'white',
             lineHeight: 1,
             position: 'relative',
             zIndex: 2,
-            marginTop: '-28px',
+            paddingTop: '12px',
             userSelect: 'none',
           }}
         >
