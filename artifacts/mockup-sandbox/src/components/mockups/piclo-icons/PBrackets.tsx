@@ -24,16 +24,16 @@ export function PBrackets() {
         <span
           style={{
             fontFamily: "'Lilita One', cursive",
-            fontSize: '148px',
+            fontSize: '160px',
             color: 'white',
             lineHeight: 1,
             position: 'relative',
             zIndex: 2,
-            paddingTop: '12px',
+            marginTop: '-28px',
             userSelect: 'none',
           }}
         >
-          P
+          p
         </span>
         <svg
           width="320"
