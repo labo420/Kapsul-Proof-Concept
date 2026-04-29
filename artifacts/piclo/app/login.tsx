@@ -114,7 +114,7 @@ export default function LoginScreen() {
                   style={styles.logoImage}
                   resizeMode="contain"
                 />
-                <Text style={[styles.logoSub, { color: colors.mutedForeground }]}>Capture the moment</Text>
+                <Text style={[styles.logoSub, { color: colors.mutedForeground }]}>Scan. Drop. Relive.</Text>
               </View>
 
               <Animated.View style={[styles.form, formAnim]}>
