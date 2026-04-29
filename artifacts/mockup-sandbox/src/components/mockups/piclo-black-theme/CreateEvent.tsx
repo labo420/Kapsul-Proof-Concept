@@ -5,6 +5,7 @@ const FG = "#FFFFFF";
 const MUTED = "#9CA3AF";
 const INPUT = "#111111";
 const G1 = "#6366F1";
+const G_MID = "#8B5CF6";
 const G2 = "#EC4899";
 
 const STEPS = ["Dettagli", "Tema", "Modalità", "Piano"];
@@ -26,7 +27,7 @@ export function CreateEvent() {
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
                 <div style={{
                   width: 28, height: 28, borderRadius: "50%",
-                  background: i <= step ? `linear-gradient(135deg, ${G1}, ${G2})` : "#111",
+                  background: i <= step ? `linear-gradient(135deg, ${G1}, ${G_MID}, ${G2})` : "#111",
                   border: i > step ? `1px solid ${BORDER}` : "none",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   color: i <= step ? "#fff" : MUTED, fontSize: "12px", fontWeight: 700,
@@ -36,7 +37,7 @@ export function CreateEvent() {
                 <span style={{ color: i <= step ? FG : MUTED, fontSize: "10px", fontWeight: 600, whiteSpace: "nowrap" }}>{s}</span>
               </div>
               {i < STEPS.length - 1 && (
-                <div style={{ flex: 1, height: "2px", background: i < step ? `linear-gradient(90deg, ${G1}, ${G2})` : BORDER, margin: "0 4px", marginBottom: "20px" }} />
+                <div style={{ flex: 1, height: "2px", background: i < step ? `linear-gradient(90deg, ${G1}, ${G_MID}, ${G2})` : BORDER, margin: "0 4px", marginBottom: "20px" }} />
               )}
             </div>
           ))}
@@ -78,7 +79,7 @@ export function CreateEvent() {
       </div>
 
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: "16px 20px 40px", borderTop: `1px solid ${BORDER}`, background: BG }}>
-        <button style={{ width: "100%", padding: "16px", background: `linear-gradient(90deg, ${G1}, ${G2})`, border: "none", borderRadius: "999px", color: "#fff", fontSize: "16px", fontWeight: 700, cursor: "pointer" }}>
+        <button style={{ width: "100%", padding: "16px", background: `linear-gradient(90deg, ${G1}, ${G_MID}, ${G2})`, border: "none", borderRadius: "999px", color: "#fff", fontSize: "16px", fontWeight: 700, cursor: "pointer" }}>
           Avanti →
         </button>
       </div>

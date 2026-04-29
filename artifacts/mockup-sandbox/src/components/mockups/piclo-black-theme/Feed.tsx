@@ -4,6 +4,7 @@ const BORDER = "#222222";
 const FG = "#FFFFFF";
 const MUTED = "#9CA3AF";
 const G1 = "#6366F1";
+const G_MID = "#8B5CF6";
 const G2 = "#EC4899";
 
 const posts = [
@@ -23,7 +24,7 @@ export function Feed() {
         {posts.map((p, i) => (
           <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: "16px", margin: "6px 16px", overflow: "hidden" }}>
             <div style={{ display: "flex", alignItems: "center", padding: "12px", gap: "10px" }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${G1}, ${G2})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "14px" }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${G1}, ${G_MID}, ${G2})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "14px" }}>
                 {p.user[0]}
               </div>
               <div>

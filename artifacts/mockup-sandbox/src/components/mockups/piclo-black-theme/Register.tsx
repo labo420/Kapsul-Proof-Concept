@@ -5,6 +5,7 @@ const FG = "#FFFFFF";
 const MUTED = "#9CA3AF";
 const INPUT = "#111111";
 const G1 = "#6366F1";
+const G_MID = "#8B5CF6";
 const G2 = "#EC4899";
 
 function Field({ label, placeholder, type = "text" }: { label: string; placeholder: string; type?: string }) {
@@ -39,7 +40,7 @@ export function Register() {
           </div>
           <Field label="EMAIL" placeholder="nome@esempio.com" type="email" />
           <Field label="PASSWORD" placeholder="Min. 6 caratteri" type="password" />
-          <button style={{ width: "100%", padding: "15px", background: `linear-gradient(90deg, ${G1}, ${G2})`, border: "none", borderRadius: "999px", color: "#fff", fontSize: "16px", fontWeight: 700, cursor: "pointer" }}>
+          <button style={{ width: "100%", padding: "15px", background: `linear-gradient(90deg, ${G1}, ${G_MID}, ${G2})`, border: "none", borderRadius: "999px", color: "#fff", fontSize: "16px", fontWeight: 700, cursor: "pointer" }}>
             Crea account →
           </button>
         </div>

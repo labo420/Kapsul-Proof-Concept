@@ -4,6 +4,7 @@ const BORDER = "#222222";
 const FG = "#FFFFFF";
 const MUTED = "#9CA3AF";
 const G1 = "#6366F1";
+const G_MID = "#8B5CF6";
 const G2 = "#EC4899";
 
 function Row({ icon, label }: { icon: string; label: string }) {
@@ -22,7 +23,7 @@ export function Profile() {
       <div style={{ padding: "24px 20px 0" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <div style={{ width: 72, height: 72, borderRadius: "50%", background: `linear-gradient(135deg, ${G1}, ${G2})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px" }}>👤</div>
+            <div style={{ width: 72, height: 72, borderRadius: "50%", background: `linear-gradient(135deg, ${G1}, ${G_MID}, ${G2})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px" }}>👤</div>
             <div>
               <div style={{ color: FG, fontSize: "18px", fontWeight: 800 }}>Marco Rossi</div>
               <div style={{ color: MUTED, fontSize: "13px" }}>@marco.r</div>

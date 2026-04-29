@@ -4,6 +4,7 @@ const BORDER = "#222222";
 const FG = "#FFFFFF";
 const MUTED = "#9CA3AF";
 const G1 = "#6366F1";
+const G_MID = "#8B5CF6";
 const G2 = "#EC4899";
 
 export function Guest() {
@@ -28,7 +29,7 @@ export function Guest() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px", gap: "16px" }}>
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ position: "absolute", width: 130, height: 130, borderRadius: "50%", background: `linear-gradient(135deg, ${G1}50, ${G2}50)`, filter: "blur(20px)" }} />
-          <button style={{ position: "relative", width: 120, height: 120, borderRadius: "50%", background: `linear-gradient(135deg, ${G1}, ${G2})`, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "44px" }}>
+          <button style={{ position: "relative", width: 120, height: 120, borderRadius: "50%", background: `linear-gradient(135deg, ${G1}, ${G_MID}, ${G2})`, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "44px" }}>
             📷
           </button>
         </div>

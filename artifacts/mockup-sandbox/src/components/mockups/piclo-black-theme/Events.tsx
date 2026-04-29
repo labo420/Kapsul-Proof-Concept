@@ -4,6 +4,7 @@ const BORDER = "#222222";
 const FG = "#FFFFFF";
 const MUTED = "#9CA3AF";
 const G1 = "#6366F1";
+const G_MID = "#8B5CF6";
 const G2 = "#EC4899";
 
 const events = [
@@ -21,13 +22,13 @@ export function Events() {
             <img src="/__mockup/images/piclo-logo-white.png" alt="Piclo" style={{ width: 100, height: 32, objectFit: "contain", display: "block" }} />
             <span style={{ color: MUTED, fontSize: "13px", fontWeight: 500, marginTop: "4px", display: "block" }}>I tuoi eventi</span>
           </div>
-          <button style={{ background: `linear-gradient(90deg, ${G1}, ${G2})`, border: "none", borderRadius: "999px", padding: "10px 18px", color: "#fff", fontSize: "14px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}>
+          <button style={{ background: `linear-gradient(90deg, ${G1}, ${G_MID}, ${G2})`, border: "none", borderRadius: "999px", padding: "10px 18px", color: "#fff", fontSize: "14px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}>
             + Nuovo
           </button>
         </div>
 
         <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
-          <button style={{ background: `linear-gradient(90deg, ${G1}, ${G2})`, border: "none", borderRadius: "999px", padding: "8px 16px", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>Data creazione</button>
+          <button style={{ background: `linear-gradient(90deg, ${G1}, ${G_MID}, ${G2})`, border: "none", borderRadius: "999px", padding: "8px 16px", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>Data creazione</button>
           <button style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: "999px", padding: "8px 16px", color: MUTED, fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>Data evento</button>
         </div>
 
@@ -50,7 +51,7 @@ export function Events() {
                   <span style={{ color: G1, fontSize: "22px", fontWeight: 800 }}>{ev.photos}</span>
                   <span style={{ color: MUTED, fontSize: "13px" }}>foto</span>
                 </div>
-                <button style={{ background: `linear-gradient(90deg, ${G1}, ${G2})`, border: "none", borderRadius: "999px", padding: "8px 14px", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>⊞ QR</button>
+                <button style={{ background: `linear-gradient(90deg, ${G1}, ${G_MID}, ${G2})`, border: "none", borderRadius: "999px", padding: "8px 14px", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>⊞ QR</button>
               </div>
             </div>
           ))}
