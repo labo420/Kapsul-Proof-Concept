@@ -7,15 +7,17 @@ const FG = "#FFFFFF";
 const MUTED = "#9CA3AF";
 const G1 = "#6366F1";
 const G_MID = "#8B5CF6";
-const G2 = "#EC4899";
 
-function Toggle({ on }: { on: boolean }) {
+function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
-    <div style={{
-      width: 44, height: 26, borderRadius: "999px",
-      background: on ? `linear-gradient(90deg, ${G1}, ${G_MID})` : BORDER,
-      position: "relative", cursor: "pointer", transition: "background 0.2s",
-    }}>
+    <div
+      onClick={onToggle}
+      style={{
+        width: 44, height: 26, borderRadius: "999px",
+        background: on ? `linear-gradient(90deg, ${G1}, ${G_MID})` : BORDER,
+        position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0,
+      }}
+    >
       <div style={{
         position: "absolute", width: 20, height: 20, borderRadius: "50%",
         background: "#fff", top: 3,
@@ -52,18 +54,15 @@ export function Settings() {
       <div style={{ marginBottom: "6px" }}>
         <div style={{ padding: "0 20px 8px", color: MUTED, fontSize: "11px", fontWeight: 600, letterSpacing: "1.2px" }}>ACCOUNT</div>
         <div style={{ borderTop: `1px solid ${BORDER}` }}>
-          <SettingRow icon="🔔" label="Notifiche push" right={<Toggle on={notif} />} />
-          <SettingRow icon="🔒" label="Account pubblico" right={<Toggle on={pub} />} />
-          <SettingRow icon="👥" label="Follower e seguiti" />
-          <SettingRow icon="✏️" label="Modifica profilo" />
+          <SettingRow icon="🔔" label="Notifiche push" right={<Toggle on={notif} onToggle={() => setNotif(v => !v)} />} />
+          <SettingRow icon="🔒" label="Account pubblico" right={<Toggle on={pub} onToggle={() => setPub(v => !v)} />} />
         </div>
       </div>
 
       <div style={{ marginBottom: "6px" }}>
         <div style={{ padding: "0 20px 8px", color: MUTED, fontSize: "11px", fontWeight: 600, letterSpacing: "1.2px" }}>PREFERENZE</div>
         <div style={{ borderTop: `1px solid ${BORDER}` }}>
-          <SettingRow icon="💾" label="Salvataggio automatico foto" right={<Toggle on={autoSave} />} />
-          <SettingRow icon="🌐" label="Lingua" right={<span style={{ color: MUTED, fontSize: "14px" }}>Italiano ›</span>} />
+          <SettingRow icon="💾" label="Salvataggio automatico foto" right={<Toggle on={autoSave} onToggle={() => setAutoSave(v => !v)} />} />
         </div>
       </div>
 
@@ -71,7 +70,6 @@ export function Settings() {
         <div style={{ padding: "0 20px 8px", color: MUTED, fontSize: "11px", fontWeight: 600, letterSpacing: "1.2px" }}>INFORMAZIONI</div>
         <div style={{ borderTop: `1px solid ${BORDER}` }}>
           <SettingRow icon="📄" label="Termini di servizio" />
-          <SettingRow icon="🔐" label="Privacy policy" />
           <SettingRow icon="ℹ️" label="Informazioni sull'app" right={<span style={{ color: MUTED, fontSize: "14px" }}>v1.0.0 ›</span>} />
         </div>
       </div>
