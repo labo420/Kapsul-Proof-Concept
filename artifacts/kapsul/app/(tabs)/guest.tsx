@@ -393,7 +393,7 @@ export default function GuestScreen() {
         ) : null}
         <Animated.View style={[styles.header, enterStyle0]}>
           <View>
-            <Text style={[styles.logo, { color: colors.foreground }]}>Piclo</Text>
+            <Text style={[styles.logo, { color: colors.foreground }]}>piclo</Text>
             <Text style={[styles.guestId, { color: colors.mutedForeground }]}>
               {guestId ?? "---"}
             </Text>

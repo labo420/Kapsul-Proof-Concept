@@ -130,7 +130,7 @@ export default function JoinScreen() {
         >
           <Users size={22} color="#fff" />
         </LinearGradient>
-        <Text style={styles.logoText}>Piclo</Text>
+        <Text style={styles.logoText}>piclo</Text>
       </View>
 
       <View style={styles.center}>

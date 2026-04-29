@@ -151,7 +151,7 @@ export default function RegisterScreen() {
                 >
                   <Camera size={24} color="#fff" />
                 </LinearGradient>
-                <Text style={styles.logoText}>Piclo</Text>
+                <Text style={styles.logoText}>piclo</Text>
                 <Text style={[styles.logoSub, { color: colors.mutedForeground }]}>Crea il tuo account</Text>
               </View>
 

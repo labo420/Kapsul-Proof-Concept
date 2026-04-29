@@ -380,14 +380,7 @@ export default function HomeScreen() {
 
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 12 }]}>
-        <LinearGradient
-          colors={[colors.gradientStart, colors.gradientEnd]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.logoGradient}
-        >
-          <Text style={styles.logoText}>Piclo</Text>
-        </LinearGradient>
+        <Text style={styles.logoText}>piclo</Text>
         {token && (
           <TouchableOpacity onPress={() => fetchFeed(true)} style={{ padding: 4 }}>
             <RefreshCw size={20} color={colors.mutedForeground} />
@@ -425,7 +418,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
   },
-  logoGradient: { borderRadius: 8, paddingHorizontal: 2, paddingVertical: 1, alignSelf: "flex-start" },
   logoText: { fontSize: 26, fontFamily: "LilitaOne_400Regular", color: "#fff" },
   card: {
     marginHorizontal: 16,

@@ -99,14 +99,7 @@ export default function HostScreen() {
       >
         <View style={styles.header}>
           <Animated.View style={logoStyle}>
-            <LinearGradient
-              colors={[colors.gradientStart, colors.gradientEnd]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.logoGradient}
-            >
-              <Text style={styles.logoText}>Piclo</Text>
-            </LinearGradient>
+            <Text style={styles.logoText}>piclo</Text>
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
               I tuoi eventi
             </Text>
@@ -314,13 +307,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 32,
-  },
-  logoGradient: {
-    borderRadius: 8,
-    paddingHorizontal: 2,
-    paddingVertical: 1,
-    alignSelf: "flex-start",
-    backgroundColor: "transparent",
   },
   logoText: {
     fontSize: 28,
