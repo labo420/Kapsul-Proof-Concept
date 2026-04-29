@@ -41,7 +41,7 @@ export function SplitScreen() {
           <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-neutral-200 rounded-full"></div>
 
           <div className="flex-1 flex flex-col">
-            <h2 className="text-2xl font-bold tracking-tight text-neutral-900 mb-6">Welcome to <span className="text-rose-500">Kapsul</span></h2>
+            <h2 className="text-2xl font-bold tracking-tight text-neutral-900 mb-6">Welcome to <span className="text-rose-500">Piclo</span></h2>
             
             <div className="space-y-4 mb-6">
               <div className="relative">
@@ -93,7 +93,7 @@ export function SplitScreen() {
             
             <div className="mt-auto pt-6 text-center">
               <p className="text-sm text-neutral-500">
-                New to Kapsul?{' '}
+                New to Piclo?{' '}
                 <a href="#" className="text-rose-500 font-semibold hover:text-rose-600 transition-colors">
                   Get started
                 </a>

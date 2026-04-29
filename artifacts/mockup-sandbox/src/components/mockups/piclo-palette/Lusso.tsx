@@ -24,7 +24,7 @@ export function Lusso() {
                 className="text-2xl font-black tracking-tight"
                 style={{ background: `linear-gradient(135deg, ${g1}, ${g2})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
               >
-                Kapsul
+                Piclo
               </span>
               <p className="text-white/40 text-xs mt-0.5">I tuoi eventi</p>
             </div>

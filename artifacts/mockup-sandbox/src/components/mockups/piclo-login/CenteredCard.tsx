@@ -43,7 +43,7 @@ export function CenteredCard() {
                 backgroundClip: 'text',
               }}
             >
-              KAPSUL
+              PICLO
             </h1>
             <p className="text-sm mt-2 font-medium tracking-wide" style={{ color: '#9CA3AF' }}>
               Capture the moment

@@ -21,7 +21,7 @@ export function FullBleedDark() {
         <div className="relative z-10 flex flex-col flex-1 px-8 pt-36 pb-12">
           <div className="mb-16">
             <h1 className="text-4xl font-bold tracking-tight mb-3 text-white">Welcome back.</h1>
-            <p className="text-white/50 text-base font-light">Sign in to continue to Kapsul</p>
+            <p className="text-white/50 text-base font-light">Sign in to continue to Piclo</p>
           </div>
 
           <form className="flex-1 flex flex-col space-y-10" onSubmit={(e) => e.preventDefault()}>
