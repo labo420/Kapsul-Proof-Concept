@@ -19,7 +19,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 ## Artifacts
 
 ### Piclo (artifacts/kapsul) — Mobile App (Expo)
-MVP of Piclo, a mobile-first event photo collection app (formerly Kapsul).
+MVP of Piclo, a mobile-first event photo collection app.
 - **Theme**: Social/Viral — Deep violet-black (#08060F) + Indigo→Pink gradient (#6366F1→#EC4899), glassmorphic cards
 - **Fonts**: Inter (UI) + Space Mono (counters) + Lilita One (logo wordmark)
 - **Screens**: Login (CenteredCard design — glass card, indigo/pink gradient), Host Home, Create Event (2-step wizard), QR Code, Guest Join (`/join/[id]` — loading→success/error, calls `apiJoinEvent`, redirects to guest tab), Guest Upload Dashboard, Guest Wall (masonry), Scan QR (web: TextInput fallback; native: camera), Event Detail
