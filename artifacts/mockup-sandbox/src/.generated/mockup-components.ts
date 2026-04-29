@@ -6,5 +6,10 @@ export const modules: ModuleMap = {
   "./components/mockups/kapsul-login/SplitScreen.tsx": () => import("../components/mockups/kapsul-login/SplitScreen.tsx"),
   "./components/mockups/kapsul-palette/Caldo.tsx": () => import("../components/mockups/kapsul-palette/Caldo.tsx"),
   "./components/mockups/kapsul-palette/Lusso.tsx": () => import("../components/mockups/kapsul-palette/Lusso.tsx"),
-  "./components/mockups/kapsul-palette/Oceano.tsx": () => import("../components/mockups/kapsul-palette/Oceano.tsx")
+  "./components/mockups/kapsul-palette/Oceano.tsx": () => import("../components/mockups/kapsul-palette/Oceano.tsx"),
+  "./components/mockups/piclo-logos/Bold.tsx": () => import("../components/mockups/piclo-logos/Bold.tsx"),
+  "./components/mockups/piclo-logos/Gradient.tsx": () => import("../components/mockups/piclo-logos/Gradient.tsx"),
+  "./components/mockups/piclo-logos/Modern.tsx": () => import("../components/mockups/piclo-logos/Modern.tsx"),
+  "./components/mockups/piclo-logos/Mono.tsx": () => import("../components/mockups/piclo-logos/Mono.tsx"),
+  "./components/mockups/piclo-logos/Serif.tsx": () => import("../components/mockups/piclo-logos/Serif.tsx")
 };
