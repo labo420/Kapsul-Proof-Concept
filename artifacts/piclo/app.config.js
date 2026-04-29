@@ -15,7 +15,7 @@ export default {
     userInterfaceStyle: "dark",
     newArchEnabled: true,
     splash: {
-      image: "./assets/images/icon.png",
+      image: "./assets/images/splash-icon.png",
       resizeMode: "contain",
       backgroundColor: "#000000",
     },
