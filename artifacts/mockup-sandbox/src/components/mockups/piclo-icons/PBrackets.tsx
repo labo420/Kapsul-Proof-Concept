@@ -8,6 +8,7 @@ export function PBrackets() {
       alignItems: 'center',
       justifyContent: 'center',
     }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');`}</style>
       <div style={{
         width: '320px',
         height: '320px',
@@ -21,14 +22,15 @@ export function PBrackets() {
         overflow: 'hidden',
       }}>
         <span
-          className="font-['Lilita_One']"
           style={{
-            fontSize: '140px',
+            fontFamily: "'Lilita One', cursive",
+            fontSize: '148px',
             color: 'white',
             lineHeight: 1,
             position: 'relative',
             zIndex: 2,
-            paddingTop: '10px',
+            paddingTop: '12px',
+            userSelect: 'none',
           }}
         >
           P
