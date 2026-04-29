@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
-  logoImage: { width: 100, height: 30 },
+  logoImage: { width: 100, height: 32 },
   center: {
     flex: 1,
     alignItems: "center",

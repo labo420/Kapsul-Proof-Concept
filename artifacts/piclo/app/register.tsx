@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   cardWrap: { borderRadius: 28, overflow: "hidden" },
   cardInner: { borderRadius: 28, borderWidth: 1, padding: 28 },
   logoSection: { alignItems: "center", marginBottom: 24 },
-  logoImage: { width: 160, height: 48, marginBottom: 8 },
+  logoImage: { width: 150, height: 44, marginBottom: 8 },
   logoSub: { fontSize: 13, marginTop: 3, letterSpacing: 0.3, fontFamily: "Inter_400Regular" },
   form: { gap: 14 },
   fieldGroup: { gap: 5 },
