@@ -23,12 +23,12 @@ export function Guest() {
       <div style={{ padding: "32px 24px 0", textAlign: "center" }}>
         <div style={{ color: MUTED, fontSize: "15px", fontWeight: 600, marginBottom: "8px" }}>Matrimonio Luca & Sara</div>
         <div style={{ color: FG, fontSize: "64px", fontWeight: 800, letterSpacing: "-2px", fontFamily: "monospace" }}>0084</div>
-        <div style={{ height: "3px", background: `linear-gradient(90deg, ${G1}, ${G2})`, borderRadius: "2px", margin: "12px auto", width: "120px" }} />
+        <div style={{ height: "3px", background: `linear-gradient(90deg, ${G1}, ${G_MID}, ${G2})`, borderRadius: "2px", margin: "12px auto", width: "120px" }} />
       </div>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px", gap: "16px" }}>
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ position: "absolute", width: 130, height: 130, borderRadius: "50%", background: `linear-gradient(135deg, ${G1}50, ${G2}50)`, filter: "blur(20px)" }} />
+          <div style={{ position: "absolute", width: 130, height: 130, borderRadius: "50%", background: `linear-gradient(135deg, ${G1}50, ${G_MID}50, ${G2}50)`, filter: "blur(20px)" }} />
           <button style={{ position: "relative", width: 120, height: 120, borderRadius: "50%", background: `linear-gradient(135deg, ${G1}, ${G_MID}, ${G2})`, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "44px" }}>
             📷
           </button>

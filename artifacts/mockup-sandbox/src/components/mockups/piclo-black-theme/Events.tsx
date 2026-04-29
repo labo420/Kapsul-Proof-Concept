@@ -43,7 +43,7 @@ export function Events() {
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
                   <span style={{ background: `${G1}22`, color: G1, borderRadius: "8px", padding: "2px 8px", fontSize: "11px", fontWeight: 600 }}>Party</span>
                   <span style={{ background: `${G2}22`, color: G2, borderRadius: "8px", padding: "2px 8px", fontSize: "11px", fontWeight: 600 }}>{ev.plan}</span>
-                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: `linear-gradient(135deg, ${G1}, ${G2})` }} />
+                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: `linear-gradient(135deg, ${G1}, ${G_MID}, ${G2})` }} />
                 </div>
               </div>
               <div style={{ borderTop: `1px solid ${BORDER}`, padding: "12px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
