@@ -29,7 +29,7 @@ export function PBrackets() {
             lineHeight: 1,
             position: 'relative',
             zIndex: 2,
-            paddingTop: '12px',
+            transform: 'translateY(20px)',
             userSelect: 'none',
           }}
         >
