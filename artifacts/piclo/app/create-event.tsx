@@ -27,6 +27,8 @@ import DeliveryModeSelector from "@/components/DeliveryModeSelector";
 import ScreenTransition from "@/components/ScreenTransition";
 import PlanCard from "@/components/PlanCard";
 import GradientPicker from "@/components/GradientPicker";
+import EventDatePicker, { formatDateIT } from "@/components/EventDatePicker";
+import EventTimePicker, { formatTimeHHMM } from "@/components/EventTimePicker";
 
 const STEPS = ["Dettagli", "Tema", "Modalità", "Piano"];
 
@@ -38,10 +40,11 @@ export default function CreateEventScreen() {
 
   const [step, setStep] = useState(0);
   const [eventName, setEventName] = useState("");
-  const [eventDate, setEventDate] = useState("");
+  const [eventDateObj, setEventDateObj] = useState<Date | null>(null);
+  const [eventTimeObj, setEventTimeObj] = useState<Date | null>(null);
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("party");
   const [vaultHours, setVaultHours] = useState(24);
-  const [focusedField, setFocusedField] = useState<"name" | "date" | null>(null);
+  const [focusedField, setFocusedField] = useState<"name" | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<EventPlan>("party");
   const [gradientStart, setGradientStart] = useState("#6366F1");
   const [gradientEnd, setGradientEnd] = useState("#EC4899");
@@ -52,9 +55,13 @@ export default function CreateEventScreen() {
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
   const LAST_STEP = STEPS.length - 1;
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dateIsInPast = eventDateObj !== null && eventDateObj < today;
+
   const canProceed =
     step === 0
-      ? eventName.trim().length > 0 && eventDate.trim().length > 0
+      ? eventName.trim().length > 0 && eventDateObj !== null && !dateIsInPast && eventTimeObj !== null
       : true;
 
   const handleNext = async () => {
@@ -68,7 +75,8 @@ export default function CreateEventScreen() {
       }
       const event = await createEvent({
         name: eventName.trim(),
-        date: eventDate.trim(),
+        date: eventDateObj ? formatDateIT(eventDateObj) : "",
+        startTime: eventTimeObj ? formatTimeHHMM(eventTimeObj) : null,
         deliveryMode,
         vaultHours: deliveryMode === "vault" ? vaultHours : undefined,
         plan: selectedPlan,
@@ -287,41 +295,24 @@ export default function CreateEventScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text
-                  style={[styles.inputLabel, { color: colors.mutedForeground }]}
-                >
+                <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>
                   DATA
                 </Text>
-                <TextInput
-                  value={eventDate}
-                  onChangeText={setEventDate}
-                  placeholder="es. 28 Aprile 2026"
-                  placeholderTextColor={colors.mutedForeground}
-                  onFocus={() => setFocusedField("date")}
-                  onBlur={() => setFocusedField(null)}
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.input,
-                      borderColor:
-                        focusedField === "date"
-                          ? colors.gradientEnd
-                          : eventDate.trim()
-                          ? colors.primary + "70"
-                          : colors.border,
-                      borderRadius: colors.radius,
-                      shadowColor:
-                        focusedField === "date"
-                          ? colors.gradientEnd
-                          : "transparent",
-                      shadowOffset: { width: 0, height: 0 },
-                      shadowOpacity: focusedField === "date" ? 0.45 : 0,
-                      shadowRadius: 8,
-                    },
-                  ]}
-                  returnKeyType="done"
-                  onSubmitEditing={canProceed ? handleNext : undefined}
+                <EventDatePicker
+                  value={eventDateObj}
+                  onChange={setEventDateObj}
+                  hasError={dateIsInPast}
+                  errorMessage="La data deve essere nel futuro"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>
+                  ORA DI INIZIO
+                </Text>
+                <EventTimePicker
+                  value={eventTimeObj}
+                  onChange={setEventTimeObj}
                 />
               </View>
             </View>

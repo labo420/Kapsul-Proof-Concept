@@ -41,6 +41,7 @@ export default {
       ],
       "expo-font",
       "expo-web-browser",
+      "@react-native-community/datetimepicker",
     ],
     experiments: {
       typedRoutes: true,

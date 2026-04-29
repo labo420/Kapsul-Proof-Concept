@@ -12,6 +12,7 @@ export interface ApiEvent {
   id: string;
   name: string;
   date: string;
+  startTime?: string | null;
   deliveryMode: "party" | "morning_after" | "vault";
   vaultHours: number;
   plan: "free" | "party" | "pro";
@@ -42,7 +43,7 @@ export interface ApiGuest {
 }
 
 export async function apiCreateEvent(
-  payload: Omit<ApiEvent, "id" | "coverImagePath" | "isActive" | "createdAt" | "photoCount" | "guestCount"> & { id?: string },
+  payload: Omit<ApiEvent, "id" | "coverImagePath" | "isActive" | "createdAt" | "photoCount" | "guestCount" | "startTime"> & { id?: string; startTime?: string },
   authToken?: string | null
 ): Promise<ApiEvent> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };

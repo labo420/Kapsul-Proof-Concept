@@ -21,6 +21,7 @@ const DELIVERY_LABELS: Record<string, string> = {
   party: "Party Mode",
   morning_after: "Morning After",
   vault: "Vault Mode",
+  now: "Mostra subito",
 };
 
 export default function EventDetailScreen() {
@@ -122,6 +123,11 @@ export default function EventDetailScreen() {
             <View style={styles.statBlock}>
               <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>DATA</Text>
               <Text style={[styles.statValue, { color: colors.foreground }]}>{event.date}</Text>
+              {event.startTime && (
+                <Text style={[styles.statSubValue, { color: colors.mutedForeground }]}>
+                  ore {event.startTime}
+                </Text>
+              )}
             </View>
             <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
             <View style={styles.statBlock}>
@@ -266,6 +272,11 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 15,
     fontWeight: "700",
+  },
+  statSubValue: {
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 2,
   },
   photoBanner: {
     borderTopWidth: 1,

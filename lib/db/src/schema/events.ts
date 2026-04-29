@@ -6,6 +6,7 @@ export const eventsTable = pgTable("events", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   date: text("date").notNull(),
+  startTime: text("start_time"),
   deliveryMode: text("delivery_mode").notNull().default("party"),
   vaultHours: integer("vault_hours").default(24),
   plan: text("plan").notNull().default("free"),

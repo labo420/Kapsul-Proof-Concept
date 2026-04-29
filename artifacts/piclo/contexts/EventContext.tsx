@@ -10,6 +10,7 @@ export interface PicloEvent {
   id: string;
   name: string;
   date: string;
+  startTime?: string | null;
   deliveryMode: DeliveryMode;
   vaultHours?: number;
   photoCount: number;
@@ -28,6 +29,7 @@ function apiEventToLocal(e: ApiEvent, existingLocal?: PicloEvent): PicloEvent {
     id: e.id,
     name: e.name,
     date: e.date,
+    startTime: e.startTime ?? null,
     deliveryMode: e.deliveryMode as DeliveryMode,
     vaultHours: e.vaultHours,
     photoCount: e.photoCount,
@@ -114,6 +116,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       const apiEvent = await apiCreateEvent({
         name: partial.name,
         date: partial.date,
+        startTime: partial.startTime ?? undefined,
         deliveryMode: partial.deliveryMode,
         vaultHours: partial.vaultHours ?? 0,
         plan: partial.plan,
