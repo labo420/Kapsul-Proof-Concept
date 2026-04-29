@@ -28,7 +28,7 @@
       "y": 840,
       "w": 720,
       "h": 36,
-      "text": "Gradiente + logo bianco"
+      "text": "Gradiente + bianco"
     },
     {
       "shapeId": "label-gradient-dark",
@@ -37,7 +37,7 @@
       "y": 840,
       "w": 720,
       "h": 36,
-      "text": "Gradiente + logo nero"
+      "text": "Gradiente + nero"
     }
   ]
 }
