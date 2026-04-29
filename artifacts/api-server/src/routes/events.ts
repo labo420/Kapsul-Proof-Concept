@@ -50,7 +50,7 @@ const CreateEventBody = z.object({
   name: z.string().min(1),
   date: z.string(),
   startTime: z.string().optional(),
-  deliveryMode: z.enum(["party", "morning_after", "vault"]).default("party"),
+  deliveryMode: z.enum(["now", "morning_after"]).default("morning_after"),
   vaultHours: z.number().optional(),
   plan: z.enum(["free", "party", "pro"]).default("free"),
   themeGradientStart: z.string().default("#6366F1"),

@@ -116,7 +116,6 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
         date: partial.date,
         startTime: partial.startTime ?? undefined,
         deliveryMode: partial.deliveryMode,
-        vaultHours: partial.vaultHours ?? 0,
         plan: partial.plan,
         themeGradientStart: partial.themeGradientStart,
         themeGradientEnd: partial.themeGradientEnd,

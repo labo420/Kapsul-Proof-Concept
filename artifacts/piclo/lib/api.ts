@@ -13,7 +13,7 @@ export interface ApiEvent {
   name: string;
   date: string;
   startTime?: string | null;
-  deliveryMode: string;
+  deliveryMode: "now" | "morning_after";
   vaultHours?: number;
   plan: "free" | "party" | "pro";
   themeGradientStart: string;

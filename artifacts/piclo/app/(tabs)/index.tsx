@@ -30,8 +30,6 @@ import GradientBadge from "@/components/GradientBadge";
 const DELIVERY_LABELS: Record<string, string> = {
   now: "Mostra subito",
   morning_after: "Mattina dopo",
-  party: "Party",
-  vault: "Vault",
 };
 
 const SPRING = { damping: 20, stiffness: 200, mass: 0.9 } as const;

@@ -20,8 +20,6 @@ import { apiGetGuests, apiRemoveGuest, type ApiGuest } from "@/lib/api";
 const DELIVERY_LABELS: Record<string, string> = {
   now: "Mostra subito",
   morning_after: "Rivela la mattina dopo",
-  party: "Party Mode",
-  vault: "Vault Mode",
 };
 
 export default function EventDetailScreen() {
