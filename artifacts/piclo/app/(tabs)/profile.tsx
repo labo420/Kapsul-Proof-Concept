@@ -38,7 +38,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGuest } from "@/contexts/GuestContext";
-import { useEvents, type KapsulEvent } from "@/contexts/EventContext";
+import { useEvents, type PicloEvent } from "@/contexts/EventContext";
 import { usePlan } from "@/contexts/PlanContext";
 import { API_BASE, photoUrl } from "@/lib/api";
 import GradientButton from "@/components/GradientButton";
@@ -261,7 +261,7 @@ function UserListModal({ visible, onClose, title, endpoint, token }: { visible: 
 
 function HighlightsPickerModal({ visible, onClose, events, selectedIds, onSave }: {
   visible: boolean; onClose: () => void;
-  events: KapsulEvent[];
+  events: PicloEvent[];
   selectedIds: string[];
   onSave: (ids: string[]) => Promise<void>;
 }) {

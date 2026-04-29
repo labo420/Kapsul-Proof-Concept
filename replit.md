@@ -18,7 +18,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ## Artifacts
 
-### Piclo (artifacts/kapsul) — Mobile App (Expo)
+### Piclo (artifacts/piclo) — Mobile App (Expo)
 MVP of Piclo, a mobile-first event photo collection app.
 - **Theme**: Social/Viral — Deep violet-black (#08060F) + Indigo→Pink gradient (#6366F1→#EC4899), glassmorphic cards
 - **Fonts**: Inter (UI) + Space Mono (counters) + Lilita One (logo wordmark)
@@ -26,7 +26,7 @@ MVP of Piclo, a mobile-first event photo collection app.
 - **Guest join flow**: QR encodes `Linking.createURL("/join/{id}")` → HTTPS URL on web, `piclo://join/{id}` on native. Route `/join/[id]` handles web link; `scan.tsx` handles QR + manual code entry on web
 - **Components**: GradientButton, GradientBadge, NeonProgressBar (gradient fill), PhotoCard (gradient overlay + reactions), DeliveryModeSelector (gradient chips)
 - **State**: EventContext (API-first, AsyncStorage as cache) + GuestContext (AsyncStorage-backed)
-- **Backend**: Real API via `artifacts/kapsul/lib/api.ts` — creates events in DB, uploads photos to object storage, join event via QR scan
+- **Backend**: Real API via `artifacts/piclo/lib/api.ts` — creates events in DB, uploads photos to object storage, join event via QR scan
 - **Key packages**: expo-linear-gradient, expo-linking, react-native-qrcode-svg, expo-clipboard, @expo-google-fonts/space-mono, react-native-reanimated
 - **Config**: `app.config.js` (dynamic, replaces `app.json`) — reads `REPLIT_EXPO_DEV_DOMAIN` for correct expo-router `origin`
 - **Backend DB schema**: `lib/db/src/schema/` — events, photos, guests tables (Drizzle + PostgreSQL)

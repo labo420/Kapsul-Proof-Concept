@@ -87,8 +87,8 @@ function renderAndSave(svgStr, outPath) {
   console.log(`Saved ${outPath} (${pngBuffer.length} bytes)`);
 }
 
-renderAndSave(svg, 'artifacts/kapsul/assets/images/icon.png');
-renderAndSave(svg, 'artifacts/kapsul/assets/images/adaptive-icon.png');
-renderAndSave(svg, 'artifacts/kapsul/assets/images/splash-icon.png');
+renderAndSave(svg, 'artifacts/piclo/assets/images/icon.png');
+renderAndSave(svg, 'artifacts/piclo/assets/images/adaptive-icon.png');
+renderAndSave(svg, 'artifacts/piclo/assets/images/splash-icon.png');
 
 console.log('Done!');

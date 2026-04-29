@@ -64,18 +64,18 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   const [hasUsedFreeTrial, setHasUsedFreeTrial] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem("kapsul_free_trial_used").then((val) => {
+    AsyncStorage.getItem("piclo_free_trial_used").then((val) => {
       if (val === "true") setHasUsedFreeTrial(true);
     });
   }, []);
 
   const markFreeTrialUsed = async () => {
-    await AsyncStorage.setItem("kapsul_free_trial_used", "true");
+    await AsyncStorage.setItem("piclo_free_trial_used", "true");
     setHasUsedFreeTrial(true);
   };
 
   const resetPlan = async () => {
-    await AsyncStorage.removeItem("kapsul_free_trial_used");
+    await AsyncStorage.removeItem("piclo_free_trial_used");
     setHasUsedFreeTrial(false);
   };
 

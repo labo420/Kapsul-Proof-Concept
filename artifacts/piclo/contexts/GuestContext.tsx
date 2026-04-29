@@ -40,20 +40,20 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function init() {
-      let id = await AsyncStorage.getItem("kapsul_guest_id");
+      let id = await AsyncStorage.getItem("piclo_guest_id");
       if (!id) {
         id = generateGuestId();
-        await AsyncStorage.setItem("kapsul_guest_id", id);
+        await AsyncStorage.setItem("piclo_guest_id", id);
       }
       setGuestId(id);
 
-      const terms = await AsyncStorage.getItem("kapsul_terms");
+      const terms = await AsyncStorage.getItem("piclo_terms");
       if (terms === "true") setAcceptedTermsState(true);
 
-      const eventId = await AsyncStorage.getItem("kapsul_current_event_id");
+      const eventId = await AsyncStorage.getItem("piclo_current_event_id");
       if (eventId) setCurrentEventIdState(eventId);
 
-      const tokensRaw = await AsyncStorage.getItem("kapsul_guest_tokens");
+      const tokensRaw = await AsyncStorage.getItem("piclo_guest_tokens");
       if (tokensRaw) {
         try {
           setGuestTokensState(JSON.parse(tokensRaw) as Record<string, string>);
@@ -65,28 +65,28 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
 
   const setAcceptedTerms = async (v: boolean) => {
     setAcceptedTermsState(v);
-    await AsyncStorage.setItem("kapsul_terms", v ? "true" : "false");
+    await AsyncStorage.setItem("piclo_terms", v ? "true" : "false");
   };
 
   const setCurrentEventId = async (id: string | null) => {
     setCurrentEventIdState(id);
     if (id) {
-      await AsyncStorage.setItem("kapsul_current_event_id", id);
+      await AsyncStorage.setItem("piclo_current_event_id", id);
     } else {
-      await AsyncStorage.removeItem("kapsul_current_event_id");
+      await AsyncStorage.removeItem("piclo_current_event_id");
     }
   };
 
   const setGuestToken = async (eventId: string, token: string) => {
     const updated = { ...guestTokens, [eventId]: token };
     setGuestTokensState(updated);
-    await AsyncStorage.setItem("kapsul_guest_tokens", JSON.stringify(updated));
+    await AsyncStorage.setItem("piclo_guest_tokens", JSON.stringify(updated));
   };
 
   const resetGuest = async () => {
     const newId = generateGuestId();
-    await AsyncStorage.multiRemove(["kapsul_terms", "kapsul_current_event_id", "kapsul_guest_tokens"]);
-    await AsyncStorage.setItem("kapsul_guest_id", newId);
+    await AsyncStorage.multiRemove(["piclo_terms", "piclo_current_event_id", "piclo_guest_tokens"]);
+    await AsyncStorage.setItem("piclo_guest_id", newId);
     setGuestId(newId);
     setAcceptedTermsState(false);
     setCurrentEventIdState(null);

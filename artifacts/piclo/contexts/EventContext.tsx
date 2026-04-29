@@ -6,7 +6,7 @@ import { apiCreateEvent, apiGetEvent, type ApiEvent } from "@/lib/api";
 
 export type DeliveryMode = "party" | "morning_after" | "vault";
 
-export interface KapsulEvent {
+export interface PicloEvent {
   id: string;
   name: string;
   date: string;
@@ -23,7 +23,7 @@ export interface KapsulEvent {
   isPublic?: boolean;
 }
 
-function apiEventToLocal(e: ApiEvent, existingLocal?: KapsulEvent): KapsulEvent {
+function apiEventToLocal(e: ApiEvent, existingLocal?: PicloEvent): PicloEvent {
   return {
     id: e.id,
     name: e.name,
@@ -43,12 +43,12 @@ function apiEventToLocal(e: ApiEvent, existingLocal?: KapsulEvent): KapsulEvent 
 }
 
 interface EventContextType {
-  events: KapsulEvent[];
+  events: PicloEvent[];
   createEvent: (
-    event: Omit<KapsulEvent, "id" | "photoCount" | "guestCount" | "createdAt">
-  ) => Promise<KapsulEvent>;
-  getEvent: (id: string) => KapsulEvent | undefined;
-  refreshEvent: (id: string, guestToken?: string) => Promise<KapsulEvent | null>;
+    event: Omit<PicloEvent, "id" | "photoCount" | "guestCount" | "createdAt">
+  ) => Promise<PicloEvent>;
+  getEvent: (id: string) => PicloEvent | undefined;
+  refreshEvent: (id: string, guestToken?: string) => Promise<PicloEvent | null>;
   incrementPhotoCount: (id: string) => void;
   incrementGuestCount: (id: string) => void;
   resetEvents: () => Promise<void>;
@@ -78,22 +78,22 @@ const EventContext = createContext<EventContextType>({
 
 export function EventProvider({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
-  const [events, setEvents] = useState<KapsulEvent[]>([]);
+  const [events, setEvents] = useState<PicloEvent[]>([]);
 
   useEffect(() => {
     async function load() {
-      const raw = await AsyncStorage.getItem("kapsul_events");
+      const raw = await AsyncStorage.getItem("piclo_events");
       if (raw) {
         try {
           const parsed: unknown[] = JSON.parse(raw);
-          const migrated: KapsulEvent[] = parsed.map((e: unknown) => {
+          const migrated: PicloEvent[] = parsed.map((e: unknown) => {
             const ev = e as Record<string, unknown>;
             return {
               themeGradientStart: "#6366F1",
               themeGradientEnd: "#EC4899",
               coverImageUri: null,
               ...ev,
-            } as KapsulEvent;
+            } as PicloEvent;
           });
           setEvents(migrated);
         } catch {}
@@ -102,14 +102,14 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     load();
   }, []);
 
-  const saveLocal = async (updated: KapsulEvent[]) => {
-    await AsyncStorage.setItem("kapsul_events", JSON.stringify(updated));
+  const saveLocal = async (updated: PicloEvent[]) => {
+    await AsyncStorage.setItem("piclo_events", JSON.stringify(updated));
     setEvents(updated);
   };
 
   const createEvent = async (
-    partial: Omit<KapsulEvent, "id" | "photoCount" | "guestCount" | "createdAt">
-  ): Promise<KapsulEvent> => {
+    partial: Omit<PicloEvent, "id" | "photoCount" | "guestCount" | "createdAt">
+  ): Promise<PicloEvent> => {
     try {
       const apiEvent = await apiCreateEvent({
         name: partial.name,
@@ -125,7 +125,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       await saveLocal(updated);
       return local;
     } catch {
-      const local: KapsulEvent = {
+      const local: PicloEvent = {
         ...partial,
         id: Date.now().toString() + Math.random().toString(36).substring(2, 8),
         photoCount: 0,
@@ -140,7 +140,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
   const getEvent = (id: string) => events.find((e) => e.id === id);
 
-  const refreshEvent = async (id: string, guestToken?: string): Promise<KapsulEvent | null> => {
+  const refreshEvent = async (id: string, guestToken?: string): Promise<PicloEvent | null> => {
     try {
       const apiEvent = await apiGetEvent(id, guestToken, token);
       const existingLocal = events.find((e) => e.id === id);
@@ -169,7 +169,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetEvents = async () => {
-    await AsyncStorage.removeItem("kapsul_events");
+    await AsyncStorage.removeItem("piclo_events");
     setEvents([]);
   };
 

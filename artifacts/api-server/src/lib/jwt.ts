@@ -9,7 +9,7 @@ if (!envSecret) {
     console.warn("WARNING: JWT_SECRET not set. Using insecure dev-only fallback.");
   }
 }
-const JWT_SECRET = envSecret ?? "kapsul_dev_secret_change_in_production";
+const JWT_SECRET = envSecret ?? "piclo_dev_secret_change_in_production";
 
 export interface JwtPayload {
   userId: string;

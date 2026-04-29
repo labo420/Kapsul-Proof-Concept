@@ -20,17 +20,32 @@ author = "agent"
 task = "workflow.run"
 args = "Start Backend"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start Piclo"
+
 [[workflows.workflow]]
 name = "Start Backend"
 author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "pnpm --filter @workspace/api-server run dev"
 waitForPort = 8080
 
+[[workflows.workflow]]
+name = "Start Piclo"
+author = "agent"
+
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm --filter @workspace/piclo run dev"
 
 [agent]
 stack = "BEST_EFFORT_FALLBACK"
@@ -44,14 +59,6 @@ timeoutMs = 20000
 [[ports]]
 localPort = 8080
 externalPort = 8080
-
-[[ports]]
-localPort = 8082
-externalPort = 3001
-
-[[ports]]
-localPort = 8083
-externalPort = 3002
 
 [[ports]]
 localPort = 22143

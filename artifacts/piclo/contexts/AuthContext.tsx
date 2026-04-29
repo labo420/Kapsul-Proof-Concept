@@ -28,7 +28,7 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
 }
 
-const TOKEN_KEY = "kapsul_auth_token";
+const TOKEN_KEY = "piclo_auth_token";
 
 async function storeToken(token: string) {
   if (Platform.OS === "web") {
