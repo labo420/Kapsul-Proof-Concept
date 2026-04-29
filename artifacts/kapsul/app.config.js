@@ -24,6 +24,10 @@ export default {
     },
     android: {
       backgroundColor: "#000000",
+      adaptiveIcon: {
+        foregroundImage: "./assets/images/adaptive-icon.png",
+        backgroundColor: "#08060F",
+      },
     },
     web: {
       favicon: "./assets/images/icon.png",

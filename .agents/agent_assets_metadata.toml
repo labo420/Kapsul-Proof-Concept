@@ -35,3 +35,9 @@ id = "Tz75mafS4Y6G9re9vUZRe"
 uri = "file://exports/piclo-logo-light.svg"
 type = "image"
 title = "piclo-logo-light.svg — sfondo bianco, testo scuro"
+
+[[outputs]]
+id = "w5lwP9dqTIAgbRISD8r7z"
+uri = "file://artifacts/kapsul/assets/images/icon.png"
+type = "image"
+title = "Piclo App Icon — 1024×1024"
