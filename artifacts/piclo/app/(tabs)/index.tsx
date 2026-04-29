@@ -243,8 +243,8 @@ export default function HostScreen() {
                         <Text style={[styles.eventName, { color: colors.foreground }]} numberOfLines={1}>
                           {event.name}
                         </Text>
-                        <Text style={[styles.eventDate, { color: colors.mutedForeground }]}>
-                          {event.date}
+                        <Text style={[styles.eventDate, { color: colors.mutedForeground }]} numberOfLines={1}>
+                          {event.date}{event.startTime ? ` · ${event.startTime}` : ""}
                         </Text>
                       </View>
                       <View style={{ gap: 6, alignItems: "flex-end" }}>
