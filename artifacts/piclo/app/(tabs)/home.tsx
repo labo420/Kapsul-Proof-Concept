@@ -380,7 +380,11 @@ export default function HomeScreen() {
 
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 12 }]}>
-        <Text style={styles.logoText}>piclo</Text>
+        <Image
+          source={require("@/assets/images/piclo-logo-white.png")}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
         {token && (
           <TouchableOpacity onPress={() => fetchFeed(true)} style={{ padding: 4 }}>
             <RefreshCw size={20} color={colors.mutedForeground} />
@@ -418,7 +422,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
   },
-  logoText: { fontSize: 26, fontFamily: "LilitaOne_400Regular", color: "#fff" },
+  logoImage: { width: 90, height: 28 },
   card: {
     marginHorizontal: 16,
     marginVertical: 6,

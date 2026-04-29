@@ -393,7 +393,11 @@ export default function GuestScreen() {
         ) : null}
         <Animated.View style={[styles.header, enterStyle0]}>
           <View>
-            <Text style={[styles.logo, { color: colors.foreground }]}>piclo</Text>
+            <Image
+              source={require("@/assets/images/piclo-logo-white.png")}
+              style={styles.logoImage}
+              contentFit="contain"
+            />
             <Text style={[styles.guestId, { color: colors.mutedForeground }]}>
               {guestId ?? "---"}
             </Text>
@@ -673,10 +677,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 36,
   },
-  logo: {
-    fontSize: 28,
-    fontFamily: "LilitaOne_400Regular",
-  },
+  logoImage: { width: 90, height: 28 },
   guestId: {
     fontSize: 12,
     marginTop: 3,

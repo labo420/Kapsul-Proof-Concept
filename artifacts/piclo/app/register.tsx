@@ -1,4 +1,4 @@
-import { ArrowRight, Camera, Eye, EyeOff, Lock, Mail, User, AtSign } from "lucide-react-native";
+import { ArrowRight, Eye, EyeOff, Lock, Mail, User, AtSign } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -143,15 +144,11 @@ export default function RegisterScreen() {
             <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFill} />
             <View style={[styles.cardInner, { backgroundColor: colors.card + "E6", borderColor: colors.border }]}>
               <View style={styles.logoSection}>
-                <LinearGradient
-                  colors={[colors.gradientStart, colors.gradientEnd]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.logoIcon}
-                >
-                  <Camera size={24} color="#fff" />
-                </LinearGradient>
-                <Text style={styles.logoText}>piclo</Text>
+                <Image
+                  source={require("@/assets/images/piclo-logo-white.png")}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
                 <Text style={[styles.logoSub, { color: colors.mutedForeground }]}>Crea il tuo account</Text>
               </View>
 
@@ -279,8 +276,7 @@ const styles = StyleSheet.create({
   cardWrap: { borderRadius: 28, overflow: "hidden" },
   cardInner: { borderRadius: 28, borderWidth: 1, padding: 28 },
   logoSection: { alignItems: "center", marginBottom: 24 },
-  logoIcon: { width: 48, height: 48, borderRadius: 16, alignItems: "center", justifyContent: "center", marginBottom: 12 },
-  logoText: { fontSize: 24, color: "#fff", fontFamily: "LilitaOne_400Regular" },
+  logoImage: { width: 160, height: 48, marginBottom: 8 },
   logoSub: { fontSize: 13, marginTop: 3, letterSpacing: 0.3, fontFamily: "Inter_400Regular" },
   form: { gap: 14 },
   fieldGroup: { gap: 5 },

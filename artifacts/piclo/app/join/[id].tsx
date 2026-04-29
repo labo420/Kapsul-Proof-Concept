@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Platform,
   StatusBar,
   StyleSheet,
@@ -122,15 +123,11 @@ export default function JoinScreen() {
       />
 
       <View style={styles.logoRow}>
-        <LinearGradient
-          colors={["#6366F1", "#EC4899"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.logoCircle}
-        >
-          <Users size={22} color="#fff" />
-        </LinearGradient>
-        <Text style={styles.logoText}>piclo</Text>
+        <Image
+          source={require("@/assets/images/piclo-logo-white.png")}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
       </View>
 
       <View style={styles.center}>
@@ -217,18 +214,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
-  logoCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoText: {
-    fontSize: 18,
-    fontFamily: "LilitaOne_400Regular",
-    color: "#fff",
-  },
+  logoImage: { width: 100, height: 30 },
   center: {
     flex: 1,
     alignItems: "center",

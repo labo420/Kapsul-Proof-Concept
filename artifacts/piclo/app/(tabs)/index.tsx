@@ -99,7 +99,11 @@ export default function HostScreen() {
       >
         <View style={styles.header}>
           <Animated.View style={logoStyle}>
-            <Text style={styles.logoText}>piclo</Text>
+            <Image
+              source={require("@/assets/images/piclo-logo-white.png")}
+              style={styles.logoImage}
+              contentFit="contain"
+            />
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
               I tuoi eventi
             </Text>
@@ -308,11 +312,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 32,
   },
-  logoText: {
-    fontSize: 28,
-    fontFamily: "LilitaOne_400Regular",
-    color: "#fff",
-  },
+  logoImage: { width: 100, height: 30 },
   subtitle: {
     fontSize: 13,
     marginTop: 3,
