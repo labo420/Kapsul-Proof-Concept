@@ -394,7 +394,7 @@ export default function GuestScreen() {
         <Animated.View style={[styles.header, enterStyle0]}>
           <View>
             <Image
-              source={require("@/assets/images/piclo-logo-white.png")}
+              source={require("../../assets/images/piclo-logo-white.png")}
               style={styles.logoImage}
               contentFit="contain"
             />

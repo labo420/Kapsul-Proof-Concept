@@ -381,7 +381,7 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 12 }]}>
         <Image
-          source={require("@/assets/images/piclo-logo-white.png")}
+          source={require("../../assets/images/piclo-logo-white.png")}
           style={styles.logoImage}
           resizeMode="contain"
         />

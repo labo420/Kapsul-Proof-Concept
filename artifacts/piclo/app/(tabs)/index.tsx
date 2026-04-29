@@ -100,7 +100,7 @@ export default function HostScreen() {
         <View style={styles.header}>
           <Animated.View style={logoStyle}>
             <Image
-              source={require("@/assets/images/piclo-logo-white.png")}
+              source={require("../../assets/images/piclo-logo-white.png")}
               style={styles.logoImage}
               contentFit="contain"
             />

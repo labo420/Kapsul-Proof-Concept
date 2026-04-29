@@ -145,7 +145,7 @@ export default function RegisterScreen() {
             <View style={[styles.cardInner, { backgroundColor: colors.card + "E6", borderColor: colors.border }]}>
               <View style={styles.logoSection}>
                 <Image
-                  source={require("@/assets/images/piclo-logo-white.png")}
+                  source={require("../assets/images/piclo-logo-white.png")}
                   style={styles.logoImage}
                   resizeMode="contain"
                 />
