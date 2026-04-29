@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "eVv29MGK93VQaNOeEjLKU"
@@ -24,3 +23,15 @@ id = "WoEVPLUfQMYd3yM6U1EkH"
 uri = "file://artifacts/kapsul/assets/images/mock-photo-3.png"
 type = "image"
 title = "mock event photo 3"
+
+[[outputs]]
+id = "P4AJh7Zk9yTfVhuxWgec1"
+uri = "file://exports/piclo-logo-dark.svg"
+type = "image"
+title = "piclo-logo-dark.svg — sfondo scuro, testo bianco"
+
+[[outputs]]
+id = "Tz75mafS4Y6G9re9vUZRe"
+uri = "file://exports/piclo-logo-light.svg"
+type = "image"
+title = "piclo-logo-light.svg — sfondo bianco, testo scuro"

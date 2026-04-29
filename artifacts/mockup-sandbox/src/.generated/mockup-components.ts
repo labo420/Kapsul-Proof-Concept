@@ -14,6 +14,7 @@ export const modules: ModuleMap = {
   "./components/mockups/piclo-logos/Condensed.tsx": () => import("../components/mockups/piclo-logos/Condensed.tsx"),
   "./components/mockups/piclo-logos/FredokaChunky.tsx": () => import("../components/mockups/piclo-logos/FredokaChunky.tsx"),
   "./components/mockups/piclo-logos/Gradient.tsx": () => import("../components/mockups/piclo-logos/Gradient.tsx"),
+  "./components/mockups/piclo-logos/LilitaLight.tsx": () => import("../components/mockups/piclo-logos/LilitaLight.tsx"),
   "./components/mockups/piclo-logos/LilitaOne.tsx": () => import("../components/mockups/piclo-logos/LilitaOne.tsx"),
   "./components/mockups/piclo-logos/Modern.tsx": () => import("../components/mockups/piclo-logos/Modern.tsx"),
   "./components/mockups/piclo-logos/Mono.tsx": () => import("../components/mockups/piclo-logos/Mono.tsx"),

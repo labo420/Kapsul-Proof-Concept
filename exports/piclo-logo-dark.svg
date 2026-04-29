@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 200" width="480" height="200">
+  <defs>
+    <style>
+      @import url(https://fonts.googleapis.com/css2?family=Lilita+One&amp;display=swap);
+    </style>
+  </defs>
+  <rect width="480" height="200" fill="#08060F" rx="0"/>
+  <text
+    x="240"
+    y="148"
+    font-family="'Lilita One', 'Arial Black', 'Impact', cursive"
+    font-size="108"
+    font-weight="400"
+    fill="#ffffff"
+    text-anchor="middle"
+    dominant-baseline="auto"
+    letter-spacing="2"
+  >piclo</text>
+</svg>
