@@ -4,7 +4,7 @@ import type { EventPlan } from "@/contexts/PlanContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiCreateEvent, apiGetEvent, type ApiEvent } from "@/lib/api";
 
-export type DeliveryMode = "party" | "morning_after" | "vault";
+export type DeliveryMode = "now" | "morning_after";
 
 export interface PicloEvent {
   id: string;
@@ -12,7 +12,6 @@ export interface PicloEvent {
   date: string;
   startTime?: string | null;
   deliveryMode: DeliveryMode;
-  vaultHours?: number;
   photoCount: number;
   guestCount: number;
   plan: EventPlan;
@@ -31,7 +30,6 @@ function apiEventToLocal(e: ApiEvent, existingLocal?: PicloEvent): PicloEvent {
     date: e.date,
     startTime: e.startTime ?? null,
     deliveryMode: e.deliveryMode as DeliveryMode,
-    vaultHours: e.vaultHours,
     photoCount: e.photoCount,
     guestCount: e.guestCount,
     plan: e.plan as EventPlan,
@@ -62,7 +60,7 @@ const EventContext = createContext<EventContextType>({
     id: "",
     name: "",
     date: "",
-    deliveryMode: "party",
+    deliveryMode: "morning_after",
     photoCount: 0,
     guestCount: 0,
     plan: "free",

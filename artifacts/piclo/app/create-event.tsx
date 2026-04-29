@@ -42,8 +42,7 @@ export default function CreateEventScreen() {
   const [eventName, setEventName] = useState("");
   const [eventDateObj, setEventDateObj] = useState<Date | null>(null);
   const [eventTimeObj, setEventTimeObj] = useState<Date | null>(null);
-  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("party");
-  const [vaultHours, setVaultHours] = useState(24);
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("morning_after");
   const [focusedField, setFocusedField] = useState<"name" | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<EventPlan>("party");
   const [gradientStart, setGradientStart] = useState("#6366F1");
@@ -78,7 +77,6 @@ export default function CreateEventScreen() {
         date: eventDateObj ? formatDateIT(eventDateObj) : "",
         startTime: eventTimeObj ? formatTimeHHMM(eventTimeObj) : null,
         deliveryMode,
-        vaultHours: deliveryMode === "vault" ? vaultHours : undefined,
         plan: selectedPlan,
         themeGradientStart: gradientStart,
         themeGradientEnd: gradientEnd,
@@ -395,7 +393,7 @@ export default function CreateEventScreen() {
           ) : step === 2 ? (
             <View style={styles.form}>
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                Quando sbloccare{"\n"}le foto?
+                Come condividere{"\n"}le foto?
               </Text>
               <Text
                 style={[
@@ -408,8 +406,6 @@ export default function CreateEventScreen() {
               <DeliveryModeSelector
                 selected={deliveryMode}
                 onSelect={setDeliveryMode}
-                vaultHours={vaultHours}
-                onVaultHoursChange={setVaultHours}
               />
             </View>
           ) : (

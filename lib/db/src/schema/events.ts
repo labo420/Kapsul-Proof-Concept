@@ -7,7 +7,7 @@ export const eventsTable = pgTable("events", {
   name: text("name").notNull(),
   date: text("date").notNull(),
   startTime: text("start_time"),
-  deliveryMode: text("delivery_mode").notNull().default("party"),
+  deliveryMode: text("delivery_mode").notNull().default("morning_after"),
   vaultHours: integer("vault_hours").default(24),
   plan: text("plan").notNull().default("free"),
   themeGradientStart: text("theme_gradient_start").notNull().default("#6366F1"),

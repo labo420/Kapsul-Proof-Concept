@@ -18,10 +18,10 @@ import { useEvents } from "@/contexts/EventContext";
 import { apiGetGuests, apiRemoveGuest, type ApiGuest } from "@/lib/api";
 
 const DELIVERY_LABELS: Record<string, string> = {
-  party: "Party Mode",
-  morning_after: "Morning After",
-  vault: "Vault Mode",
   now: "Mostra subito",
+  morning_after: "Rivela la mattina dopo",
+  party: "Party Mode",
+  vault: "Vault Mode",
 };
 
 export default function EventDetailScreen() {

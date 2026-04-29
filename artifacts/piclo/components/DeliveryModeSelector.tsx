@@ -1,4 +1,4 @@
-import { Check, Zap, Sun, Lock, type LucideIcon } from "lucide-react-native";
+import { Check, Zap, Sun } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
@@ -9,164 +9,159 @@ import type { DeliveryMode } from "@/contexts/EventContext";
 interface DeliveryModeSelectorProps {
   selected: DeliveryMode;
   onSelect: (mode: DeliveryMode) => void;
-  vaultHours: number;
-  onVaultHoursChange: (h: number) => void;
 }
 
-const MODES: { id: DeliveryMode; icon: LucideIcon; title: string; subtitle: string }[] = [
-  {
-    id: "party",
-    icon: Zap,
-    title: "Party Mode",
-    subtitle: "Foto visibili in tempo reale",
-  },
-  {
-    id: "morning_after",
-    icon: Sun,
-    title: "Morning After",
-    subtitle: "Sbloccate alle 06:00 del mattino",
-  },
-  {
-    id: "vault",
-    icon: Lock,
-    title: "Vault Mode",
-    subtitle: "Sbloccate dopo X ore",
-  },
-];
-
-const HOUR_OPTIONS = [1, 2, 3, 6, 12, 24, 48, 72];
-
-export default function DeliveryModeSelector({
-  selected,
-  onSelect,
-  vaultHours,
-  onVaultHoursChange,
-}: DeliveryModeSelectorProps) {
+export default function DeliveryModeSelector({ selected, onSelect }: DeliveryModeSelectorProps) {
   const colors = useColors();
+
+  const morningSelected = selected === "morning_after";
+  const nowSelected = selected === "now";
 
   return (
     <View style={styles.container}>
-      {MODES.map(mode => {
-        const isSelected = selected === mode.id;
-        return (
-          <TouchableOpacity
-            key={mode.id}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              onSelect(mode.id);
-            }}
-            activeOpacity={0.75}
-            style={{ borderRadius: colors.radius, overflow: "hidden", marginBottom: 10 }}
+      <TouchableOpacity
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onSelect("morning_after");
+        }}
+        activeOpacity={0.75}
+        style={{ borderRadius: colors.radius, overflow: "hidden", marginBottom: 10 }}
+      >
+        {morningSelected ? (
+          <LinearGradient
+            colors={[colors.gradientStart + "28", colors.gradientEnd + "28"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.card, { borderColor: colors.gradientStart + "90", borderRadius: colors.radius }]}
           >
-            {isSelected ? (
-              <LinearGradient
-                colors={[colors.gradientStart + "20", colors.gradientEnd + "20"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={[
-                  styles.modeCard,
-                  {
-                    borderColor: colors.gradientStart + "80",
-                    borderRadius: colors.radius,
-                  },
-                ]}
-              >
-                <ModeCardContent mode={mode} isSelected colors={colors} />
-              </LinearGradient>
-            ) : (
-              <View
-                style={[
-                  styles.modeCard,
-                  {
-                    backgroundColor: colors.card,
-                    borderColor: colors.border,
-                    borderRadius: colors.radius,
-                  },
-                ]}
-              >
-                <ModeCardContent mode={mode} isSelected={false} colors={colors} />
-              </View>
-            )}
-          </TouchableOpacity>
-        );
-      })}
-
-      {selected === "vault" && (
-        <View style={[styles.hoursRow, { borderTopColor: colors.border }]}>
-          <Text style={[styles.hoursLabel, { color: colors.mutedForeground }]}>Sblocca dopo</Text>
-          <View style={styles.hoursChips}>
-            {HOUR_OPTIONS.map(h => (
-              <TouchableOpacity
-                key={h}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  onVaultHoursChange(h);
-                }}
-                style={{ borderRadius: 999, overflow: "hidden" }}
-              >
-                {vaultHours === h ? (
-                  <LinearGradient
-                    colors={[colors.gradientStart, colors.gradientEnd]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.chip}
-                  >
-                    <Text style={[styles.chipText, { color: "#fff" }]}>{h}h</Text>
-                  </LinearGradient>
-                ) : (
-                  <View style={[styles.chip, { backgroundColor: colors.muted, borderWidth: 1, borderColor: colors.border }]}>
-                    <Text style={[styles.chipText, { color: colors.mutedForeground }]}>{h}h</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
+            <CardContent
+              icon={<Sun size={24} color="#fff" />}
+              iconBg={{ type: "gradient", start: colors.gradientStart, end: colors.gradientEnd }}
+              title="Rivela la mattina dopo"
+              subtitle={"Le foto si sbloccano alle 06:00\ndel mattino successivo"}
+              badge="CONSIGLIATO"
+              isSelected
+              colors={colors}
+            />
+          </LinearGradient>
+        ) : (
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
+            <CardContent
+              icon={<Sun size={24} color={colors.foreground} />}
+              iconBg={{ type: "flat", color: colors.muted }}
+              title="Rivela la mattina dopo"
+              subtitle={"Le foto si sbloccano alle 06:00\ndel mattino successivo"}
+              isSelected={false}
+              colors={colors}
+            />
           </View>
-        </View>
-      )}
+        )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onSelect("now");
+        }}
+        activeOpacity={0.75}
+        style={{ borderRadius: colors.radius, overflow: "hidden" }}
+      >
+        {nowSelected ? (
+          <LinearGradient
+            colors={[colors.gradientStart + "28", colors.gradientEnd + "28"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.card, { borderColor: colors.gradientStart + "90", borderRadius: colors.radius }]}
+          >
+            <CardContent
+              icon={<Zap size={24} color="#fff" />}
+              iconBg={{ type: "gradient", start: colors.gradientStart, end: colors.gradientEnd }}
+              title="Mostra subito"
+              subtitle="Le foto sono visibili appena vengono caricate"
+              isSelected
+              colors={colors}
+            />
+          </LinearGradient>
+        ) : (
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
+            <CardContent
+              icon={<Zap size={24} color={colors.foreground} />}
+              iconBg={{ type: "flat", color: colors.muted }}
+              title="Mostra subito"
+              subtitle="Le foto sono visibili appena vengono caricate"
+              isSelected={false}
+              colors={colors}
+            />
+          </View>
+        )}
+      </TouchableOpacity>
     </View>
   );
 }
 
-function ModeCardContent({
-  mode,
+type IconBg =
+  | { type: "gradient"; start: string; end: string }
+  | { type: "flat"; color: string };
+
+function CardContent({
+  icon,
+  iconBg,
+  title,
+  subtitle,
+  badge,
   isSelected,
   colors,
 }: {
-  mode: (typeof MODES)[number];
+  icon: React.ReactNode;
+  iconBg: IconBg;
+  title: string;
+  subtitle: string;
+  badge?: string;
   isSelected: boolean;
   colors: ReturnType<typeof import("@/hooks/useColors").useColors>;
 }) {
-  const ModeIcon = mode.icon;
   return (
-    <View style={styles.modeInner}>
-      <View style={styles.modeLeft}>
-        {isSelected ? (
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            style={styles.iconWrap}
-          >
-            <ModeIcon size={22} color="#fff" />
-          </LinearGradient>
-        ) : (
-          <View style={[styles.iconWrap, { backgroundColor: colors.muted }]}>
-            <ModeIcon size={22} color={colors.foreground} />
-          </View>
-        )}
-        <View style={styles.modeText}>
-          <Text style={[styles.modeTitle, { color: isSelected ? "#fff" : colors.foreground }]}>
-            {mode.title}
-          </Text>
-          <Text style={[styles.modeSubtitle, { color: colors.mutedForeground }]}>
-            {mode.subtitle}
-          </Text>
+    <View style={styles.cardInner}>
+      {iconBg.type === "gradient" ? (
+        <LinearGradient
+          colors={[iconBg.start, iconBg.end]}
+          style={styles.iconWrap}
+        >
+          {icon}
+        </LinearGradient>
+      ) : (
+        <View style={[styles.iconWrap, { backgroundColor: iconBg.color }]}>
+          {icon}
         </View>
+      )}
+
+      <View style={styles.textBlock}>
+        <View style={styles.titleRow}>
+          <Text style={[styles.cardTitle, { color: isSelected ? "#fff" : colors.foreground }]}>
+            {title}
+          </Text>
+          {badge && (
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.badge}
+            >
+              <Text style={styles.badgeText}>{badge}</Text>
+            </LinearGradient>
+          )}
+        </View>
+        <Text style={[styles.cardSubtitle, { color: colors.mutedForeground }]}>
+          {subtitle}
+        </Text>
       </View>
+
       {isSelected && (
         <LinearGradient
           colors={[colors.gradientStart, colors.gradientEnd]}
           style={styles.checkCircle}
         >
-          <Check size={12} color="#fff" />
+          <Check size={13} color="#fff" />
         </LinearGradient>
       )}
     </View>
@@ -177,70 +172,58 @@ const styles = StyleSheet.create({
   container: {
     gap: 0,
   },
-  modeCard: {
+  card: {
     borderWidth: 1,
   },
-  modeInner: {
+  cardInner: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    padding: 14,
-  },
-  modeLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    flex: 1,
+    padding: 16,
+    gap: 14,
   },
   iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 50,
+    height: 50,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
-  modeText: {
+  textBlock: {
     flex: 1,
-    gap: 3,
+    gap: 4,
   },
-  modeTitle: {
-    fontSize: 15,
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  cardTitle: {
+    fontSize: 16,
     fontWeight: "700",
   },
-  modeSubtitle: {
+  cardSubtitle: {
     fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 17,
+  },
+  badge: {
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.8,
   },
   checkCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
-  },
-  hoursRow: {
-    borderTopWidth: 1,
-    paddingTop: 16,
-    gap: 10,
-    marginTop: 4,
-  },
-  hoursLabel: {
-    fontSize: 12,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    fontWeight: "600",
-  },
-  hoursChips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-  },
-  chipText: {
-    fontSize: 13,
-    fontWeight: "700",
+    flexShrink: 0,
   },
 });

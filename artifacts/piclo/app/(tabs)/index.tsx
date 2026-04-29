@@ -28,8 +28,9 @@ import GradientButton from "@/components/GradientButton";
 import GradientBadge from "@/components/GradientBadge";
 
 const DELIVERY_LABELS: Record<string, string> = {
+  now: "Mostra subito",
+  morning_after: "Mattina dopo",
   party: "Party",
-  morning_after: "Morning After",
   vault: "Vault",
 };
 

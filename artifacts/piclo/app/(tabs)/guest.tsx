@@ -526,7 +526,7 @@ export default function GuestScreen() {
                   <Check size={14} color="#fff" />
                 </LinearGradient>
                 <Text style={[styles.doneText, { color: colors.foreground }]}>
-                  Foto aggiunta al vault
+                  Foto aggiunta con successo
                 </Text>
               </Animated.View>
             )}

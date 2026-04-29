@@ -24,8 +24,9 @@ import { useEvents } from "@/contexts/EventContext";
 import ScreenTransition from "@/components/ScreenTransition";
 
 const DELIVERY_LABELS: Record<string, string> = {
+  now: "Mostra subito",
+  morning_after: "Rivela la mattina dopo",
   party: "Party Mode",
-  morning_after: "Morning After",
   vault: "Vault Mode",
 };
 
