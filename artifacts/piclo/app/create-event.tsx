@@ -393,7 +393,7 @@ export default function CreateEventScreen() {
           ) : step === 2 ? (
             <View style={styles.form}>
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                Come condividere{"\n"}le foto?
+                Come condividi{"\n"}le foto?
               </Text>
               <Text
                 style={[
