@@ -1,0 +1,43 @@
+{
+  "description": "Canvas image shapes for Piclo gradient logo variants",
+  "shapes": [
+    {
+      "shapeId": "img-gradient-white",
+      "type": "image",
+      "x": 50,
+      "y": 540,
+      "w": 720,
+      "h": 288,
+      "src": ".canvas/assets/piclo-logo-gradient-white.png",
+      "altText": "Piclo logo — testo bianco su sfondo gradiente"
+    },
+    {
+      "shapeId": "img-gradient-dark",
+      "type": "image",
+      "x": 810,
+      "y": 540,
+      "w": 720,
+      "h": 288,
+      "src": ".canvas/assets/piclo-logo-gradient-dark.png",
+      "altText": "Piclo logo — testo nero su sfondo gradiente"
+    },
+    {
+      "shapeId": "label-gradient-white",
+      "type": "text",
+      "x": 50,
+      "y": 840,
+      "w": 720,
+      "h": 36,
+      "text": "Gradiente + logo bianco"
+    },
+    {
+      "shapeId": "label-gradient-dark",
+      "type": "text",
+      "x": 810,
+      "y": 840,
+      "w": 720,
+      "h": 36,
+      "text": "Gradiente + logo nero"
+    }
+  ]
+}
