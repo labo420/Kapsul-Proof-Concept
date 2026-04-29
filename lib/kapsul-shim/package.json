@@ -1,0 +1,8 @@
+{
+  "name": "@workspace/kapsul",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "PORT=${PORT:-22143} pnpm --filter @workspace/piclo run dev"
+  }
+}

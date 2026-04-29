@@ -630,6 +630,8 @@ importers:
         specifier: ^0.31.9
         version: 0.31.9
 
+  lib/kapsul-shim: {}
+
   scripts:
     devDependencies:
       '@types/node':
