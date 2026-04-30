@@ -61,15 +61,18 @@ type SortBy = "createdAt" | "eventDate";
 export default function HostScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { events, refreshEvent } = useEvents();
+  const { events, refreshEvents } = useEvents();
   const [sortBy, setSortBy] = useState<SortBy>("createdAt");
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all(events.map((e) => refreshEvent(e.id).catch(() => {})));
-    setRefreshing(false);
-  }, [events, refreshEvent]);
+    try {
+      await refreshEvents();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshEvents]);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;

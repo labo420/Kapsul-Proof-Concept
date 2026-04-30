@@ -80,8 +80,12 @@ export default function GuestScreen() {
   const handleRefresh = useCallback(async () => {
     if (!currentEventId) return;
     setRefreshing(true);
-    await refreshEvent(currentEventId, guestTokens[currentEventId]).catch(() => {});
-    setRefreshing(false);
+    try {
+      await refreshEvent(currentEventId, guestTokens[currentEventId]);
+    } catch {
+    } finally {
+      setRefreshing(false);
+    }
   }, [currentEventId, guestTokens, refreshEvent]);
 
   useFocusEffect(

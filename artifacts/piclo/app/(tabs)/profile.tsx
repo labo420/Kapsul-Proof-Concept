@@ -457,7 +457,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { user, token, refreshUser } = useAuth();
-  const { events } = useEvents();
+  const { events, refreshEvents } = useEvents();
 
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [followersModalVisible, setFollowersModalVisible] = useState(false);
@@ -516,14 +516,18 @@ export default function ProfileScreen() {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([
-      refreshUser(),
-      fetchCounts(),
-      fetchSuggestions(),
-      fetchUnreadCount(),
-    ]);
-    setRefreshing(false);
-  }, [refreshUser, fetchCounts, fetchSuggestions, fetchUnreadCount]);
+    try {
+      await Promise.all([
+        refreshUser(),
+        fetchCounts(),
+        fetchSuggestions(),
+        fetchUnreadCount(),
+        refreshEvents(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshUser, fetchCounts, fetchSuggestions, fetchUnreadCount, refreshEvents]);
 
   const handleAvatarPress = async () => {
     if (!token) return;

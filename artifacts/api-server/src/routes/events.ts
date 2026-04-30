@@ -127,8 +127,8 @@ router.post("/events", optionalAuth, async (req, res) => {
 router.get("/events", optionalAuth, async (req, res) => {
   try {
     const userId = req.user?.userId;
-    const events = await db
-      .select(publicEventFields)
+    const rows = await db
+      .select({ ...publicEventFields, hostToken: eventsTable.hostToken })
       .from(eventsTable)
       .where(
         userId
@@ -136,6 +136,10 @@ router.get("/events", optionalAuth, async (req, res) => {
           : eq(eventsTable.isPublic, true)
       )
       .orderBy(eventsTable.createdAt);
+    const events = rows.map(({ hostToken, ...rest }) => ({
+      ...rest,
+      hostToken: userId && rest.creatorId === userId ? hostToken : undefined,
+    }));
     res.json(events);
   } catch {
     res.status(500).json({ error: "Server error" });

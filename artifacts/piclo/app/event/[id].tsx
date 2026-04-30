@@ -98,8 +98,11 @@ export default function EventDetailScreen() {
   const handleRefresh = useCallback(async () => {
     if (!id) return;
     setRefreshing(true);
-    await Promise.all([refreshEvent(id), loadGuests()]);
-    setRefreshing(false);
+    try {
+      await Promise.all([refreshEvent(id), loadGuests()]);
+    } finally {
+      setRefreshing(false);
+    }
   }, [id, refreshEvent, loadGuests]);
 
   function openEdit() {

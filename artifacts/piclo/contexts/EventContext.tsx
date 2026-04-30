@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import type { EventPlan } from "@/contexts/PlanContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiCreateEvent, apiGetEvent, type ApiEvent } from "@/lib/api";
+import { apiCreateEvent, apiGetEvent, apiGetEvents, type ApiEvent } from "@/lib/api";
 
 export type DeliveryMode = "now" | "morning_after";
 
@@ -53,6 +53,7 @@ interface EventContextType {
   ) => Promise<PicloEvent>;
   getEvent: (id: string) => PicloEvent | undefined;
   refreshEvent: (id: string, guestToken?: string) => Promise<PicloEvent | null>;
+  refreshEvents: () => Promise<void>;
   incrementPhotoCount: (id: string) => void;
   incrementGuestCount: (id: string) => void;
   resetEvents: () => Promise<void>;
@@ -77,6 +78,7 @@ const EventContext = createContext<EventContextType>({
   }),
   getEvent: () => undefined,
   refreshEvent: async () => null,
+  refreshEvents: async () => {},
   incrementPhotoCount: () => {},
   incrementGuestCount: () => {},
   resetEvents: async () => {},
@@ -178,6 +180,26 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     saveLocal(updated);
   };
 
+  const refreshEvents = async (): Promise<void> => {
+    try {
+      const serverList = await apiGetEvents(token);
+      setEvents((prev) => {
+        const merged = [...prev];
+        for (const se of serverList) {
+          const idx = merged.findIndex((e) => e.id === se.id);
+          const local = apiEventToLocal(se, idx >= 0 ? merged[idx] : undefined);
+          if (idx >= 0) {
+            merged[idx] = local;
+          } else {
+            merged.unshift(local);
+          }
+        }
+        AsyncStorage.setItem("piclo_events", JSON.stringify(merged)).catch(() => {});
+        return merged;
+      });
+    } catch {}
+  };
+
   const resetEvents = async () => {
     await AsyncStorage.removeItem("piclo_events");
     setEvents([]);
@@ -190,6 +212,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
         createEvent,
         getEvent,
         refreshEvent,
+        refreshEvents,
         incrementPhotoCount,
         incrementGuestCount,
         resetEvents,

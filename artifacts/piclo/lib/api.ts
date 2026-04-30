@@ -69,6 +69,14 @@ export async function apiGetEvent(id: string, guestToken?: string, authToken?: s
   return res.json() as Promise<ApiEvent>;
 }
 
+export async function apiGetEvents(authToken?: string | null): Promise<ApiEvent[]> {
+  const headers: Record<string, string> = {};
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+  const res = await fetch(`${API_BASE}/events`, { headers });
+  if (!res.ok) throw new Error(`Get events failed: ${res.status}`);
+  return res.json() as Promise<ApiEvent[]>;
+}
+
 export async function apiJoinEvent(
   eventId: string,
   guestId: string
