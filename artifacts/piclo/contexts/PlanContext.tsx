@@ -38,7 +38,7 @@ export const PLAN_LIMITS: Record<EventPlan, PlanLimits> = {
   },
   pro: {
     maxPhotos: 5000,
-    maxGuests: 9999,
+    maxGuests: 99999,
     hasWatermark: false,
     hasAiRecap: true,
     hasHdDownload: true,

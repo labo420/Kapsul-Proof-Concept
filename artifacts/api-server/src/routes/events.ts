@@ -7,7 +7,7 @@ import multer from "multer";
 import { objectStorageClient } from "../lib/objectStorage.js";
 import { optionalAuth } from "../middlewares/auth.js";
 
-const PLAN_MAX_GUESTS: Record<string, number> = { free: 15, party: 50, pro: 9999 };
+const PLAN_MAX_GUESTS: Record<string, number> = { free: 15, party: 50, pro: 9999999 };
 
 const publicEventFields = {
   id: eventsTable.id,
