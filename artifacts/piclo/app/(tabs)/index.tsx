@@ -118,7 +118,7 @@ export default function HostScreen() {
       >
         <View style={styles.header}>
           <Animated.View style={logoStyle}>
-            <PicloLogo variant="white" width={100} height={32} />
+            <PicloLogo variant="white" width={120} height={59} />
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
               I tuoi eventi
             </Text>

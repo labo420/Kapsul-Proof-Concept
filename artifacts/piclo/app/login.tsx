@@ -109,7 +109,7 @@ export default function LoginScreen() {
             <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFill} />
             <View style={[styles.cardInner, { backgroundColor: colors.card + "E6", borderColor: colors.border }]}>
               <View style={styles.logoSection}>
-                <PicloLogo variant="white" width={220} height={64} />
+                <PicloLogo variant="white" width={240} height={118} />
                 <Text style={[styles.logoSub, { color: colors.mutedForeground }]}>Scan. Drop. Relive.</Text>
               </View>
 

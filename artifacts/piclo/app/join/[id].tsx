@@ -123,7 +123,7 @@ export default function JoinScreen() {
       />
 
       <View style={styles.logoRow}>
-        <PicloLogo variant="white" width={100} height={32} />
+        <PicloLogo variant="white" width={120} height={59} />
       </View>
 
       <View style={styles.center}>

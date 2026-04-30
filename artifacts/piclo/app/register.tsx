@@ -144,7 +144,7 @@ export default function RegisterScreen() {
             <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFill} />
             <View style={[styles.cardInner, { backgroundColor: colors.card + "E6", borderColor: colors.border }]}>
               <View style={styles.logoSection}>
-                <PicloLogo variant="white" width={150} height={44} />
+                <PicloLogo variant="white" width={180} height={89} />
                 <Text style={[styles.logoSub, { color: colors.mutedForeground }]}>Crea il tuo account</Text>
               </View>
 

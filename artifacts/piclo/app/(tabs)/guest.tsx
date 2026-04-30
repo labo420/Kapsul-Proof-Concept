@@ -426,7 +426,7 @@ export default function GuestScreen() {
         ) : null}
         <Animated.View style={[styles.header, enterStyle0]}>
           <View>
-            <PicloLogo variant="white" width={100} height={32} />
+            <PicloLogo variant="white" width={120} height={59} />
             <Text style={[styles.guestId, { color: colors.mutedForeground }]}>
               {guestId ?? "---"}
             </Text>

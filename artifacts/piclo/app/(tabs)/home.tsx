@@ -383,7 +383,7 @@ export default function HomeScreen() {
 
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 12 }]}>
-        <PicloLogo variant="white" width={100} height={32} />
+        <PicloLogo variant="white" width={120} height={59} />
         {token && (
           <TouchableOpacity onPress={() => fetchFeed(true)} style={{ padding: 4 }}>
             <RefreshCw size={20} color={colors.mutedForeground} />
