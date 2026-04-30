@@ -693,8 +693,23 @@ router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res
       return;
     }
 
-    res.setHeader("Content-Disposition", `attachment; filename="piclo-${photoId}.jpg"`);
-    res.setHeader("Content-Type", "image/jpeg");
+    // Preserve original content type and extension for Pro downloads; previews are always JPEG
+    let contentType = "image/jpeg";
+    let fileExt = "jpg";
+    if (isPro) {
+      try {
+        const [fileMeta] = await fileRef.getMetadata();
+        const ct = (fileMeta.contentType as string) || "image/jpeg";
+        contentType = ct;
+        if (ct.includes("png")) fileExt = "png";
+        else if (ct.includes("webp")) fileExt = "webp";
+        else if (ct.includes("gif")) fileExt = "gif";
+      } catch {
+        // Keep defaults if metadata unavailable
+      }
+    }
+    res.setHeader("Content-Disposition", `attachment; filename="piclo-${photoId}.${fileExt}"`);
+    res.setHeader("Content-Type", contentType);
     res.setHeader("Cache-Control", "private, max-age=3600");
     fileRef.createReadStream().pipe(res);
   } catch (err) {
@@ -710,8 +725,31 @@ router.get("/photos/{*objectPath}", async (req, res): Promise<void> => {
       res.status(400).json({ error: "Missing path" });
       return;
     }
+
     const bucket = getBucket();
-    const file = bucket.file(objectKey);
+    let servedKey = objectKey;
+
+    // Plan-aware serving: if requesting a non-preview original photo, check event plan.
+    // Non-Pro events → transparently serve the preview to enforce watermark/compression.
+    const isPreviewFile = objectKey.endsWith("_preview.jpg");
+    const originalPhotoMatch = !isPreviewFile && objectKey.match(/^photos\/([^/]+)\/[^/]+\.[^./]+$/i);
+    if (originalPhotoMatch) {
+      const eventId = originalPhotoMatch[1];
+      const [eventRow] = await db
+        .select({ plan: eventsTable.plan })
+        .from(eventsTable)
+        .where(eq(eventsTable.id, eventId));
+      if (eventRow && eventRow.plan !== "pro") {
+        const previewKey = objectKey.replace(/\.[^.]+$/, "_preview.jpg");
+        const [previewExists] = await bucket.file(previewKey).exists();
+        if (previewExists) {
+          servedKey = previewKey;
+        }
+        // If preview doesn't exist yet (pre-feature upload), fall through to serve original
+      }
+    }
+
+    const file = bucket.file(servedKey);
     const [exists] = await file.exists();
     if (!exists) {
       res.status(404).json({ error: "Not found" });
