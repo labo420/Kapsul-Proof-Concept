@@ -117,8 +117,9 @@ export default function QRScreen() {
         resolved = true;
         clearTimeout(timeoutId);
         try {
+          const base64Data = dataURL.replace(/^data:[^;]+;base64,/, "");
           const fileUri = `${FileSystem.cacheDirectory}qr-${id}-${qrVariant}.png`;
-          await FileSystem.writeAsStringAsync(fileUri, dataURL, {
+          await FileSystem.writeAsStringAsync(fileUri, base64Data, {
             encoding: FileSystem.EncodingType.Base64,
           });
           await MediaLibrary.saveToLibraryAsync(fileUri);

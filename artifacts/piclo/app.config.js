@@ -42,6 +42,14 @@ export default {
       "expo-font",
       "expo-web-browser",
       "@react-native-community/datetimepicker",
+      [
+        "expo-media-library",
+        {
+          photosPermission: "Piclo usa la tua galleria per salvare i QR code degli eventi.",
+          savePhotosPermission: "Piclo usa la tua galleria per salvare i QR code degli eventi.",
+          isAccessMediaLocationEnabled: true,
+        },
+      ],
     ],
     experiments: {
       typedRoutes: true,
