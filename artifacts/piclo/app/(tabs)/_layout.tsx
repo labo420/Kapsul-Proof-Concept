@@ -11,10 +11,6 @@ import { useColors } from "@/hooks/useColors";
 function NativeTabLayout() {
   return (
     <NativeTabs>
-      <NativeTabs.Trigger name="home">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Home</Label>
-      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "calendar", selected: "calendar" }} />
         <Label>Crea</Label>
@@ -62,6 +58,7 @@ function ClassicTabLayout() {
         name="home"
         options={{
           title: "Home",
+          href: null,
           tabBarIcon: ({ color }) => <Home size={22} color={color} />,
         }}
       />
