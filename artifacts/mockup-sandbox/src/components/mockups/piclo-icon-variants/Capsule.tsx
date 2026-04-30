@@ -1,5 +1,5 @@
 export function Capsule() {
-  const PICLO_PATHS = [
+  const paths = [
     "M110.40 210.16L110.40 253.84Q110.40 255.52 89.88 255.52Q69.36 255.52 69.36 253.84L69.36 253.84L69.36 130.24L61.20 130.24Q55.44 130.24 53.28 119.68L53.28 119.68Q52.56 116.32 52.56 111.04Q52.56 105.76 55.92 98.56L55.92 98.56Q60.72 88 71.28 88L71.28 88Q78.24 88 84.12 91.24Q90 94.48 92.28 97.24Q94.56 100 94.56 100.48L94.56 100.48Q110.64 88 129.36 88Q148.08 88 161.52 102.52Q174.96 117.04 174.96 147.40Q174.96 177.76 161.52 194.44Q148.08 211.12 127.44 211.12L127.44 211.12Q118.08 211.12 110.40 210.16L110.40 210.16ZM120.24 130L120.24 130Q116.16 130 112.32 132.64L112.32 132.64L112.32 175.12Q116.40 175.60 118.92 175.60Q121.44 175.60 122.88 175.60L122.88 175.60Q132.72 174.64 132.72 150.40L132.72 150.40Q132.72 130 120.24 130Z",
     "M240.72 90.88L240.72 208.72Q240.72 210.64 218.76 210.64Q196.80 210.64 196.80 208.96L196.80 208.96L196.80 91.12Q196.80 89.44 218.76 89.44Q240.72 89.44 240.72 90.88L240.72 90.88ZM240.72 41.44L240.72 76.72Q240.72 78.40 218.76 78.40Q196.80 78.40 196.80 76.96L196.80 76.96L196.80 42.40Q196.80 40 218.76 40Q240.72 40 240.72 41.44L240.72 41.44Z",
     "M306.48 150.64L306.48 150.64Q306.48 174.16 324.24 174.16L324.24 174.16Q335.76 174.16 343.44 169.60L343.44 169.60Q347.04 169.60 349.32 181.96Q351.60 194.32 351.60 198.76Q351.60 203.20 350.40 204.64L350.40 204.64Q337.68 212.56 315.60 212.56Q293.52 212.56 278.04 196.12Q262.56 179.68 262.56 151.24Q262.56 122.80 277.80 105.28Q293.04 87.76 318.36 87.76Q343.68 87.76 353.52 100L353.52 100Q355.68 102.64 355.68 107.80Q355.68 112.96 353.76 120.40L353.76 120.40Q349.44 135.76 342.48 138.16L342.48 138.16Q341.52 138.40 339.72 138.40Q337.92 138.40 335.28 135.52L335.28 135.52Q325.92 126.16 320.28 126.16Q314.64 126.16 310.56 131.92Q306.48 137.68 306.48 150.64Z",
@@ -7,64 +7,41 @@ export function Capsule() {
     "M454.20 196Q439.20 179.44 439.20 150.16Q439.20 120.88 454.20 104.32Q469.20 87.76 494.64 87.76Q520.08 87.76 534.96 104.32Q549.84 120.88 549.84 150.16Q549.84 179.44 534.96 196Q520.08 212.56 494.64 212.56Q469.20 212.56 454.20 196ZM494.76 127.84Q481.20 127.84 481.20 149.92Q481.20 172 494.76 172Q508.32 172 508.32 149.92Q508.32 127.84 494.76 127.84Z",
   ];
 
+  const cx = 670;
+  const cy = 148;
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #0f0f1a 0%, #1a1030 100%)",
-        fontFamily: "sans-serif",
-      }}
-    >
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
-        <div
-          style={{
-            width: 120,
-            height: 120,
-            borderRadius: 28,
-            background: "linear-gradient(135deg, #6366F1, #8B5CF6, #EC4899)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 20px 60px rgba(236,72,153,0.4)",
-          }}
-        >
-          <svg viewBox="0 0 100 100" width="72" height="72">
-            <rect x="20" y="35" width="60" height="30" rx="15" ry="15" fill="white" />
-            <rect x="46" y="20" width="8" height="15" rx="4" fill="white" opacity="0.7" transform="rotate(-30 50 50)" />
-            <rect x="46" y="20" width="8" height="15" rx="4" fill="white" opacity="0.7" transform="rotate(30 50 50)" />
-            <rect x="46" y="20" width="8" height="15" rx="4" fill="white" opacity="0.5" />
-            <circle cx="50" cy="50" r="8" fill="rgba(139,92,246,0.9)" />
-            <circle cx="50" cy="50" r="4" fill="white" />
-          </svg>
-        </div>
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "#0f0f1a",
+    }}>
+      <svg viewBox="0 0 730 296" style={{ width: "90%", maxWidth: 660 }}>
+        <defs>
+          <linearGradient id="cap-g" x1="52" y1="0" x2="720" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#6366F1" />
+            <stop offset="50%" stopColor="#8B5CF6" />
+            <stop offset="100%" stopColor="#EC4899" />
+          </linearGradient>
+        </defs>
 
-        <svg viewBox="52 40 498 216" width="180" height="78" style={{ display: "block" }}>
-          <defs>
-            <linearGradient id="cap-text-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#6366F1" />
-              <stop offset="50%" stopColor="#8B5CF6" />
-              <stop offset="100%" stopColor="#EC4899" />
-            </linearGradient>
-          </defs>
-          {PICLO_PATHS.map((d, i) => (
-            <path key={i} d={d} fill="url(#cap-text-grad)" />
-          ))}
-        </svg>
+        {paths.map((d, i) => <path key={i} d={d} fill="url(#cap-g)" />)}
 
-        <div
-          style={{
-            fontSize: 11,
-            letterSpacing: 4,
-            color: "rgba(255,255,255,0.4)",
-            textTransform: "uppercase",
-          }}
-        >
-          CAPSULE
-        </div>
-      </div>
+        <line x1="608" y1="76" x2="608" y2="220" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+
+        {/* Capsule icon — vertical pill */}
+        <rect x={cx - 22} y={cy - 54} width={44} height={108} rx={22} fill="white" opacity={0.9} />
+        {/* Spark / 4-pointed star */}
+        <path
+          d={`M${cx},${cy - 68} L${cx + 5},${cy - 73} L${cx},${cy - 78} L${cx - 5},${cy - 73} Z`}
+          fill="white"
+          opacity={0.6}
+        />
+        <circle cx={cx} cy={cy} r={9} fill="#EC4899" />
+        <circle cx={cx} cy={cy} r={4} fill="white" />
+      </svg>
     </div>
   );
 }
