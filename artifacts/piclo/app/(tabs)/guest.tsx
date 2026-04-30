@@ -533,7 +533,7 @@ export default function GuestScreen() {
           </View>
         )}
 
-        <Animated.View style={enterStyle3}>
+        <Animated.View style={[enterStyle3, { gap: 10 }]}>
           <TouchableOpacity
             onPress={() => router.push("/wall")}
             style={[styles.wallLink, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}
@@ -545,12 +545,32 @@ export default function GuestScreen() {
                 Guarda il Guest Wall
               </Text>
               <Text style={[styles.wallLinkSub, { color: colors.mutedForeground }]}>
-                Visualizza e scarica le foto
+                Sfoglia tutte le foto dell'evento
               </Text>
             </View>
-            <Download size={15} color={colors.mutedForeground} style={{ marginRight: 4 }} />
             <ChevronRight size={16} color={colors.mutedForeground} />
           </TouchableOpacity>
+
+          {activeEvent && (
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push("/wall");
+              }}
+              style={[styles.downloadPhotoBtn, { borderRadius: colors.radius, overflow: "hidden" }]}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.downloadPhotoBtnGradient}
+              >
+                <Download size={18} color="#fff" />
+                <Text style={styles.downloadPhotoBtnText}>Scarica le tue foto</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
         </Animated.View>
 
         {activeEvent && (
@@ -808,6 +828,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "400",
     marginTop: 2,
+  },
+  downloadPhotoBtn: {
+    marginBottom: 0,
+  },
+  downloadPhotoBtnGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 18,
+    borderRadius: 14,
+  },
+  downloadPhotoBtnText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#fff",
+    letterSpacing: 0.2,
   },
   modalOverlay: {
     flex: 1,

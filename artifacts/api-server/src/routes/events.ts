@@ -730,7 +730,7 @@ router.get("/photos/{*objectPath}", async (req, res): Promise<void> => {
     let servedKey = objectKey;
 
     // Plan-aware serving: if requesting a non-preview original photo, check event plan.
-    // Non-Pro events → transparently serve the preview to enforce watermark/compression.
+    // Non-Pro events → ALWAYS serve the preview. Generate it on-demand if missing.
     const isPreviewFile = objectKey.endsWith("_preview.jpg");
     const originalPhotoMatch = !isPreviewFile && objectKey.match(/^photos\/([^/]+)\/[^/]+\.[^./]+$/i);
     if (originalPhotoMatch) {
@@ -744,8 +744,24 @@ router.get("/photos/{*objectPath}", async (req, res): Promise<void> => {
         const [previewExists] = await bucket.file(previewKey).exists();
         if (previewExists) {
           servedKey = previewKey;
+        } else {
+          // Preview missing for this non-Pro event: generate on demand
+          req.log.info({ objectKey, eventId }, "preview missing, generating on demand for photo serve");
+          try {
+            const [originalBuffer] = await bucket.file(objectKey).download() as [Buffer];
+            const previewBuffer = await generatePreview(originalBuffer);
+            await bucket.file(previewKey).save(previewBuffer, {
+              contentType: "image/jpeg",
+              metadata: { eventId },
+            });
+            servedKey = previewKey;
+          } catch (genErr) {
+            req.log.error(genErr, "on-demand preview generation failed for serve");
+            // Never serve non-Pro originals — return 503
+            res.status(503).json({ error: "Preview not available, please retry" });
+            return;
+          }
         }
-        // If preview doesn't exist yet (pre-feature upload), fall through to serve original
       }
     }
 
