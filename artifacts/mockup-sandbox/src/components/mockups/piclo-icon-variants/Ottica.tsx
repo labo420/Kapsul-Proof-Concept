@@ -9,7 +9,7 @@ export function Ottica() {
         <circle cx={cx} cy={cy} r={152} fill="none" stroke="white" strokeWidth={3} opacity={0.65} />
         <circle cx={cx} cy={cy} r={105} fill="none" stroke="white" strokeWidth={1} opacity={0.15} />
         {angles.map((a) => (
-          <path key={a} d={blade} fill="white" transform={`rotate(${a} ${cx} ${cy})`} />
+          <path key={a} d={blade} fill="white" stroke="#0f0f1a" strokeWidth={2} transform={`rotate(${a} ${cx} ${cy})`} />
         ))}
         <circle cx={cx} cy={cy} r={6} fill="white" opacity={0.95} />
       </svg>

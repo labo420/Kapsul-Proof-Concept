@@ -7,7 +7,7 @@ export function Scatto() {
     <div style={{ width: "100%", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f0f1a" }}>
       <svg viewBox="0 0 400 400" style={{ width: "90%", maxWidth: 340 }}>
         {angles.map((a) => (
-          <path key={a} d={blade} fill="white" transform={`rotate(${a} ${cx} ${cy})`} />
+          <path key={a} d={blade} fill="white" stroke="#0f0f1a" strokeWidth={2} transform={`rotate(${a} ${cx} ${cy})`} />
         ))}
         <circle cx={cx} cy={cy} r={5} fill="white" opacity={0.9} />
       </svg>

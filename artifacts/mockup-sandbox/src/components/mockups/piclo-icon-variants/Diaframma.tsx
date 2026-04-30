@@ -11,8 +11,8 @@ export function Diaframma() {
             key={a}
             d={blade}
             fill="white"
-            stroke="rgba(255,255,255,0.2)"
-            strokeWidth={0.6}
+            stroke="#0f0f1a"
+            strokeWidth={1.5}
             transform={`rotate(${a} ${cx} ${cy})`}
           />
         ))}
