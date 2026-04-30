@@ -729,11 +729,12 @@ router.get("/photos/{*objectPath}", async (req, res): Promise<void> => {
     const bucket = getBucket();
     let servedKey = objectKey;
 
-    // Plan-aware serving: if requesting a non-preview original photo, check event plan.
-    // Non-Pro events → ALWAYS serve the preview. Generate it on-demand if missing.
     const isPreviewFile = objectKey.endsWith("_preview.jpg");
     const originalPhotoMatch = !isPreviewFile && objectKey.match(/^photos\/([^/]+)\/[^/]+\.[^./]+$/i);
+    const previewRequestMatch = isPreviewFile && objectKey.match(/^photos\/([^/]+)\/(.+)_preview\.jpg$/i);
+
     if (originalPhotoMatch) {
+      // Requesting an original file: for non-Pro events always serve the preview
       const eventId = originalPhotoMatch[1];
       const [eventRow] = await db
         .select({ plan: eventsTable.plan })
@@ -745,22 +746,44 @@ router.get("/photos/{*objectPath}", async (req, res): Promise<void> => {
         if (previewExists) {
           servedKey = previewKey;
         } else {
-          // Preview missing for this non-Pro event: generate on demand
-          req.log.info({ objectKey, eventId }, "preview missing, generating on demand for photo serve");
+          req.log.info({ objectKey, eventId }, "preview missing, generating on demand (original request)");
           try {
             const [originalBuffer] = await bucket.file(objectKey).download() as [Buffer];
             const previewBuffer = await generatePreview(originalBuffer);
-            await bucket.file(previewKey).save(previewBuffer, {
-              contentType: "image/jpeg",
-              metadata: { eventId },
-            });
+            await bucket.file(previewKey).save(previewBuffer, { contentType: "image/jpeg", metadata: { eventId } });
             servedKey = previewKey;
           } catch (genErr) {
-            req.log.error(genErr, "on-demand preview generation failed for serve");
-            // Never serve non-Pro originals — return 503
+            req.log.error(genErr, "on-demand preview generation failed");
             res.status(503).json({ error: "Preview not available, please retry" });
             return;
           }
+        }
+      }
+    } else if (previewRequestMatch) {
+      // Requesting a _preview.jpg: generate on demand if it doesn't exist (handles legacy listings)
+      const [previewExists] = await bucket.file(objectKey).exists();
+      if (!previewExists) {
+        const [, eventId, photoBase] = previewRequestMatch;
+        req.log.info({ objectKey, eventId }, "preview missing, generating on demand (preview request)");
+        let generated = false;
+        for (const ext of ["jpg", "png"]) {
+          const origKey = `photos/${eventId}/${photoBase}.${ext}`;
+          const [origExists] = await bucket.file(origKey).exists();
+          if (origExists) {
+            try {
+              const [origBuffer] = await bucket.file(origKey).download() as [Buffer];
+              const prevBuffer = await generatePreview(origBuffer);
+              await bucket.file(objectKey).save(prevBuffer, { contentType: "image/jpeg", metadata: { eventId } });
+              generated = true;
+            } catch (genErr) {
+              req.log.error(genErr, "on-demand preview generation failed (preview request)");
+            }
+            break;
+          }
+        }
+        if (!generated) {
+          res.status(503).json({ error: "Preview not available, please retry" });
+          return;
         }
       }
     }

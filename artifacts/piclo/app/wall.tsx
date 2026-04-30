@@ -132,9 +132,13 @@ export default function WallScreen() {
       const headers: Record<string, string> = {};
       if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
 
-      const { uri } = await FileSystem.downloadAsync(downloadUrl, tmpPath, { headers });
-      await MediaLibrary.saveToLibraryAsync(uri);
-      await FileSystem.deleteAsync(uri, { idempotent: true });
+      const result = await FileSystem.downloadAsync(downloadUrl, tmpPath, { headers });
+      if (result.status !== 200) {
+        await FileSystem.deleteAsync(result.uri, { idempotent: true });
+        throw new Error(`Download failed: HTTP ${result.status}`);
+      }
+      await MediaLibrary.saveToLibraryAsync(result.uri);
+      await FileSystem.deleteAsync(result.uri, { idempotent: true });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setDownloadedId(photo.id);
