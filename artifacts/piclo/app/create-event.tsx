@@ -177,45 +177,48 @@ export default function CreateEventScreen() {
 
         <View style={styles.progressStrip}>
           {STEPS.map((s, i) => (
-            <View key={s} style={styles.progressItem}>
-              {i <= step ? (
-                <LinearGradient
-                  colors={[colors.gradientStart, colors.gradientEnd]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={[styles.stepDot, { borderRadius: 999 }]}
-                >
-                  {i < step ? (
-                    <Check size={11} color="#fff" />
-                  ) : (
-                    <Text style={styles.stepNum}>{i + 1}</Text>
-                  )}
-                </LinearGradient>
-              ) : (
-                <View
+            <React.Fragment key={s}>
+              <View style={styles.progressItem}>
+                {i <= step ? (
+                  <LinearGradient
+                    colors={[colors.gradientStart, colors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={[styles.stepDot, { borderRadius: 999 }]}
+                  >
+                    {i < step ? (
+                      <Check size={11} color="#fff" />
+                    ) : (
+                      <Text style={styles.stepNum}>{i + 1}</Text>
+                    )}
+                  </LinearGradient>
+                ) : (
+                  <View
+                    style={[
+                      styles.stepDot,
+                      { backgroundColor: colors.muted, borderRadius: 999 },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.stepNum, { color: colors.mutedForeground }]}
+                    >
+                      {i + 1}
+                    </Text>
+                  </View>
+                )}
+                <Text
+                  numberOfLines={1}
                   style={[
-                    styles.stepDot,
-                    { backgroundColor: colors.muted, borderRadius: 999 },
+                    styles.stepLabel,
+                    {
+                      color:
+                        i <= step ? colors.foreground : colors.mutedForeground,
+                    },
                   ]}
                 >
-                  <Text
-                    style={[styles.stepNum, { color: colors.mutedForeground }]}
-                  >
-                    {i + 1}
-                  </Text>
-                </View>
-              )}
-              <Text
-                style={[
-                  styles.stepLabel,
-                  {
-                    color:
-                      i <= step ? colors.foreground : colors.mutedForeground,
-                  },
-                ]}
-              >
-                {s}
-              </Text>
+                  {s}
+                </Text>
+              </View>
               {i < STEPS.length - 1 && (
                 <View style={styles.stepLineWrap}>
                   <View
@@ -234,7 +237,7 @@ export default function CreateEventScreen() {
                   )}
                 </View>
               )}
-            </View>
+            </React.Fragment>
           ))}
         </View>
 
@@ -667,32 +670,31 @@ const styles = StyleSheet.create({
   topTitle: { fontSize: 17, fontWeight: "700" },
   progressStrip: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: "flex-start",
     paddingVertical: 16,
-    paddingHorizontal: 16,
-    gap: 0,
+    paddingHorizontal: 8,
   },
   progressItem: {
-    flexDirection: "row",
+    flex: 1,
+    flexDirection: "column",
     alignItems: "center",
-    gap: 6,
+    gap: 4,
   },
   stepDot: {
-    width: 26,
-    height: 26,
+    width: 24,
+    height: 24,
     alignItems: "center",
     justifyContent: "center",
   },
-  stepNum: { fontSize: 12, fontWeight: "800", color: "#fff" },
-  stepLabel: { fontSize: 11, fontWeight: "600" },
+  stepNum: { fontSize: 11, fontWeight: "800", color: "#fff" },
+  stepLabel: { fontSize: 9, fontWeight: "600", textAlign: "center" },
   stepLineWrap: {
-    width: 28,
+    width: 20,
     height: 3,
-    marginHorizontal: 4,
     overflow: "hidden",
     borderRadius: 999,
     position: "relative",
+    marginTop: 11,
   },
   stepLineBg: {
     position: "absolute",
