@@ -21,15 +21,7 @@ export function Costellazione() {
       background: "#0f0f1a",
     }}>
       <svg viewBox="0 0 730 296" style={{ width: "90%", maxWidth: 660 }}>
-        <defs>
-          <linearGradient id="cs-g" x1="52" y1="0" x2="720" y2="0" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#6366F1" />
-            <stop offset="50%" stopColor="#8B5CF6" />
-            <stop offset="100%" stopColor="#EC4899" />
-          </linearGradient>
-        </defs>
-
-        {paths.map((d, i) => <path key={i} d={d} fill="url(#cs-g)" />)}
+        {paths.map((d, i) => <path key={i} d={d} fill="white" />)}
 
         <line x1="608" y1="76" x2="608" y2="220" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
 
@@ -42,7 +34,7 @@ export function Costellazione() {
         <circle cx={p1.x} cy={p1.y} r={8} fill="white" opacity={0.8} />
         <circle cx={p3.x} cy={p3.y} r={8} fill="white" opacity={0.8} />
         <circle cx={p2.x} cy={p2.y} r={13} fill="white" opacity={0.95} />
-        <circle cx={p2.x} cy={p2.y} r={7} fill="#8B5CF6" />
+        <circle cx={p2.x} cy={p2.y} r={7} fill="rgba(255,255,255,0.35)" />
       </svg>
     </div>
   );

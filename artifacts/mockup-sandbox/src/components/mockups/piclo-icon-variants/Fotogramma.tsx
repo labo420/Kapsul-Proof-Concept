@@ -20,15 +20,7 @@ export function Fotogramma() {
       background: "#0f0f1a",
     }}>
       <svg viewBox="0 0 730 296" style={{ width: "90%", maxWidth: 660 }}>
-        <defs>
-          <linearGradient id="ft-g" x1="52" y1="0" x2="720" y2="0" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#6366F1" />
-            <stop offset="50%" stopColor="#8B5CF6" />
-            <stop offset="100%" stopColor="#EC4899" />
-          </linearGradient>
-        </defs>
-
-        {paths.map((d, i) => <path key={i} d={d} fill="url(#ft-g)" />)}
+        {paths.map((d, i) => <path key={i} d={d} fill="white" />)}
 
         <line x1="608" y1="76" x2="608" y2="220" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
 
@@ -51,7 +43,7 @@ export function Fotogramma() {
 
         {/* Light dot — top-right inside frame */}
         <circle cx={fx + fw - 16} cy={fy + 18} r={7} fill="white" opacity={0.9} />
-        <circle cx={fx + fw - 16} cy={fy + 18} r={3.5} fill="#EC4899" />
+        <circle cx={fx + fw - 16} cy={fy + 18} r={3.5} fill="rgba(255,255,255,0.4)" />
       </svg>
     </div>
   );

@@ -21,16 +21,8 @@ export function Obiettivo() {
       background: "#0f0f1a",
     }}>
       <svg viewBox="0 0 730 296" style={{ width: "90%", maxWidth: 660 }}>
-        <defs>
-          <linearGradient id="ob-g" x1="52" y1="0" x2="720" y2="0" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#6366F1" />
-            <stop offset="50%" stopColor="#8B5CF6" />
-            <stop offset="100%" stopColor="#EC4899" />
-          </linearGradient>
-        </defs>
-
         {/* PICLO wordmark */}
-        {paths.map((d, i) => <path key={i} d={d} fill="url(#ob-g)" />)}
+        {paths.map((d, i) => <path key={i} d={d} fill="white" />)}
 
         {/* Separator line */}
         <line x1="608" y1="76" x2="608" y2="220" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
@@ -50,7 +42,7 @@ export function Obiettivo() {
         ))}
         <circle cx={cx} cy={cy} r={14} fill="#0f0f1a" />
         <circle cx={cx} cy={cy} r={10} fill="white" opacity={0.9} />
-        <circle cx={cx} cy={cy} r={5} fill="#8B5CF6" />
+        <circle cx={cx} cy={cy} r={5} fill="rgba(255,255,255,0.35)" />
       </svg>
     </div>
   );

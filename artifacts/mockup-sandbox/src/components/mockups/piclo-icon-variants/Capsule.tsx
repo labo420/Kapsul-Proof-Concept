@@ -19,15 +19,7 @@ export function Capsule() {
       background: "#0f0f1a",
     }}>
       <svg viewBox="0 0 730 296" style={{ width: "90%", maxWidth: 660 }}>
-        <defs>
-          <linearGradient id="cap-g" x1="52" y1="0" x2="720" y2="0" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#6366F1" />
-            <stop offset="50%" stopColor="#8B5CF6" />
-            <stop offset="100%" stopColor="#EC4899" />
-          </linearGradient>
-        </defs>
-
-        {paths.map((d, i) => <path key={i} d={d} fill="url(#cap-g)" />)}
+        {paths.map((d, i) => <path key={i} d={d} fill="white" />)}
 
         <line x1="608" y1="76" x2="608" y2="220" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
 
@@ -39,7 +31,7 @@ export function Capsule() {
           fill="white"
           opacity={0.6}
         />
-        <circle cx={cx} cy={cy} r={9} fill="#EC4899" />
+        <circle cx={cx} cy={cy} r={9} fill="rgba(255,255,255,0.25)" />
         <circle cx={cx} cy={cy} r={4} fill="white" />
       </svg>
     </div>
