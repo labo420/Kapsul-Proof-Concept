@@ -53,7 +53,7 @@ export default function GuestScreen() {
   const { user, token } = useAuth();
   const { guestId, acceptedTerms, setAcceptedTerms, currentEventId, setCurrentEventId, guestTokens } = useGuest();
   const uploaderId = user?.id ?? guestId;
-  const { events, getEvent, incrementPhotoCount } = useEvents();
+  const { events, getEvent, refreshEvent, incrementPhotoCount } = useEvents();
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
   const [uploadCount, setUploadCount] = useState(0);
@@ -67,6 +67,7 @@ export default function GuestScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (currentEventId) refreshEvent(currentEventId, guestTokens[currentEventId]).catch(() => {});
       if (activeEvent?.themeGradientStart && activeEvent?.themeGradientEnd) {
         setActiveGradient({
           start: activeEvent.themeGradientStart,
@@ -76,7 +77,7 @@ export default function GuestScreen() {
       return () => {
         setActiveGradient(null);
       };
-    }, [activeEvent?.id, activeEvent?.themeGradientStart, activeEvent?.themeGradientEnd, setActiveGradient])
+    }, [activeEvent?.id, activeEvent?.themeGradientStart, activeEvent?.themeGradientEnd, setActiveGradient, currentEventId, refreshEvent, guestTokens])
   );
 
   const liveCount = activeEvent?.photoCount ?? uploadCount;

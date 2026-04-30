@@ -54,7 +54,7 @@ export default function WallScreen() {
   const { width } = useWindowDimensions();
   const { currentEventId, guestTokens } = useGuest();
   const { token: authToken } = useAuth();
-  const { getEvent } = useEvents();
+  const { getEvent, refreshEvent } = useEvents();
   const activeEvent = currentEventId ? getEvent(currentEventId) : null;
   const isHost = !!activeEvent?.hostToken;
   const canDownload = isHost || activeEvent?.guestsCanDownload !== false;
@@ -98,8 +98,9 @@ export default function WallScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (currentEventId) refreshEvent(currentEventId).catch(() => {});
       fetchPhotos();
-    }, [fetchPhotos])
+    }, [fetchPhotos, currentEventId, refreshEvent])
   );
 
   const onRefresh = () => {

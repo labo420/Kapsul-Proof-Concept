@@ -467,26 +467,39 @@ router.get("/events/:id/photos", optionalAuth, async (req, res): Promise<void> =
     }
 
     const isMember = isCreator || isHost || isGuest;
+    const isHostOrCreator = !!(isCreator || isHost);
+
+    // guestsCanView=false overrides public visibility — only identified members can access
+    if (!event.guestsCanView && !isHostOrCreator) {
+      if (!isGuest || requesterGuestId === null) {
+        res.status(403).json({ error: "Access denied" });
+        return;
+      }
+    }
 
     if (!event.isPublic && !isMember) {
       res.status(403).json({ error: "Private event" });
       return;
     }
 
-    // When guestsCanView=false and the requester is a guest (not host/creator), show only their own photos
-    const isGuestOnly = isGuest && !isCreator && !isHost;
-    const shouldFilterByGuest = isGuestOnly && !event.guestsCanView && requesterGuestId !== null;
+    // Determine photo filter:
+    // - host/creator: all photos
+    // - guest with guestsCanView=false: only their own photos
+    // - guest with guestsCanView=true: all photos
+    // - non-member public viewer (only reachable when guestsCanView=true): public photos only
+    const photosWhere = (() => {
+      if (isHostOrCreator) return eq(photosTable.eventId, id);
+      if (!event.guestsCanView && requesterGuestId) {
+        return and(eq(photosTable.eventId, id), eq(photosTable.guestId, requesterGuestId));
+      }
+      if (isMember) return eq(photosTable.eventId, id);
+      return and(eq(photosTable.eventId, id), eq(photosTable.isPublic, true));
+    })();
 
     const photos = await db
       .select()
       .from(photosTable)
-      .where(
-        shouldFilterByGuest
-          ? and(eq(photosTable.eventId, id), eq(photosTable.guestId, requesterGuestId!))
-          : isMember
-          ? eq(photosTable.eventId, id)
-          : and(eq(photosTable.eventId, id), eq(photosTable.isPublic, true))
-      )
+      .where(photosWhere)
       .orderBy(photosTable.createdAt);
 
     // For non-Pro events, expose the preview path so original files are not discoverable by guests
@@ -668,6 +681,14 @@ router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res
       if (guestRow) { isMember = true; requesterGuestId = guestRow.guestId; }
     }
 
+    // guestsCanView=false overrides public visibility — only identified guests can access
+    if (!event.guestsCanView && !isHostOrCreator) {
+      if (!isMember || requesterGuestId === null) {
+        res.status(403).json({ error: "Access denied" });
+        return;
+      }
+    }
+
     if (!isMember && !event.isPublic) {
       res.status(403).json({ error: "Access denied" });
       return;
@@ -679,15 +700,19 @@ router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res
       return;
     }
 
-    // Fetch photo — non-members can only access public photos (same rule as photo listing)
-    // When guestsCanView=false, guests can only download their own photos
+    // Fetch photo — mirrors the photo listing logic
+    // - host/creator: any photo in event
+    // - guest with guestsCanView=false: only their own photo
+    // - guest with guestsCanView=true: any photo in event
+    // - non-member (public event, guestsCanView=true): only public photos
     const photoWhereClause = (() => {
       const base = and(eq(photosTable.id, photoId), eq(photosTable.eventId, eventId));
-      if (!isMember) return and(base, eq(photosTable.isPublic, true));
-      if (!isHostOrCreator && !event.guestsCanView && requesterGuestId) {
+      if (isHostOrCreator) return base;
+      if (!event.guestsCanView && requesterGuestId) {
         return and(base, eq(photosTable.guestId, requesterGuestId));
       }
-      return base;
+      if (isMember) return base;
+      return and(base, eq(photosTable.isPublic, true));
     })();
     const [photo] = await db.select().from(photosTable).where(photoWhereClause);
     if (!photo) {
