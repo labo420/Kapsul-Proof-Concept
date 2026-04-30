@@ -9,6 +9,7 @@ import * as MediaLibrary from "expo-media-library";
 import * as FileSystem from "expo-file-system/legacy";
 import QRCode from "react-native-qrcode-svg";
 import React, { useCallback, useRef, useState } from "react";
+import type Svg from "react-native-svg";
 import {
   Alert,
   Platform,
@@ -33,9 +34,6 @@ const DELIVERY_LABELS: Record<string, string> = {
 
 type QrVariant = "dark" | "light";
 
-interface QRCodeRef {
-  toDataURL: (callback: (dataURL: string) => void) => void;
-}
 
 const QR_VARIANTS: { key: QrVariant; label: string; qrColor: string; qrBg: string; containerBg: string }[] = [
   { key: "dark", label: "Scuro", qrColor: "#08060F", qrBg: "#ffffff", containerBg: "#ffffff" },
@@ -51,7 +49,7 @@ export default function QRScreen() {
   const [copied, setCopied] = useState(false);
   const [qrVariant, setQrVariant] = useState<QrVariant>("dark");
   const [downloading, setDownloading] = useState(false);
-  const qrRef = useRef<QRCodeRef | null>(null);
+  const qrRef = useRef<Svg | null>(null);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -105,12 +103,18 @@ export default function QRScreen() {
         return;
       }
 
+      let resolved = false;
+
       const timeoutId = setTimeout(() => {
+        if (resolved) return;
+        resolved = true;
         setDownloading(false);
         Alert.alert("Errore", "Impossibile generare il QR. Riprova.");
       }, 8000);
 
       qrRef.current.toDataURL(async (dataURL: string) => {
+        if (resolved) return;
+        resolved = true;
         clearTimeout(timeoutId);
         try {
           const fileUri = `${FileSystem.cacheDirectory}qr-${id}-${qrVariant}.png`;
@@ -208,7 +212,7 @@ export default function QRScreen() {
                 size={200}
                 backgroundColor={activeVariant.qrBg}
                 color={activeVariant.qrColor}
-                getRef={(ref) => { qrRef.current = ref as unknown as QRCodeRef; }}
+                getRef={(ref) => { qrRef.current = ref as Svg; }}
               />
             </View>
           </LinearGradient>
