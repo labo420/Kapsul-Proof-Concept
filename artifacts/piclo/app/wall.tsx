@@ -3,7 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import * as MediaLibrary from "expo-media-library";
-import * as FileSystem from "expo-file-system/legacy";
+import { File, Paths } from "expo-file-system";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -141,18 +141,14 @@ export default function WallScreen() {
         ? `?hostToken=${encodeURIComponent(hostTokenVal)}`
         : guestToken ? `?guestToken=${encodeURIComponent(guestToken)}` : "";
       const downloadUrl = `${API_BASE}/events/${encodeURIComponent(currentEventId)}/photos/${encodeURIComponent(photo.id)}/download${qs}`;
-      const tmpPath = (FileSystem.documentDirectory ?? "") + `piclo_${photo.id}.jpg`;
+      const tmpFile = new File(Paths.document, `piclo_${photo.id}.jpg`);
 
       const headers: Record<string, string> = {};
       if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
 
-      const result = await FileSystem.downloadAsync(downloadUrl, tmpPath, { headers });
-      if (result.status !== 200) {
-        await FileSystem.deleteAsync(result.uri, { idempotent: true });
-        throw new Error(`Download failed: HTTP ${result.status}`);
-      }
-      await MediaLibrary.saveToLibraryAsync(result.uri);
-      await FileSystem.deleteAsync(result.uri, { idempotent: true });
+      const downloadedFile = await File.downloadFileAsync(downloadUrl, tmpFile, { headers, idempotent: true });
+      await MediaLibrary.saveToLibraryAsync(downloadedFile.uri);
+      downloadedFile.delete();
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setDownloadedId(photo.id);

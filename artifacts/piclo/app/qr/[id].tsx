@@ -6,7 +6,7 @@ import * as Linking from "expo-linking";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as MediaLibrary from "expo-media-library";
-import * as FileSystem from "expo-file-system/legacy";
+import { File, Paths } from "expo-file-system";
 import QRCode from "react-native-qrcode-svg";
 import React, { useCallback, useRef, useState } from "react";
 import type Svg from "react-native-svg";
@@ -118,11 +118,9 @@ export default function QRScreen() {
         clearTimeout(timeoutId);
         try {
           const base64Data = dataURL.replace(/^data:[^;]+;base64,/, "");
-          const fileUri = `${FileSystem.cacheDirectory}qr-${id}-${qrVariant}.png`;
-          await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-          await MediaLibrary.saveToLibraryAsync(fileUri);
+          const file = new File(Paths.cache, `qr-${id}-${qrVariant}.png`);
+          file.write(base64Data, { encoding: "base64" });
+          await MediaLibrary.saveToLibraryAsync(file.uri);
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           Alert.alert("Salvato!", "Il QR code è stato salvato nella tua galleria.");
         } catch {
