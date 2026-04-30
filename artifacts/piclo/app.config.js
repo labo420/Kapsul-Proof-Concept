@@ -17,16 +17,16 @@ export default {
     splash: {
       image: "./assets/images/splash-icon.png",
       resizeMode: "contain",
-      backgroundColor: "#000000",
+      backgroundColor: "#0f0f1a",
     },
     ios: {
       supportsTablet: false,
     },
     android: {
-      backgroundColor: "#000000",
+      backgroundColor: "#0f0f1a",
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
-        backgroundColor: "#08060F",
+        backgroundColor: "#0f0f1a",
       },
     },
     web: {
