@@ -4,6 +4,7 @@ import { eq, and, or } from "drizzle-orm";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import multer from "multer";
+import sharp from "sharp";
 import { objectStorageClient } from "../lib/objectStorage.js";
 import { optionalAuth } from "../middlewares/auth.js";
 
@@ -290,6 +291,30 @@ router.post(
         metadata: { eventId: id, guestId },
       });
 
+      // Generate compressed preview with watermark (non-blocking — don't fail upload if this fails)
+      void (async () => {
+        try {
+          const previewKey = `photos/${id}/${photoId}_preview.jpg`;
+          const watermarkSvg = Buffer.from(
+            `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="64">` +
+            `<text x="210" y="52" font-family="Arial, Helvetica, sans-serif" font-size="36" ` +
+            `font-weight="bold" fill="white" fill-opacity="0.55" text-anchor="end">Piclo</text>` +
+            `</svg>`
+          );
+          const previewBuffer = await sharp(req.file!.buffer)
+            .resize(1080, 1080, { fit: "inside", withoutEnlargement: true })
+            .composite([{ input: watermarkSvg, gravity: "southeast" }])
+            .jpeg({ quality: 85 })
+            .toBuffer();
+          await bucket.file(previewKey).save(previewBuffer, {
+            contentType: "image/jpeg",
+            metadata: { eventId: id },
+          });
+        } catch (previewErr) {
+          // Non-blocking: log but don't fail the request
+        }
+      })();
+
       const objectPath = `/api/photos/${objectKey}`;
       await db.insert(photosTable).values({
         id: photoId,
@@ -547,6 +572,89 @@ router.delete("/events/:id/guests/:guestId", async (req, res): Promise<void> => 
     res.json({ removed: deletedGuests.length > 0, photosDeleted: photos.length });
   } catch (err) {
     req.log.error(err, "remove guest error");
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res): Promise<void> => {
+  try {
+    const eventId = param(req.params.id);
+    const photoId = param(req.params.photoId);
+    const { guestToken, hostToken: qHostToken } = req.query as { guestToken?: string; hostToken?: string };
+
+    const [event] = await db
+      .select({
+        plan: eventsTable.plan,
+        hostToken: eventsTable.hostToken,
+        isPublic: eventsTable.isPublic,
+        creatorId: eventsTable.creatorId,
+      })
+      .from(eventsTable)
+      .where(eq(eventsTable.id, eventId));
+    if (!event) {
+      res.status(404).json({ error: "Event not found" });
+      return;
+    }
+
+    let hasAccess = !!event.isPublic;
+    if (!hasAccess && qHostToken && event.hostToken && qHostToken === event.hostToken) hasAccess = true;
+    if (!hasAccess && req.user && req.user.userId === event.creatorId) hasAccess = true;
+    if (!hasAccess && guestToken) {
+      const [guestRow] = await db
+        .select({ id: guestsTable.id })
+        .from(guestsTable)
+        .where(and(eq(guestsTable.eventId, eventId), eq(guestsTable.token, guestToken)));
+      if (guestRow) hasAccess = true;
+    }
+    if (!hasAccess && req.user) {
+      const [guestRow] = await db
+        .select({ id: guestsTable.id })
+        .from(guestsTable)
+        .where(and(eq(guestsTable.eventId, eventId), eq(guestsTable.guestId, req.user.userId)));
+      if (guestRow) hasAccess = true;
+    }
+    if (!hasAccess) {
+      res.status(403).json({ error: "Access denied" });
+      return;
+    }
+
+    const [photo] = await db
+      .select()
+      .from(photosTable)
+      .where(and(eq(photosTable.id, photoId), eq(photosTable.eventId, eventId)));
+    if (!photo) {
+      res.status(404).json({ error: "Photo not found" });
+      return;
+    }
+
+    const isPro = event.plan === "pro";
+    const originalKey = photo.objectPath.replace(/^\/api\/photos\//, "");
+
+    let objectKey: string;
+    if (isPro) {
+      objectKey = originalKey;
+    } else {
+      const baseKey = originalKey.replace(/\.[^.]+$/, "");
+      const previewKey = `${baseKey}_preview.jpg`;
+      const bucket2 = getBucket();
+      const [previewExists] = await bucket2.file(previewKey).exists();
+      objectKey = previewExists ? previewKey : originalKey;
+    }
+
+    const bucket = getBucket();
+    const fileRef = bucket.file(objectKey);
+    const [exists] = await fileRef.exists();
+    if (!exists) {
+      res.status(404).json({ error: "File not found" });
+      return;
+    }
+
+    res.setHeader("Content-Disposition", `attachment; filename="piclo-${photoId}.jpg"`);
+    res.setHeader("Content-Type", "image/jpeg");
+    res.setHeader("Cache-Control", "private, max-age=3600");
+    fileRef.createReadStream().pipe(res);
+  } catch (err) {
+    req.log.error(err, "download photo error");
     res.status(500).json({ error: "Server error" });
   }
 });

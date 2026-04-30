@@ -1,11 +1,18 @@
-import { ChevronLeft } from "lucide-react-native";
+import { ChevronLeft, Download, X } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import * as Haptics from "expo-haptics";
+import * as MediaLibrary from "expo-media-library";
+import * as FileSystem from "expo-file-system/legacy";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Image,
+  Modal,
   Platform,
+  Pressable,
   RefreshControl,
   StatusBar,
   StyleSheet,
@@ -20,7 +27,7 @@ import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/contexts/GuestContext";
 import { useAuth } from "@/contexts/AuthContext";
 import PhotoCard from "@/components/PhotoCard";
-import { apiGetPhotos, photoUrl, type ApiPhoto } from "@/lib/api";
+import { API_BASE, apiGetPhotos, photoUrl, type ApiPhoto } from "@/lib/api";
 
 const MOCK_PHOTOS = [
   { id: "m1", uri: "https://picsum.photos/seed/party1/400/550", h: 220, col: 0 },
@@ -29,7 +36,7 @@ const MOCK_PHOTOS = [
   { id: "m4", uri: "https://picsum.photos/seed/party4/400/400", h: 190, col: 0 },
 ];
 
-type WallPhoto = { id: string; uri: string; h: number; col: number };
+type WallPhoto = { id: string; uri: string; h: number; col: number; isMock?: boolean };
 
 function toWallPhotos(apiPhotos: ApiPhoto[]): WallPhoto[] {
   return apiPhotos.map((p, i) => ({
@@ -50,6 +57,9 @@ export default function WallScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<WallPhoto | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadedId, setDownloadedId] = useState<string | null>(null);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -66,19 +76,19 @@ export default function WallScreen() {
         if (currentEventId) {
           const data = await apiGetPhotos(currentEventId, guestTokens[currentEventId] ?? undefined, authToken);
           const wall = toWallPhotos(data);
-          setPhotos(wall.length > 0 ? wall : MOCK_PHOTOS);
+          setPhotos(wall.length > 0 ? wall : MOCK_PHOTOS.map(p => ({ ...p, isMock: true })));
         } else {
-          setPhotos(MOCK_PHOTOS);
+          setPhotos(MOCK_PHOTOS.map(p => ({ ...p, isMock: true })));
         }
       } catch {
         setError(true);
-        setPhotos(MOCK_PHOTOS);
+        setPhotos(MOCK_PHOTOS.map(p => ({ ...p, isMock: true })));
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [currentEventId, guestTokens]
+    [currentEventId, guestTokens, authToken]
   );
 
   useFocusEffect(
@@ -91,6 +101,50 @@ export default function WallScreen() {
     setRefreshing(true);
     fetchPhotos(true);
   };
+
+  const handleDownload = useCallback(async (photo: WallPhoto) => {
+    if (photo.isMock || !currentEventId) return;
+
+    if (Platform.OS === "web") {
+      const guestToken = guestTokens[currentEventId];
+      const qs = guestToken ? `?guestToken=${encodeURIComponent(guestToken)}` : "";
+      const url = `${API_BASE}/events/${encodeURIComponent(currentEventId)}/photos/${encodeURIComponent(photo.id)}/download${qs}`;
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `piclo-${photo.id}.jpg`;
+      a.click();
+      return;
+    }
+
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permesso negato", "Abilita l'accesso alla libreria nelle impostazioni per scaricare le foto.");
+      return;
+    }
+
+    setDownloading(true);
+    try {
+      const guestToken = guestTokens[currentEventId];
+      const qs = guestToken ? `?guestToken=${encodeURIComponent(guestToken)}` : "";
+      const downloadUrl = `${API_BASE}/events/${encodeURIComponent(currentEventId)}/photos/${encodeURIComponent(photo.id)}/download${qs}`;
+      const tmpPath = (FileSystem.documentDirectory ?? "") + `piclo_${photo.id}.jpg`;
+
+      const headers: Record<string, string> = {};
+      if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
+      const { uri } = await FileSystem.downloadAsync(downloadUrl, tmpPath, { headers });
+      await MediaLibrary.saveToLibraryAsync(uri);
+      await FileSystem.deleteAsync(uri, { idempotent: true });
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setDownloadedId(photo.id);
+      setTimeout(() => setDownloadedId(null), 3000);
+    } catch {
+      Alert.alert("Errore download", "Impossibile scaricare la foto. Riprova.");
+    } finally {
+      setDownloading(false);
+    }
+  }, [currentEventId, guestTokens, authToken]);
 
   const { leftCol, rightCol } = useMemo(() => {
     const left: WallPhoto[] = [];
@@ -171,22 +225,32 @@ export default function WallScreen() {
             <View style={[styles.masonryRow, { gap: GAP }]}>
               <View style={[styles.col, { width: colWidth, gap: GAP }]}>
                 {leftCol.map((photo) => (
-                  <PhotoCard
+                  <TouchableOpacity
                     key={photo.id}
-                    uri={photo.uri}
-                    height={photo.h}
-                    width={colWidth}
-                  />
+                    onPress={() => setSelectedPhoto(photo)}
+                    activeOpacity={0.92}
+                  >
+                    <PhotoCard
+                      uri={photo.uri}
+                      height={photo.h}
+                      width={colWidth}
+                    />
+                  </TouchableOpacity>
                 ))}
               </View>
               <View style={[styles.col, { width: colWidth, gap: GAP }]}>
                 {rightCol.map((photo) => (
-                  <PhotoCard
+                  <TouchableOpacity
                     key={photo.id}
-                    uri={photo.uri}
-                    height={photo.h}
-                    width={colWidth}
-                  />
+                    onPress={() => setSelectedPhoto(photo)}
+                    activeOpacity={0.92}
+                  >
+                    <PhotoCard
+                      uri={photo.uri}
+                      height={photo.h}
+                      width={colWidth}
+                    />
+                  </TouchableOpacity>
                 ))}
               </View>
             </View>
@@ -194,6 +258,73 @@ export default function WallScreen() {
           scrollEnabled={true}
         />
       )}
+
+      <Modal
+        visible={selectedPhoto !== null}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setSelectedPhoto(null)}
+      >
+        <View style={styles.lightboxOverlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setSelectedPhoto(null)} />
+
+          {selectedPhoto && (
+            <View style={styles.lightboxContent}>
+              <Image
+                source={{ uri: selectedPhoto.uri }}
+                style={styles.lightboxImage}
+                resizeMode="contain"
+              />
+            </View>
+          )}
+
+          <View style={[styles.lightboxTopBar, { paddingTop: insets.top + 8 }]}>
+            <TouchableOpacity
+              onPress={() => setSelectedPhoto(null)}
+              style={styles.lightboxCloseBtn}
+              activeOpacity={0.8}
+            >
+              <X size={22} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
+          {selectedPhoto && !selectedPhoto.isMock && (
+            <View style={[styles.lightboxBottomBar, { paddingBottom: insets.bottom + 16 }]}>
+              {downloadedId === selectedPhoto.id ? (
+                <View style={[styles.downloadedBadge, { backgroundColor: colors.gradientStart + "22", borderColor: colors.gradientStart + "55" }]}>
+                  <Text style={[styles.downloadedText, { color: colors.gradientStart }]}>
+                    Salvata nel rullino!
+                  </Text>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => handleDownload(selectedPhoto)}
+                  disabled={downloading}
+                  activeOpacity={0.85}
+                  style={styles.downloadBtnWrap}
+                >
+                  <LinearGradient
+                    colors={[colors.gradientStart, colors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.downloadBtn}
+                  >
+                    {downloading ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <>
+                        <Download size={18} color="#fff" />
+                        <Text style={styles.downloadBtnText}>Scarica foto</Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -246,5 +377,75 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     paddingHorizontal: 32,
+  },
+  lightboxOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.96)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  lightboxContent: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  lightboxImage: {
+    width: "100%",
+    height: "85%",
+  },
+  lightboxTopBar: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  lightboxCloseBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  lightboxBottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 24,
+    alignItems: "center",
+  },
+  downloadBtnWrap: {
+    width: "100%",
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  downloadBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 999,
+  },
+  downloadBtnText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#fff",
+    letterSpacing: 0.2,
+  },
+  downloadedBadge: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  downloadedText: {
+    fontSize: 15,
+    fontWeight: "700",
   },
 });
