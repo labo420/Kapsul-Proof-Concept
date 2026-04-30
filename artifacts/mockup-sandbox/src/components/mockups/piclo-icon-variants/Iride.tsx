@@ -1,6 +1,5 @@
 export function Iride() {
   const cx = 200, cy = 200;
-  const outerR = 130, innerR = 38;
   const blade = "M291.9,108.1 A130,130 0 0,1 291.9,291.9 L209.8,236.7 A38,38 0 0,1 236.7,190.2 Z";
   const angles = [0, 60, 120, 180, 240, 300];
 
