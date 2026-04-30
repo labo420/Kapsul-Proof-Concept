@@ -638,6 +638,7 @@ router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res
         isPublic: eventsTable.isPublic,
         creatorId: eventsTable.creatorId,
         guestsCanDownload: eventsTable.guestsCanDownload,
+        guestsCanView: eventsTable.guestsCanView,
       })
       .from(eventsTable)
       .where(eq(eventsTable.id, eventId));
@@ -649,21 +650,22 @@ router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res
     // Determine membership level — mirrors logic in GET /events/:id/photos
     let isMember = false;
     let isHostOrCreator = false;
+    let requesterGuestId: string | null = null;
     if (qHostToken && event.hostToken && qHostToken === event.hostToken) { isMember = true; isHostOrCreator = true; }
     if (!isMember && req.user && req.user.userId === event.creatorId) { isMember = true; isHostOrCreator = true; }
     if (!isMember && guestToken) {
       const [guestRow] = await db
-        .select({ id: guestsTable.id })
+        .select({ id: guestsTable.id, guestId: guestsTable.guestId })
         .from(guestsTable)
         .where(and(eq(guestsTable.eventId, eventId), eq(guestsTable.token, guestToken)));
-      if (guestRow) isMember = true;
+      if (guestRow) { isMember = true; requesterGuestId = guestRow.guestId; }
     }
     if (!isMember && req.user) {
       const [guestRow] = await db
-        .select({ id: guestsTable.id })
+        .select({ id: guestsTable.id, guestId: guestsTable.guestId })
         .from(guestsTable)
         .where(and(eq(guestsTable.eventId, eventId), eq(guestsTable.guestId, req.user.userId)));
-      if (guestRow) isMember = true;
+      if (guestRow) { isMember = true; requesterGuestId = guestRow.guestId; }
     }
 
     if (!isMember && !event.isPublic) {
@@ -678,14 +680,16 @@ router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res
     }
 
     // Fetch photo — non-members can only access public photos (same rule as photo listing)
-    const [photo] = await db
-      .select()
-      .from(photosTable)
-      .where(
-        isMember
-          ? and(eq(photosTable.id, photoId), eq(photosTable.eventId, eventId))
-          : and(eq(photosTable.id, photoId), eq(photosTable.eventId, eventId), eq(photosTable.isPublic, true))
-      );
+    // When guestsCanView=false, guests can only download their own photos
+    const photoWhereClause = (() => {
+      const base = and(eq(photosTable.id, photoId), eq(photosTable.eventId, eventId));
+      if (!isMember) return and(base, eq(photosTable.isPublic, true));
+      if (!isHostOrCreator && !event.guestsCanView && requesterGuestId) {
+        return and(base, eq(photosTable.guestId, requesterGuestId));
+      }
+      return base;
+    })();
+    const [photo] = await db.select().from(photosTable).where(photoWhereClause);
     if (!photo) {
       res.status(404).json({ error: "Photo not found" });
       return;
