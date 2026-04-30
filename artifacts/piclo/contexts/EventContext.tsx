@@ -21,6 +21,8 @@ export interface PicloEvent {
   coverImageUri: string | null;
   hostToken?: string | null;
   isPublic?: boolean;
+  guestsCanView: boolean;
+  guestsCanDownload: boolean;
 }
 
 function apiEventToLocal(e: ApiEvent, existingLocal?: PicloEvent): PicloEvent {
@@ -38,7 +40,9 @@ function apiEventToLocal(e: ApiEvent, existingLocal?: PicloEvent): PicloEvent {
     themeGradientEnd: e.themeGradientEnd,
     coverImageUri: existingLocal?.coverImageUri ?? null,
     hostToken: e.hostToken ?? existingLocal?.hostToken ?? null,
-    isPublic: (e as ApiEvent & { isPublic?: boolean }).isPublic ?? true,
+    isPublic: e.isPublic ?? true,
+    guestsCanView: e.guestsCanView ?? true,
+    guestsCanDownload: e.guestsCanDownload ?? true,
   };
 }
 
@@ -68,6 +72,8 @@ const EventContext = createContext<EventContextType>({
     themeGradientStart: "#6366F1",
     themeGradientEnd: "#EC4899",
     coverImageUri: null,
+    guestsCanView: true,
+    guestsCanDownload: true,
   }),
   getEvent: () => undefined,
   refreshEvent: async () => null,
@@ -92,6 +98,8 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
               themeGradientStart: "#6366F1",
               themeGradientEnd: "#EC4899",
               coverImageUri: null,
+              guestsCanView: true,
+              guestsCanDownload: true,
               ...ev,
             } as PicloEvent;
           });
@@ -119,6 +127,8 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
         plan: partial.plan,
         themeGradientStart: partial.themeGradientStart,
         themeGradientEnd: partial.themeGradientEnd,
+        guestsCanView: partial.guestsCanView,
+        guestsCanDownload: partial.guestsCanDownload,
       }, token);
       const local = apiEventToLocal(apiEvent);
       const updated = [local, ...events];

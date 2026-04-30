@@ -19,6 +19,8 @@ export const eventsTable = pgTable("events", {
   isPublic: boolean("is_public").notNull().default(true),
   hostToken: text("host_token"),
   creatorId: text("creator_id"),
+  guestsCanView: boolean("guests_can_view").notNull().default(true),
+  guestsCanDownload: boolean("guests_can_download").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

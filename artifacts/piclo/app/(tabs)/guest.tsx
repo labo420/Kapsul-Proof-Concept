@@ -1,4 +1,4 @@
-import { Camera as CameraIcon, Check, ChevronRight, Download, Film, Images, Lock, LogOut, QrCode } from "lucide-react-native";
+import { Camera as CameraIcon, Check, ChevronRight, Download, EyeOff, Film, Images, Lock, LogOut, QrCode } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
@@ -534,6 +534,15 @@ export default function GuestScreen() {
         )}
 
         <Animated.View style={[enterStyle3, { gap: 10 }]}>
+          {activeEvent && !activeEvent.guestsCanView && (
+            <View style={[styles.viewOnlyBanner, { backgroundColor: colors.muted, borderColor: colors.border, borderRadius: colors.radius }]}>
+              <EyeOff size={15} color={colors.mutedForeground} />
+              <Text style={[styles.viewOnlyText, { color: colors.mutedForeground }]}>
+                Stai visualizzando solo le tue foto
+              </Text>
+            </View>
+          )}
+
           <TouchableOpacity
             onPress={() => router.push("/wall")}
             style={[styles.wallLink, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}
@@ -545,13 +554,13 @@ export default function GuestScreen() {
                 Guarda il Guest Wall
               </Text>
               <Text style={[styles.wallLinkSub, { color: colors.mutedForeground }]}>
-                Sfoglia tutte le foto dell'evento
+                {activeEvent?.guestsCanView === false ? "Le tue foto" : "Sfoglia tutte le foto dell'evento"}
               </Text>
             </View>
             <ChevronRight size={16} color={colors.mutedForeground} />
           </TouchableOpacity>
 
-          {activeEvent && (
+          {activeEvent && activeEvent.guestsCanDownload !== false && (
             <TouchableOpacity
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -828,6 +837,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "400",
     marginTop: 2,
+  },
+  viewOnlyBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+  },
+  viewOnlyText: {
+    fontSize: 13,
+    fontWeight: "500",
+    flex: 1,
   },
   downloadPhotoBtn: {
     marginBottom: 0,

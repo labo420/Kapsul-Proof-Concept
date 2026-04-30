@@ -22,7 +22,10 @@ export interface ApiEvent {
   photoCount: number;
   guestCount: number;
   isActive: boolean;
+  isPublic?: boolean;
   hostToken?: string | null;
+  guestsCanView?: boolean;
+  guestsCanDownload?: boolean;
   createdAt: string;
 }
 
@@ -43,7 +46,7 @@ export interface ApiGuest {
 }
 
 export async function apiCreateEvent(
-  payload: Omit<ApiEvent, "id" | "coverImagePath" | "isActive" | "createdAt" | "photoCount" | "guestCount" | "startTime"> & { id?: string; startTime?: string },
+  payload: Omit<ApiEvent, "id" | "coverImagePath" | "isActive" | "createdAt" | "photoCount" | "guestCount" | "startTime"> & { id?: string; startTime?: string; guestsCanView?: boolean; guestsCanDownload?: boolean },
   authToken?: string | null
 ): Promise<ApiEvent> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -91,7 +94,7 @@ export async function apiJoinEvent(
 export async function apiUpdateEvent(
   eventId: string,
   hostToken: string,
-  updates: { name?: string; date?: string; startTime?: string | null }
+  updates: { name?: string; date?: string; startTime?: string | null; guestsCanView?: boolean; guestsCanDownload?: boolean }
 ): Promise<ApiEvent> {
   const res = await fetch(`${API_BASE}/events/${encodeURIComponent(eventId)}`, {
     method: "PATCH",

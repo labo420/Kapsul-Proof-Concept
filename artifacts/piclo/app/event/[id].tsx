@@ -1,4 +1,4 @@
-import { ChevronLeft, Images, Pencil, QrCode, Users, UserX } from "lucide-react-native";
+import { ChevronLeft, Download, Eye, EyeOff, Images, Pencil, QrCode, Users, UserX } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -11,6 +11,7 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -74,6 +75,8 @@ export default function EventDetailScreen() {
   const [editName, setEditName] = useState("");
   const [editDate, setEditDate] = useState<Date | null>(null);
   const [editTime, setEditTime] = useState<Date | null>(null);
+  const [editGuestsCanView, setEditGuestsCanView] = useState(true);
+  const [editGuestsCanDownload, setEditGuestsCanDownload] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const loadGuests = useCallback(async () => {
@@ -95,6 +98,8 @@ export default function EventDetailScreen() {
     setEditName(event.name);
     setEditDate(parseItalianDate(event.date));
     setEditTime(event.startTime ? parseHHMM(event.startTime) : null);
+    setEditGuestsCanView(event.guestsCanView ?? true);
+    setEditGuestsCanDownload(event.guestsCanDownload ?? true);
     setEditVisible(true);
   }
 
@@ -110,6 +115,8 @@ export default function EventDetailScreen() {
         name: editName.trim(),
         date: editDate ? formatDateIT(editDate) : event.date,
         startTime: editTime ? formatTimeHHMM(editTime) : null,
+        guestsCanView: editGuestsCanView,
+        guestsCanDownload: editGuestsCanDownload,
       });
       await refreshEvent(id);
       setEditVisible(false);
@@ -360,6 +367,63 @@ export default function EventDetailScreen() {
               <View style={styles.formGroup}>
                 <Text style={[styles.formLabel, { color: colors.mutedForeground }]}>ORARIO</Text>
                 <EventTimePicker value={editTime} onChange={setEditTime} />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.mutedForeground }]}>PERMESSI OSPITI</Text>
+                <View style={[styles.permissionsCard, { backgroundColor: colors.input, borderColor: colors.border, borderRadius: colors.radius }]}>
+                  <TouchableOpacity
+                    onPress={() => setEditGuestsCanView(v => !v)}
+                    activeOpacity={0.7}
+                    style={styles.permissionRow}
+                  >
+                    <View style={[styles.permissionIcon, { backgroundColor: editGuestsCanView ? colors.gradientStart + "22" : colors.muted }]}>
+                      {editGuestsCanView ? (
+                        <Eye size={16} color={colors.gradientStart} />
+                      ) : (
+                        <EyeOff size={16} color={colors.mutedForeground} />
+                      )}
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.permissionTitle, { color: colors.foreground }]}>
+                        Vedono tutte le foto
+                      </Text>
+                      <Text style={[styles.permissionSub, { color: colors.mutedForeground }]}>
+                        {editGuestsCanView ? "Galleria completa" : "Solo le proprie foto"}
+                      </Text>
+                    </View>
+                    <Switch
+                      value={editGuestsCanView}
+                      onValueChange={setEditGuestsCanView}
+                      trackColor={{ false: colors.border, true: colors.gradientStart + "88" }}
+                      thumbColor={editGuestsCanView ? colors.gradientStart : colors.mutedForeground}
+                    />
+                  </TouchableOpacity>
+                  <View style={[styles.permissionDivider, { backgroundColor: colors.border }]} />
+                  <TouchableOpacity
+                    onPress={() => setEditGuestsCanDownload(v => !v)}
+                    activeOpacity={0.7}
+                    style={styles.permissionRow}
+                  >
+                    <View style={[styles.permissionIcon, { backgroundColor: editGuestsCanDownload ? colors.gradientStart + "22" : colors.muted }]}>
+                      <Download size={16} color={editGuestsCanDownload ? colors.gradientStart : colors.mutedForeground} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.permissionTitle, { color: colors.foreground }]}>
+                        Possono scaricare
+                      </Text>
+                      <Text style={[styles.permissionSub, { color: colors.mutedForeground }]}>
+                        {editGuestsCanDownload ? "Download abilitato" : "Download disabilitato"}
+                      </Text>
+                    </View>
+                    <Switch
+                      value={editGuestsCanDownload}
+                      onValueChange={setEditGuestsCanDownload}
+                      trackColor={{ false: colors.border, true: colors.gradientStart + "88" }}
+                      thumbColor={editGuestsCanDownload ? colors.gradientStart : colors.mutedForeground}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <TouchableOpacity
@@ -629,5 +693,36 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#fff",
     letterSpacing: 0.2,
+  },
+  permissionsCard: {
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  permissionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  permissionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  permissionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  permissionSub: {
+    fontSize: 12,
+    fontWeight: "400",
+    marginTop: 1,
+  },
+  permissionDivider: {
+    height: 1,
+    marginHorizontal: 14,
   },
 });

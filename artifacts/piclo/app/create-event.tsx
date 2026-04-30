@@ -1,4 +1,4 @@
-import { ArrowRight, Camera as CameraIcon, Check, ChevronLeft, ChevronRight, ImageIcon, Images, Lock, X } from "lucide-react-native";
+import { ArrowRight, Camera as CameraIcon, Check, ChevronLeft, ChevronRight, Download, Eye, EyeOff, ImageIcon, Images, Lock, X } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
@@ -14,6 +14,7 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -30,7 +31,7 @@ import GradientPicker from "@/components/GradientPicker";
 import EventDatePicker, { formatDateIT } from "@/components/EventDatePicker";
 import EventTimePicker, { formatTimeHHMM } from "@/components/EventTimePicker";
 
-const STEPS = ["Dettagli", "Tema", "Modalità", "Piano"];
+const STEPS = ["Dettagli", "Tema", "Modalità", "Permessi", "Piano"];
 
 export default function CreateEventScreen() {
   const colors = useColors();
@@ -49,6 +50,8 @@ export default function CreateEventScreen() {
   const [gradientEnd, setGradientEnd] = useState("#EC4899");
   const [coverImageUri, setCoverImageUri] = useState<string | null>(null);
   const [showCoverSheet, setShowCoverSheet] = useState(false);
+  const [guestsCanView, setGuestsCanView] = useState(true);
+  const [guestsCanDownload, setGuestsCanDownload] = useState(true);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -81,6 +84,8 @@ export default function CreateEventScreen() {
         themeGradientStart: gradientStart,
         themeGradientEnd: gradientEnd,
         coverImageUri,
+        guestsCanView,
+        guestsCanDownload,
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace(`/qr/${event.id}`);
@@ -407,6 +412,85 @@ export default function CreateEventScreen() {
                 selected={deliveryMode}
                 onSelect={setDeliveryMode}
               />
+            </View>
+          ) : step === 3 ? (
+            <View style={styles.form}>
+              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                Permessi{"\n"}degli ospiti
+              </Text>
+              <Text
+                style={[
+                  styles.sectionSubtitle,
+                  { color: colors.mutedForeground },
+                ]}
+              >
+                Decidi cosa possono fare gli ospiti con le foto
+              </Text>
+              <View style={[styles.permissionsCard, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
+                <TouchableOpacity
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setGuestsCanView(v => !v);
+                  }}
+                  activeOpacity={0.7}
+                  style={styles.permissionRow}
+                >
+                  <View style={[styles.permissionIcon, { backgroundColor: guestsCanView ? colors.gradientStart + "22" : colors.muted }]}>
+                    {guestsCanView ? (
+                      <Eye size={18} color={colors.gradientStart} />
+                    ) : (
+                      <EyeOff size={18} color={colors.mutedForeground} />
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.permissionTitle, { color: colors.foreground }]}>
+                      Ospiti vedono tutte le foto
+                    </Text>
+                    <Text style={[styles.permissionSub, { color: colors.mutedForeground }]}>
+                      {guestsCanView ? "Galleria completa visibile a tutti" : "Ogni ospite vede solo le proprie foto"}
+                    </Text>
+                  </View>
+                  <Switch
+                    value={guestsCanView}
+                    onValueChange={(v) => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setGuestsCanView(v);
+                    }}
+                    trackColor={{ false: colors.border, true: colors.gradientStart + "88" }}
+                    thumbColor={guestsCanView ? colors.gradientStart : colors.mutedForeground}
+                  />
+                </TouchableOpacity>
+                <View style={[styles.permissionDivider, { backgroundColor: colors.border }]} />
+                <TouchableOpacity
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setGuestsCanDownload(v => !v);
+                  }}
+                  activeOpacity={0.7}
+                  style={styles.permissionRow}
+                >
+                  <View style={[styles.permissionIcon, { backgroundColor: guestsCanDownload ? colors.gradientStart + "22" : colors.muted }]}>
+                    <Download size={18} color={guestsCanDownload ? colors.gradientStart : colors.mutedForeground} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.permissionTitle, { color: colors.foreground }]}>
+                      Ospiti possono scaricare
+                    </Text>
+                    <Text style={[styles.permissionSub, { color: colors.mutedForeground }]}>
+                      {guestsCanDownload ? "Download abilitato per tutti" : "Download disabilitato per gli ospiti"}
+                    </Text>
+                  </View>
+                  <Switch
+                    value={guestsCanDownload}
+                    onValueChange={(v) => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setGuestsCanDownload(v);
+                    }}
+                    trackColor={{ false: colors.border, true: colors.gradientStart + "88" }}
+                    thumbColor={guestsCanDownload ? colors.gradientStart : colors.mutedForeground}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
           ) : (
             <View style={styles.form}>
@@ -782,5 +866,36 @@ const styles = StyleSheet.create({
   sheetCancelText: {
     fontSize: 15,
     fontWeight: "600",
+  },
+  permissionsCard: {
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  permissionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+  },
+  permissionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  permissionTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  permissionSub: {
+    fontSize: 12,
+    fontWeight: "400",
+    marginTop: 2,
+  },
+  permissionDivider: {
+    height: 1,
+    marginHorizontal: 16,
   },
 });

@@ -26,6 +26,7 @@ import { useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/contexts/GuestContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEvents } from "@/contexts/EventContext";
 import PhotoCard from "@/components/PhotoCard";
 import { API_BASE, apiGetPhotos, photoUrl, type ApiPhoto } from "@/lib/api";
 
@@ -53,6 +54,10 @@ export default function WallScreen() {
   const { width } = useWindowDimensions();
   const { currentEventId, guestTokens } = useGuest();
   const { token: authToken } = useAuth();
+  const { getEvent } = useEvents();
+  const activeEvent = currentEventId ? getEvent(currentEventId) : null;
+  const isHost = !!activeEvent?.hostToken;
+  const canDownload = isHost || activeEvent?.guestsCanDownload !== false;
   const [photos, setPhotos] = useState<WallPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -293,7 +298,7 @@ export default function WallScreen() {
             </TouchableOpacity>
           </View>
 
-          {selectedPhoto && !selectedPhoto.isMock && (
+          {selectedPhoto && !selectedPhoto.isMock && canDownload && (
             <View style={[styles.lightboxBottomBar, { paddingBottom: insets.bottom + 16 }]}>
               {downloadedId === selectedPhoto.id ? (
                 <View style={[styles.downloadedBadge, { backgroundColor: colors.gradientStart + "22", borderColor: colors.gradientStart + "55" }]}>

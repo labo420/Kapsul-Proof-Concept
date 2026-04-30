@@ -26,6 +26,8 @@ const publicEventFields = {
   isActive: eventsTable.isActive,
   isPublic: eventsTable.isPublic,
   creatorId: eventsTable.creatorId,
+  guestsCanView: eventsTable.guestsCanView,
+  guestsCanDownload: eventsTable.guestsCanDownload,
   createdAt: eventsTable.createdAt,
 } as const;
 
@@ -71,6 +73,8 @@ const CreateEventBody = z.object({
   plan: z.enum(["free", "party", "pro"]).default("free"),
   themeGradientStart: z.string().default("#6366F1"),
   themeGradientEnd: z.string().default("#EC4899"),
+  guestsCanView: z.boolean().default(true),
+  guestsCanDownload: z.boolean().default(true),
 });
 
 router.post("/events", optionalAuth, async (req, res) => {
@@ -91,6 +95,8 @@ router.post("/events", optionalAuth, async (req, res) => {
         plan: body.plan,
         themeGradientStart: body.themeGradientStart,
         themeGradientEnd: body.themeGradientEnd,
+        guestsCanView: body.guestsCanView,
+        guestsCanDownload: body.guestsCanDownload,
         hostToken,
         creatorId,
       })
@@ -105,6 +111,8 @@ router.post("/events", optionalAuth, async (req, res) => {
           plan: body.plan,
           themeGradientStart: body.themeGradientStart,
           themeGradientEnd: body.themeGradientEnd,
+          guestsCanView: body.guestsCanView,
+          guestsCanDownload: body.guestsCanDownload,
           ...(creatorId ? { creatorId } : {}),
         },
       })
@@ -370,9 +378,16 @@ router.patch("/events/:id", async (req, res): Promise<void> => {
       name: z.string().min(1).optional(),
       date: z.string().optional(),
       startTime: z.string().nullable().optional(),
+      guestsCanView: z.boolean().optional(),
+      guestsCanDownload: z.boolean().optional(),
     }).refine(
-      (b) => b.name !== undefined || b.date !== undefined || b.startTime !== undefined,
-      { message: "At least one of name, date, or startTime must be provided" }
+      (b) =>
+        b.name !== undefined ||
+        b.date !== undefined ||
+        b.startTime !== undefined ||
+        b.guestsCanView !== undefined ||
+        b.guestsCanDownload !== undefined,
+      { message: "At least one field must be provided" }
     );
     const body = UpdateEventBody.parse(req.body);
 
@@ -395,6 +410,8 @@ router.patch("/events/:id", async (req, res): Promise<void> => {
     if (body.name !== undefined) updates.name = body.name;
     if (body.date !== undefined) updates.date = body.date;
     if (body.startTime !== undefined) updates.startTime = body.startTime;
+    if (body.guestsCanView !== undefined) updates.guestsCanView = body.guestsCanView;
+    if (body.guestsCanDownload !== undefined) updates.guestsCanDownload = body.guestsCanDownload;
 
     const [updated] = await db
       .update(eventsTable)
@@ -427,19 +444,26 @@ router.get("/events/:id/photos", optionalAuth, async (req, res): Promise<void> =
     const isHost = hostToken && event.hostToken === hostToken;
 
     let isGuest = false;
+    let requesterGuestId: string | null = null;
     if (guestToken) {
       const [guestRow] = await db
         .select({ guestId: guestsTable.guestId })
         .from(guestsTable)
         .where(and(eq(guestsTable.eventId, id), eq(guestsTable.token, guestToken)));
-      isGuest = !!guestRow;
+      if (guestRow) {
+        isGuest = true;
+        requesterGuestId = guestRow.guestId;
+      }
     }
     if (!isGuest && req.user) {
       const [memberRow] = await db
-        .select({ id: guestsTable.id })
+        .select({ guestId: guestsTable.guestId })
         .from(guestsTable)
         .where(and(eq(guestsTable.eventId, id), eq(guestsTable.guestId, req.user.userId)));
-      isGuest = !!memberRow;
+      if (memberRow) {
+        isGuest = true;
+        requesterGuestId = memberRow.guestId;
+      }
     }
 
     const isMember = isCreator || isHost || isGuest;
@@ -449,11 +473,17 @@ router.get("/events/:id/photos", optionalAuth, async (req, res): Promise<void> =
       return;
     }
 
+    // When guestsCanView=false and the requester is a guest (not host/creator), show only their own photos
+    const isGuestOnly = isGuest && !isCreator && !isHost;
+    const shouldFilterByGuest = isGuestOnly && !event.guestsCanView && requesterGuestId !== null;
+
     const photos = await db
       .select()
       .from(photosTable)
       .where(
-        isMember
+        shouldFilterByGuest
+          ? and(eq(photosTable.eventId, id), eq(photosTable.guestId, requesterGuestId!))
+          : isMember
           ? eq(photosTable.eventId, id)
           : and(eq(photosTable.eventId, id), eq(photosTable.isPublic, true))
       )
@@ -463,7 +493,7 @@ router.get("/events/:id/photos", optionalAuth, async (req, res): Promise<void> =
     const isPro = event.plan === "pro";
     const responsePhotos = isPro
       ? photos
-      : photos.map((p) => ({
+      : photos.map((p: typeof photos[number]) => ({
           ...p,
           objectPath: p.objectPath.replace(/\.[^.]+$/, "_preview.jpg"),
         }));
@@ -505,7 +535,7 @@ router.get("/events/:id/guests", async (req, res): Promise<void> => {
     }
 
     res.json(
-      guests.map((g) => ({
+      guests.map((g: typeof guests[number]) => ({
         guestId: g.guestId,
         joinedAt: g.joinedAt,
         photoCount: photoCounts[g.guestId] ?? 0,
@@ -557,7 +587,7 @@ router.delete("/events/:id/guests/:guestId", async (req, res): Promise<void> => 
 
     const bucket = getBucket();
     await Promise.all(
-      photos.map((photo) => {
+      photos.map((photo: typeof photos[number]) => {
         const objectKey = photo.objectPath.replace(/^\/api\/photos\//, "");
         const previewKey = objectKey.replace(/\.[^.]+$/, "_preview.jpg");
         return Promise.all([
@@ -607,6 +637,7 @@ router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res
         hostToken: eventsTable.hostToken,
         isPublic: eventsTable.isPublic,
         creatorId: eventsTable.creatorId,
+        guestsCanDownload: eventsTable.guestsCanDownload,
       })
       .from(eventsTable)
       .where(eq(eventsTable.id, eventId));
@@ -617,8 +648,9 @@ router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res
 
     // Determine membership level — mirrors logic in GET /events/:id/photos
     let isMember = false;
-    if (qHostToken && event.hostToken && qHostToken === event.hostToken) isMember = true;
-    if (!isMember && req.user && req.user.userId === event.creatorId) isMember = true;
+    let isHostOrCreator = false;
+    if (qHostToken && event.hostToken && qHostToken === event.hostToken) { isMember = true; isHostOrCreator = true; }
+    if (!isMember && req.user && req.user.userId === event.creatorId) { isMember = true; isHostOrCreator = true; }
     if (!isMember && guestToken) {
       const [guestRow] = await db
         .select({ id: guestsTable.id })
@@ -636,6 +668,12 @@ router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res
 
     if (!isMember && !event.isPublic) {
       res.status(403).json({ error: "Access denied" });
+      return;
+    }
+
+    // Guests cannot download if guestsCanDownload=false; host/creator are exempt
+    if (!isHostOrCreator && !event.guestsCanDownload) {
+      res.status(403).json({ error: "Download not allowed for this event" });
       return;
     }
 
