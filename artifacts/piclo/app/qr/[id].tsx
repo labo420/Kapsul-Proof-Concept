@@ -1,13 +1,16 @@
-import { Check, CheckCheck, Copy, Plus, Rocket, Share2, Users } from "lucide-react-native";
+import { Check, CheckCheck, Copy, Download, Plus, Rocket, Share2, Users } from "lucide-react-native";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import * as Linking from "expo-linking";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import * as MediaLibrary from "expo-media-library";
+import * as FileSystem from "expo-file-system/legacy";
 import QRCode from "react-native-qrcode-svg";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
+  Alert,
   Platform,
   ScrollView,
   Share,
@@ -28,6 +31,13 @@ const DELIVERY_LABELS: Record<string, string> = {
   morning_after: "Rivela la mattina dopo",
 };
 
+type QrVariant = "dark" | "light";
+
+const QR_VARIANTS: { key: QrVariant; label: string; qrColor: string; qrBg: string; containerBg: string }[] = [
+  { key: "dark", label: "Scuro", qrColor: "#08060F", qrBg: "#ffffff", containerBg: "#ffffff" },
+  { key: "light", label: "Chiaro", qrColor: "#ffffff", qrBg: "#08060F", containerBg: "#08060F" },
+];
+
 export default function QRScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
@@ -35,12 +45,17 @@ export default function QRScreen() {
   const { setActiveGradient } = useTheme();
   const { getEvent } = useEvents();
   const [copied, setCopied] = useState(false);
+  const [qrVariant, setQrVariant] = useState<QrVariant>("dark");
+  const [downloading, setDownloading] = useState(false);
+  const qrRef = useRef<any>(null);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
 
   const event = getEvent(id ?? "");
   const eventLink = Linking.createURL(`/join/${id ?? ""}`);
+
+  const activeVariant = QR_VARIANTS.find((v) => v.key === qrVariant)!;
 
   useFocusEffect(
     useCallback(() => {
@@ -68,6 +83,43 @@ export default function QRScreen() {
     try {
       await Share.share({ message: `Partecipa a ${event?.name ?? "Piclo"}!\n${eventLink}` });
     } catch {}
+  };
+
+  const handleDownload = async () => {
+    if (Platform.OS === "web") {
+      Alert.alert("Non disponibile", "Il download è disponibile solo su dispositivo mobile.");
+      return;
+    }
+    if (!qrRef.current) return;
+
+    setDownloading(true);
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permesso negato", "Abilita l'accesso alla galleria nelle impostazioni per salvare il QR.");
+        setDownloading(false);
+        return;
+      }
+
+      qrRef.current.toDataURL(async (dataURL: string) => {
+        try {
+          const fileUri = `${FileSystem.cacheDirectory}qr-${id}-${qrVariant}.png`;
+          await FileSystem.writeAsStringAsync(fileUri, dataURL, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          await MediaLibrary.saveToLibraryAsync(fileUri);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Alert.alert("Salvato!", "Il QR code è stato salvato nella tua galleria.");
+        } catch {
+          Alert.alert("Errore", "Impossibile salvare il QR. Riprova.");
+        } finally {
+          setDownloading(false);
+        }
+      });
+    } catch {
+      Alert.alert("Errore", "Impossibile salvare il QR. Riprova.");
+      setDownloading(false);
+    }
   };
 
   if (!event) {
@@ -140,14 +192,50 @@ export default function QRScreen() {
             colors={[colors.gradientStart, colors.gradientEnd]}
             style={styles.qrGradientBorder}
           >
-            <View style={styles.qrInner}>
-              <QRCode value={eventLink} size={200} backgroundColor="#fff" color="#08060F" />
+            <View style={[styles.qrInner, { backgroundColor: activeVariant.containerBg }]}>
+              <QRCode
+                value={eventLink}
+                size={200}
+                backgroundColor={activeVariant.qrBg}
+                color={activeVariant.qrColor}
+                getRef={(ref) => { qrRef.current = ref; }}
+              />
             </View>
           </LinearGradient>
         </View>
 
+        <View style={[styles.variantToggle, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          {QR_VARIANTS.map((v) => (
+            <TouchableOpacity
+              key={v.key}
+              onPress={() => {
+                setQrVariant(v.key);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+              activeOpacity={0.8}
+              style={[
+                styles.variantBtn,
+                qrVariant === v.key && { backgroundColor: colors.primary },
+              ]}
+            >
+              <View style={[styles.variantDot, {
+                backgroundColor: v.qrColor,
+                borderColor: v.qrBg,
+                borderWidth: 1,
+              }]} />
+              <Text style={[
+                styles.variantLabel,
+                { color: qrVariant === v.key ? "#fff" : colors.mutedForeground },
+              ]}>
+                {v.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <TouchableOpacity
-          onPress={handleShare}
+          onPress={handleDownload}
+          disabled={downloading}
           style={{ borderRadius: 999, overflow: "hidden", width: "100%", marginBottom: 12 }}
           activeOpacity={0.8}
         >
@@ -157,14 +245,23 @@ export default function QRScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.shareBtn}
           >
-            <Share2 size={20} color="#fff" />
-            <Text style={styles.shareBtnText}>Condividi con gli ospiti</Text>
+            <Download size={20} color="#fff" />
+            <Text style={styles.shareBtnText}>
+              {downloading ? "Salvataggio…" : "Scarica QR"}
+            </Text>
           </LinearGradient>
         </TouchableOpacity>
 
-        <Text style={[styles.qrHint, { color: colors.mutedForeground }]}>
-          Gli ospiti inquadrano questo QR — nessun download
-        </Text>
+        <TouchableOpacity
+          onPress={handleShare}
+          style={{ borderRadius: 999, overflow: "hidden", width: "100%", marginBottom: 28 }}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.shareOutlineBtn, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            <Share2 size={18} color={colors.foreground} />
+            <Text style={[styles.shareOutlineBtnText, { color: colors.foreground }]}>Condividi con gli ospiti</Text>
+          </View>
+        </TouchableOpacity>
 
         <View style={[styles.linkRow, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
           <Text style={[styles.linkText, { color: colors.mutedForeground }]} numberOfLines={1}>
@@ -272,21 +369,40 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   qrWrapper: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   qrGradientBorder: {
     padding: 3,
     borderRadius: 22,
   },
   qrInner: {
-    backgroundColor: "#fff",
     borderRadius: 20,
     padding: 18,
   },
-  qrHint: {
-    fontSize: 13,
-    fontWeight: "500",
-    marginBottom: 28,
+  variantToggle: {
+    flexDirection: "row",
+    borderRadius: 999,
+    borderWidth: 1,
+    padding: 4,
+    gap: 4,
+    marginBottom: 20,
+  },
+  variantBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  variantDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 999,
+  },
+  variantLabel: {
+    fontSize: 14,
+    fontWeight: "700",
   },
   linkRow: {
     width: "100%",
@@ -347,6 +463,20 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#fff",
     letterSpacing: 0.2,
+  },
+  shareOutlineBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  shareOutlineBtnText: {
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: 0.1,
   },
   newEventBtn: {
     flexDirection: "row",
