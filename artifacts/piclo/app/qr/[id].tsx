@@ -33,6 +33,10 @@ const DELIVERY_LABELS: Record<string, string> = {
 
 type QrVariant = "dark" | "light";
 
+interface QRCodeRef {
+  toDataURL: (callback: (dataURL: string) => void) => void;
+}
+
 const QR_VARIANTS: { key: QrVariant; label: string; qrColor: string; qrBg: string; containerBg: string }[] = [
   { key: "dark", label: "Scuro", qrColor: "#08060F", qrBg: "#ffffff", containerBg: "#ffffff" },
   { key: "light", label: "Chiaro", qrColor: "#ffffff", qrBg: "#08060F", containerBg: "#08060F" },
@@ -47,7 +51,7 @@ export default function QRScreen() {
   const [copied, setCopied] = useState(false);
   const [qrVariant, setQrVariant] = useState<QrVariant>("dark");
   const [downloading, setDownloading] = useState(false);
-  const qrRef = useRef<any>(null);
+  const qrRef = useRef<QRCodeRef | null>(null);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -198,7 +202,7 @@ export default function QRScreen() {
                 size={200}
                 backgroundColor={activeVariant.qrBg}
                 color={activeVariant.qrColor}
-                getRef={(ref) => { qrRef.current = ref; }}
+                getRef={(ref) => { qrRef.current = ref as unknown as QRCodeRef; }}
               />
             </View>
           </LinearGradient>
@@ -291,7 +295,7 @@ export default function QRScreen() {
           <View style={styles.infoRow}>
             <Rocket size={18} color={colors.mutedForeground} />
             <Text style={[styles.infoText, { color: colors.mutedForeground }]}>
-              Nessun download richiesto — solo scansione e via
+              Scarica il QR per stamparlo o condividerlo come immagine
             </Text>
           </View>
           <View style={styles.infoRow}>
