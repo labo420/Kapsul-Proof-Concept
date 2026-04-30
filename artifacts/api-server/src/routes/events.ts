@@ -46,6 +46,21 @@ function param(p: string | string[]): string {
   return Array.isArray(p) ? p[0]! : p;
 }
 
+const WATERMARK_SVG = Buffer.from(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="64">` +
+  `<text x="210" y="52" font-family="Arial, Helvetica, sans-serif" font-size="36" ` +
+  `font-weight="bold" fill="white" fill-opacity="0.55" text-anchor="end">Piclo</text>` +
+  `</svg>`
+);
+
+async function generatePreview(sourceBuffer: Buffer): Promise<Buffer> {
+  return sharp(sourceBuffer)
+    .resize(1080, 1080, { fit: "inside", withoutEnlargement: true })
+    .composite([{ input: WATERMARK_SVG, gravity: "southeast" }])
+    .jpeg({ quality: 85 })
+    .toBuffer();
+}
+
 const CreateEventBody = z.object({
   id: z.string().optional(),
   name: z.string().min(1),
@@ -291,29 +306,20 @@ router.post(
         metadata: { eventId: id, guestId },
       });
 
-      // Generate compressed preview with watermark (non-blocking — don't fail upload if this fails)
-      void (async () => {
-        try {
-          const previewKey = `photos/${id}/${photoId}_preview.jpg`;
-          const watermarkSvg = Buffer.from(
-            `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="64">` +
-            `<text x="210" y="52" font-family="Arial, Helvetica, sans-serif" font-size="36" ` +
-            `font-weight="bold" fill="white" fill-opacity="0.55" text-anchor="end">Piclo</text>` +
-            `</svg>`
-          );
-          const previewBuffer = await sharp(req.file!.buffer)
-            .resize(1080, 1080, { fit: "inside", withoutEnlargement: true })
-            .composite([{ input: watermarkSvg, gravity: "southeast" }])
-            .jpeg({ quality: 85 })
-            .toBuffer();
-          await bucket.file(previewKey).save(previewBuffer, {
-            contentType: "image/jpeg",
-            metadata: { eventId: id },
-          });
-        } catch (previewErr) {
-          // Non-blocking: log but don't fail the request
-        }
-      })();
+      // Generate compressed preview with watermark (synchronous — ensures Free/Party users always get watermarked version)
+      try {
+        const previewKey = `photos/${id}/${photoId}_preview.jpg`;
+        const previewBuffer = await generatePreview(req.file.buffer);
+        await bucket.file(previewKey).save(previewBuffer, {
+          contentType: "image/jpeg",
+          metadata: { eventId: id },
+        });
+      } catch (previewErr) {
+        req.log.error(previewErr, "preview generation failed during upload");
+        // Fail the upload if we can't generate preview — we cannot let non-Pro users download originals
+        res.status(500).json({ error: "Failed to process photo. Please try again." });
+        return;
+      }
 
       const objectPath = `/api/photos/${objectKey}`;
       await db.insert(photosTable).values({
@@ -596,32 +602,39 @@ router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res
       return;
     }
 
-    let hasAccess = !!event.isPublic;
-    if (!hasAccess && qHostToken && event.hostToken && qHostToken === event.hostToken) hasAccess = true;
-    if (!hasAccess && req.user && req.user.userId === event.creatorId) hasAccess = true;
-    if (!hasAccess && guestToken) {
+    // Determine membership level — mirrors logic in GET /events/:id/photos
+    let isMember = false;
+    if (qHostToken && event.hostToken && qHostToken === event.hostToken) isMember = true;
+    if (!isMember && req.user && req.user.userId === event.creatorId) isMember = true;
+    if (!isMember && guestToken) {
       const [guestRow] = await db
         .select({ id: guestsTable.id })
         .from(guestsTable)
         .where(and(eq(guestsTable.eventId, eventId), eq(guestsTable.token, guestToken)));
-      if (guestRow) hasAccess = true;
+      if (guestRow) isMember = true;
     }
-    if (!hasAccess && req.user) {
+    if (!isMember && req.user) {
       const [guestRow] = await db
         .select({ id: guestsTable.id })
         .from(guestsTable)
         .where(and(eq(guestsTable.eventId, eventId), eq(guestsTable.guestId, req.user.userId)));
-      if (guestRow) hasAccess = true;
+      if (guestRow) isMember = true;
     }
-    if (!hasAccess) {
+
+    if (!isMember && !event.isPublic) {
       res.status(403).json({ error: "Access denied" });
       return;
     }
 
+    // Fetch photo — non-members can only access public photos (same rule as photo listing)
     const [photo] = await db
       .select()
       .from(photosTable)
-      .where(and(eq(photosTable.id, photoId), eq(photosTable.eventId, eventId)));
+      .where(
+        isMember
+          ? and(eq(photosTable.id, photoId), eq(photosTable.eventId, eventId))
+          : and(eq(photosTable.id, photoId), eq(photosTable.eventId, eventId), eq(photosTable.isPublic, true))
+      );
     if (!photo) {
       res.status(404).json({ error: "Photo not found" });
       return;
@@ -629,6 +642,7 @@ router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res
 
     const isPro = event.plan === "pro";
     const originalKey = photo.objectPath.replace(/^\/api\/photos\//, "");
+    const bucket = getBucket();
 
     let objectKey: string;
     if (isPro) {
@@ -636,12 +650,29 @@ router.get("/events/:id/photos/:photoId/download", optionalAuth, async (req, res
     } else {
       const baseKey = originalKey.replace(/\.[^.]+$/, "");
       const previewKey = `${baseKey}_preview.jpg`;
-      const bucket2 = getBucket();
-      const [previewExists] = await bucket2.file(previewKey).exists();
-      objectKey = previewExists ? previewKey : originalKey;
+      const [previewExists] = await bucket.file(previewKey).exists();
+
+      if (previewExists) {
+        objectKey = previewKey;
+      } else {
+        // Preview missing (e.g. photo uploaded before this feature) — generate on demand
+        req.log.info({ photoId, eventId }, "preview missing, generating on demand for download");
+        try {
+          const [originalBuffer] = await bucket.file(originalKey).download();
+          const previewBuffer = await generatePreview(originalBuffer as Buffer);
+          await bucket.file(previewKey).save(previewBuffer, {
+            contentType: "image/jpeg",
+            metadata: { eventId },
+          });
+          objectKey = previewKey;
+        } catch (genErr) {
+          req.log.error(genErr, "on-demand preview generation failed");
+          res.status(503).json({ error: "Preview not ready. Please try again." });
+          return;
+        }
+      }
     }
 
-    const bucket = getBucket();
     const fileRef = bucket.file(objectKey);
     const [exists] = await fileRef.exists();
     if (!exists) {
