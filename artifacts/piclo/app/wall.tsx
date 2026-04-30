@@ -81,7 +81,8 @@ export default function WallScreen() {
         if (currentEventId) {
           const data = await apiGetPhotos(currentEventId, guestTokens[currentEventId] ?? undefined, authToken);
           const wall = toWallPhotos(data);
-          setPhotos(wall.length > 0 ? wall : MOCK_PHOTOS.map(p => ({ ...p, isMock: true })));
+          // When in an active event, show real results (even empty) to avoid leaking mock photos
+          setPhotos(wall);
         } else {
           setPhotos(MOCK_PHOTOS.map(p => ({ ...p, isMock: true })));
         }
@@ -98,9 +99,9 @@ export default function WallScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (currentEventId) refreshEvent(currentEventId).catch(() => {});
+      if (currentEventId) refreshEvent(currentEventId, guestTokens[currentEventId]).catch(() => {});
       fetchPhotos();
-    }, [fetchPhotos, currentEventId, refreshEvent])
+    }, [fetchPhotos, currentEventId, refreshEvent, guestTokens])
   );
 
   const onRefresh = () => {
@@ -113,7 +114,10 @@ export default function WallScreen() {
 
     if (Platform.OS === "web") {
       const guestToken = guestTokens[currentEventId];
-      const qs = guestToken ? `?guestToken=${encodeURIComponent(guestToken)}` : "";
+      const hostTokenVal = activeEvent?.hostToken;
+      const qs = hostTokenVal
+        ? `?hostToken=${encodeURIComponent(hostTokenVal)}`
+        : guestToken ? `?guestToken=${encodeURIComponent(guestToken)}` : "";
       const url = `${API_BASE}/events/${encodeURIComponent(currentEventId)}/photos/${encodeURIComponent(photo.id)}/download${qs}`;
       const a = document.createElement("a");
       a.href = url;
@@ -131,7 +135,10 @@ export default function WallScreen() {
     setDownloading(true);
     try {
       const guestToken = guestTokens[currentEventId];
-      const qs = guestToken ? `?guestToken=${encodeURIComponent(guestToken)}` : "";
+      const hostTokenVal = activeEvent?.hostToken;
+      const qs = hostTokenVal
+        ? `?hostToken=${encodeURIComponent(hostTokenVal)}`
+        : guestToken ? `?guestToken=${encodeURIComponent(guestToken)}` : "";
       const downloadUrl = `${API_BASE}/events/${encodeURIComponent(currentEventId)}/photos/${encodeURIComponent(photo.id)}/download${qs}`;
       const tmpPath = (FileSystem.documentDirectory ?? "") + `piclo_${photo.id}.jpg`;
 
@@ -231,40 +238,48 @@ export default function WallScreen() {
             paddingBottom: bottomPad + 80,
           }}
           showsVerticalScrollIndicator={false}
-          renderItem={() => (
-            <View style={[styles.masonryRow, { gap: GAP }]}>
-              <View style={[styles.col, { width: colWidth, gap: GAP }]}>
-                {leftCol.map((photo) => (
-                  <TouchableOpacity
-                    key={photo.id}
-                    onPress={() => setSelectedPhoto(photo)}
-                    activeOpacity={0.92}
-                  >
-                    <PhotoCard
-                      uri={photo.uri}
-                      height={photo.h}
-                      width={colWidth}
-                    />
-                  </TouchableOpacity>
-                ))}
+          renderItem={() =>
+            photos.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={[styles.emptyStateText, { color: colors.mutedForeground }]}>
+                  {currentEventId ? "Nessuna foto ancora" : "Unisciti a un evento per vedere le foto"}
+                </Text>
               </View>
-              <View style={[styles.col, { width: colWidth, gap: GAP }]}>
-                {rightCol.map((photo) => (
-                  <TouchableOpacity
-                    key={photo.id}
-                    onPress={() => setSelectedPhoto(photo)}
-                    activeOpacity={0.92}
-                  >
-                    <PhotoCard
-                      uri={photo.uri}
-                      height={photo.h}
-                      width={colWidth}
-                    />
-                  </TouchableOpacity>
-                ))}
+            ) : (
+              <View style={[styles.masonryRow, { gap: GAP }]}>
+                <View style={[styles.col, { width: colWidth, gap: GAP }]}>
+                  {leftCol.map((photo) => (
+                    <TouchableOpacity
+                      key={photo.id}
+                      onPress={() => setSelectedPhoto(photo)}
+                      activeOpacity={0.92}
+                    >
+                      <PhotoCard
+                        uri={photo.uri}
+                        height={photo.h}
+                        width={colWidth}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <View style={[styles.col, { width: colWidth, gap: GAP }]}>
+                  {rightCol.map((photo) => (
+                    <TouchableOpacity
+                      key={photo.id}
+                      onPress={() => setSelectedPhoto(photo)}
+                      activeOpacity={0.92}
+                    >
+                      <PhotoCard
+                        uri={photo.uri}
+                        height={photo.h}
+                        width={colWidth}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
-            </View>
-          )}
+            )
+          }
           scrollEnabled={true}
         />
       )}
@@ -457,5 +472,15 @@ const styles = StyleSheet.create({
   downloadedText: {
     fontSize: 15,
     fontWeight: "700",
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  emptyStateText: {
+    fontSize: 15,
+    fontWeight: "400",
+    textAlign: "center",
   },
 });
