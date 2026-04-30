@@ -14,6 +14,7 @@ import {
   Platform,
   Pressable,
   RefreshControl,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -216,11 +217,20 @@ export default function WallScreen() {
           <ActivityIndicator color={colors.primary} size="large" />
         </View>
       ) : error ? (
-        <View style={styles.center}>
+        <ScrollView
+          contentContainerStyle={[styles.center, { flex: 1 }]}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+            />
+          }
+        >
           <Text style={[styles.errorText, { color: colors.mutedForeground }]}>
             Errore di rete. Tira su per riprovare.
           </Text>
-        </View>
+        </ScrollView>
       ) : (
         <FlatList
           data={[{ key: "masonry" }]}

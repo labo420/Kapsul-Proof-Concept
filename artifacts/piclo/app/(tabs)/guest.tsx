@@ -745,6 +745,7 @@ const styles = StyleSheet.create({
     marginBottom: 36,
   },
   logoImage: { width: 100, height: 32 },
+  logo: { fontSize: 20, fontWeight: "800", letterSpacing: -0.3 },
   guestId: {
     fontSize: 12,
     marginTop: 3,
