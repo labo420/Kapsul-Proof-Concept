@@ -3,9 +3,10 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Platform,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -60,8 +61,15 @@ type SortBy = "createdAt" | "eventDate";
 export default function HostScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { events } = useEvents();
+  const { events, refreshEvent } = useEvents();
   const [sortBy, setSortBy] = useState<SortBy>("createdAt");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all(events.map((e) => refreshEvent(e.id).catch(() => {})));
+    setRefreshing(false);
+  }, [events, refreshEvent]);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
@@ -95,6 +103,14 @@ export default function HostScreen() {
           paddingHorizontal: 20,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
       >
         <View style={styles.header}>
           <Animated.View style={logoStyle}>

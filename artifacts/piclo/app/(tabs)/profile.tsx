@@ -14,6 +14,7 @@ import {
   Image,
   Modal,
   Platform,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -466,6 +467,7 @@ export default function ProfileScreen() {
   const [counts, setCounts] = useState<SocialCounts>({ followers: 0, following: 0, posts: 0 });
   const [suggestions, setSuggestions] = useState<SuggestedUser[]>([]);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
@@ -511,6 +513,17 @@ export default function ProfileScreen() {
     fetchSuggestions();
     fetchUnreadCount();
   }, [fetchCounts, fetchSuggestions, fetchUnreadCount]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      refreshUser(),
+      fetchCounts(),
+      fetchSuggestions(),
+      fetchUnreadCount(),
+    ]);
+    setRefreshing(false);
+  }, [refreshUser, fetchCounts, fetchSuggestions, fetchUnreadCount]);
 
   const handleAvatarPress = async () => {
     if (!token) return;
@@ -587,6 +600,14 @@ export default function ProfileScreen() {
       <ScrollView
         contentContainerStyle={{ paddingTop: topPad + 16, paddingBottom: bottomPad + 100 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
       >
         {/* ── Top bar ── */}
         <Animated.View style={[anim0, { paddingHorizontal: 24, flexDirection: "row", alignItems: "center", marginBottom: 20 }]}>

@@ -9,6 +9,8 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  RefreshControl,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -397,7 +399,19 @@ export default function HomeScreen() {
           <ActivityIndicator size="large" color={colors.gradientStart} />
         </View>
       ) : items.length === 0 ? (
-        <EmptyFeed isLoggedIn={!!user} />
+        <ScrollView
+          contentContainerStyle={{ flex: 1 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => fetchFeed(true)}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
+        >
+          <EmptyFeed isLoggedIn={!!user} />
+        </ScrollView>
       ) : (
         <FlatList
           data={items}
@@ -405,8 +419,14 @@ export default function HomeScreen() {
           renderItem={({ item }) => <FeedCard item={item} authToken={token} />}
           contentContainerStyle={{ paddingBottom: 120, paddingTop: 8 }}
           showsVerticalScrollIndicator={false}
-          refreshing={refreshing}
-          onRefresh={() => fetchFeed(true)}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => fetchFeed(true)}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
         />
       )}
     </View>

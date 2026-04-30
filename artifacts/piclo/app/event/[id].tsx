@@ -8,6 +8,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -70,6 +71,7 @@ export default function EventDetailScreen() {
 
   const [guests, setGuests] = useState<ApiGuest[]>([]);
   const [removingGuest, setRemovingGuest] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [editVisible, setEditVisible] = useState(false);
   const [editName, setEditName] = useState("");
@@ -92,6 +94,13 @@ export default function EventDetailScreen() {
   useEffect(() => {
     loadGuests();
   }, [loadGuests]);
+
+  const handleRefresh = useCallback(async () => {
+    if (!id) return;
+    setRefreshing(true);
+    await Promise.all([refreshEvent(id), loadGuests()]);
+    setRefreshing(false);
+  }, [id, refreshEvent, loadGuests]);
 
   function openEdit() {
     if (!event) return;
@@ -205,6 +214,14 @@ export default function EventDetailScreen() {
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
       >
         <LinearGradient
           colors={[colors.gradientStart + "14", colors.gradientEnd + "14"]}

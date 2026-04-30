@@ -12,6 +12,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -58,6 +59,7 @@ export default function GuestScreen() {
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
   const [uploadCount, setUploadCount] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const [uploadBatchCurrent, setUploadBatchCurrent] = useState(0);
   const [uploadBatchTotal, setUploadBatchTotal] = useState(0);
   const [showTerms, setShowTerms] = useState(false);
@@ -74,6 +76,13 @@ export default function GuestScreen() {
       };
     }, [])
   );
+
+  const handleRefresh = useCallback(async () => {
+    if (!currentEventId) return;
+    setRefreshing(true);
+    await refreshEvent(currentEventId, guestTokens[currentEventId]).catch(() => {});
+    setRefreshing(false);
+  }, [currentEventId, guestTokens, refreshEvent]);
 
   useFocusEffect(
     useCallback(() => {
@@ -398,6 +407,14 @@ export default function GuestScreen() {
           paddingHorizontal: 24,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
       >
         {activeEvent?.coverImageUri ? (
           <View style={{ height: 170 }} />
