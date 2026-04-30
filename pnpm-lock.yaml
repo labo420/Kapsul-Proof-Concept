@@ -456,6 +456,9 @@ importers:
       expo-media-library:
         specifier: ^55.0.15
         version: 55.0.15(expo@54.0.33)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))
+      expo-screen-capture:
+        specifier: ^55.0.13
+        version: 55.0.13(expo@54.0.33)(react@19.1.0)
       expo-secure-store:
         specifier: ^55.0.13
         version: 55.0.13(expo@54.0.33)
@@ -3894,6 +3897,12 @@ packages:
         optional: true
       react-server-dom-webpack:
         optional: true
+
+  expo-screen-capture@55.0.13:
+    resolution: {integrity: sha512-wdSktx6hHJz8wiP1c96gNRc5TOVfBA6wd7GJJlADvLVL4OVKqfiUQ122Z6L6gBtELoXW23XOS/CB5rvRM8xjVA==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
 
   expo-secure-store@55.0.13:
     resolution: {integrity: sha512-I6r0JNO1Fd4o0Gu7Ixiic7s89lqgdUHq17uBH9y1f/AntoyKn71TdtYJH82RgfsBbu5qNVzrwImmvlANyOlITQ==}
@@ -10220,6 +10229,11 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
       - supports-color
+
+  expo-screen-capture@55.0.13(expo@54.0.33)(react@19.1.0):
+    dependencies:
+      expo: 54.0.33(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
+      react: 19.1.0
 
   expo-secure-store@55.0.13(expo@54.0.33):
     dependencies:
