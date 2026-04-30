@@ -181,11 +181,13 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshEvents = async (): Promise<void> => {
+    if (!token) return;
     try {
       const serverList = await apiGetEvents(token);
+      const ownedEvents = serverList.filter((e) => !!e.hostToken);
       setEvents((prev) => {
         const merged = [...prev];
-        for (const se of serverList) {
+        for (const se of ownedEvents) {
           const idx = merged.findIndex((e) => e.id === se.id);
           const local = apiEventToLocal(se, idx >= 0 ? merged[idx] : undefined);
           if (idx >= 0) {
