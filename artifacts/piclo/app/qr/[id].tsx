@@ -105,7 +105,13 @@ export default function QRScreen() {
         return;
       }
 
+      const timeoutId = setTimeout(() => {
+        setDownloading(false);
+        Alert.alert("Errore", "Impossibile generare il QR. Riprova.");
+      }, 8000);
+
       qrRef.current.toDataURL(async (dataURL: string) => {
+        clearTimeout(timeoutId);
         try {
           const fileUri = `${FileSystem.cacheDirectory}qr-${id}-${qrVariant}.png`;
           await FileSystem.writeAsStringAsync(fileUri, dataURL, {
