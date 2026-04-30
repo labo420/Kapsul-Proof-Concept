@@ -331,6 +331,53 @@ router.post(
   }
 );
 
+router.patch("/events/:id", async (req, res): Promise<void> => {
+  try {
+    const id = param(req.params.id);
+    const UpdateEventBody = z.object({
+      hostToken: z.string(),
+      name: z.string().min(1).optional(),
+      date: z.string().optional(),
+      startTime: z.string().nullable().optional(),
+    }).refine(
+      (b) => b.name !== undefined || b.date !== undefined || b.startTime !== undefined,
+      { message: "At least one of name, date, or startTime must be provided" }
+    );
+    const body = UpdateEventBody.parse(req.body);
+
+    const [event] = await db
+      .select()
+      .from(eventsTable)
+      .where(eq(eventsTable.id, id));
+
+    if (!event) {
+      res.status(404).json({ error: "Event not found" });
+      return;
+    }
+
+    if (event.hostToken !== body.hostToken) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
+    const updates: Partial<typeof eventsTable.$inferInsert> = {};
+    if (body.name !== undefined) updates.name = body.name;
+    if (body.date !== undefined) updates.date = body.date;
+    if (body.startTime !== undefined) updates.startTime = body.startTime;
+
+    const [updated] = await db
+      .update(eventsTable)
+      .set(updates)
+      .where(eq(eventsTable.id, id))
+      .returning();
+
+    res.json(updated);
+  } catch (err) {
+    req.log.error(err, "update event error");
+    res.status(400).json({ error: "Invalid request" });
+  }
+});
+
 router.get("/events/:id/photos", optionalAuth, async (req, res): Promise<void> => {
   try {
     const id = param(req.params.id);

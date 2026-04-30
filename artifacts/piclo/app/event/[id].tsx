@@ -1,26 +1,62 @@
-import { ChevronLeft, Images, QrCode, Users, UserX } from "lucide-react-native";
+import { ChevronLeft, Images, Pencil, QrCode, Users, UserX } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useEvents } from "@/contexts/EventContext";
-import { apiGetGuests, apiRemoveGuest, type ApiGuest } from "@/lib/api";
+import { apiGetGuests, apiRemoveGuest, apiUpdateEvent, type ApiGuest } from "@/lib/api";
+import EventDatePicker, { formatDateIT } from "@/components/EventDatePicker";
+import EventTimePicker, { formatTimeHHMM } from "@/components/EventTimePicker";
 
 const DELIVERY_LABELS: Record<string, string> = {
   now: "Mostra subito",
   morning_after: "Rivela la mattina dopo",
 };
+
+const MONTHS_IT = [
+  "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
+  "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre",
+];
+
+function parseItalianDate(s: string): Date | null {
+  const parts = s.trim().split(" ");
+  if (parts.length !== 3) return null;
+  const day = parseInt(parts[0]!, 10);
+  const monthIdx = MONTHS_IT.findIndex(
+    (m) => m.toLowerCase() === parts[1]!.toLowerCase()
+  );
+  const year = parseInt(parts[2]!, 10);
+  if (isNaN(day) || monthIdx === -1 || isNaN(year)) return null;
+  const d = new Date(year, monthIdx, day);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function parseHHMM(s: string): Date | null {
+  const parts = s.split(":");
+  if (parts.length < 2) return null;
+  const h = parseInt(parts[0]!, 10);
+  const m = parseInt(parts[1]!, 10);
+  if (isNaN(h) || isNaN(m)) return null;
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d;
+}
 
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,6 +69,12 @@ export default function EventDetailScreen() {
 
   const [guests, setGuests] = useState<ApiGuest[]>([]);
   const [removingGuest, setRemovingGuest] = useState<string | null>(null);
+
+  const [editVisible, setEditVisible] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editDate, setEditDate] = useState<Date | null>(null);
+  const [editTime, setEditTime] = useState<Date | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const loadGuests = useCallback(async () => {
     if (!id || !event?.hostToken) return;
@@ -47,6 +89,36 @@ export default function EventDetailScreen() {
   useEffect(() => {
     loadGuests();
   }, [loadGuests]);
+
+  function openEdit() {
+    if (!event) return;
+    setEditName(event.name);
+    setEditDate(parseItalianDate(event.date));
+    setEditTime(event.startTime ? parseHHMM(event.startTime) : null);
+    setEditVisible(true);
+  }
+
+  async function handleSave() {
+    if (!event || !id || !event.hostToken) return;
+    if (!editName.trim()) {
+      Alert.alert("Errore", "Il nome dell'evento non può essere vuoto.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await apiUpdateEvent(id, event.hostToken, {
+        name: editName.trim(),
+        date: editDate ? formatDateIT(editDate) : event.date,
+        startTime: editTime ? formatTimeHHMM(editTime) : null,
+      });
+      await refreshEvent(id);
+      setEditVisible(false);
+    } catch {
+      Alert.alert("Errore", "Impossibile salvare le modifiche. Riprova.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   function handleRemoveGuest(guest: ApiGuest) {
     if (!id || !event) return;
@@ -88,6 +160,8 @@ export default function EventDetailScreen() {
     );
   }
 
+  const isHost = !!event.hostToken;
+
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" />
@@ -102,9 +176,21 @@ export default function EventDetailScreen() {
           <Text style={[styles.topTitle, { color: colors.foreground }]} numberOfLines={1}>
             {event.name}
           </Text>
-          <TouchableOpacity onPress={() => router.push(`/qr/${event.id}`)} style={styles.backBtn}>
-            <QrCode size={22} color={colors.primary} />
-          </TouchableOpacity>
+          <View style={styles.topActions}>
+            {isHost && (
+              <TouchableOpacity
+                onPress={openEdit}
+                style={styles.iconBtn}
+                accessibilityLabel="Modifica evento"
+                accessibilityRole="button"
+              >
+                <Pencil size={20} color={colors.primary} />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity onPress={() => router.push(`/qr/${event.id}`)} style={styles.iconBtn}>
+              <QrCode size={22} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
       </LinearGradient>
 
@@ -219,6 +305,82 @@ export default function EventDetailScreen() {
           )}
         </View>
       </ScrollView>
+
+      <Modal
+        visible={editVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOuter}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <Pressable style={styles.modalBackdrop} onPress={() => setEditVisible(false)} />
+          <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
+            <View style={styles.sheetHeader}>
+              <Text style={[styles.sheetTitle, { color: colors.foreground }]}>Modifica evento</Text>
+              <TouchableOpacity onPress={() => setEditVisible(false)} style={styles.cancelBtn}>
+                <Text style={[styles.cancelBtnText, { color: colors.mutedForeground }]}>Annulla</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              style={styles.sheetBody}
+              contentContainerStyle={styles.sheetBodyContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.mutedForeground }]}>NOME EVENTO</Text>
+                <TextInput
+                  value={editName}
+                  onChangeText={setEditName}
+                  style={[
+                    styles.nameInput,
+                    {
+                      backgroundColor: colors.input,
+                      borderColor: editName.trim() ? colors.primary + "70" : colors.border,
+                      borderRadius: colors.radius,
+                      color: colors.foreground,
+                    },
+                  ]}
+                  placeholderTextColor={colors.mutedForeground}
+                  placeholder="Nome dell'evento"
+                  maxLength={80}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.mutedForeground }]}>DATA</Text>
+                <EventDatePicker value={editDate} onChange={setEditDate} />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.mutedForeground }]}>ORARIO</Text>
+                <EventTimePicker value={editTime} onChange={setEditTime} />
+              </View>
+
+              <TouchableOpacity
+                onPress={handleSave}
+                disabled={saving || !editName.trim()}
+                style={{ borderRadius: 999, overflow: "hidden", opacity: saving || !editName.trim() ? 0.5 : 1 }}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={[colors.gradientStart, colors.gradientEnd]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.saveBtn}
+                >
+                  <Text style={styles.saveBtnText}>{saving ? "Salvataggio…" : "Salva modifiche"}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -235,6 +397,8 @@ const styles = StyleSheet.create({
   },
   backBtn: { width: 40, alignItems: "center" },
   topTitle: { fontSize: 17, fontWeight: "700", flex: 1, textAlign: "center" },
+  topActions: { flexDirection: "row", gap: 4, alignItems: "center" },
+  iconBtn: { width: 36, alignItems: "center" },
   errorText: { textAlign: "center", marginTop: 100, fontSize: 16 },
   scroll: { flex: 1 },
   content: {
@@ -389,5 +553,81 @@ const styles = StyleSheet.create({
   },
   removeBtn: {
     padding: 4,
+  },
+  modalOuter: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  sheet: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    paddingTop: 12,
+    maxHeight: "85%",
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  cancelBtn: {
+    padding: 4,
+  },
+  cancelBtnText: {
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  sheetBody: {
+    flexShrink: 1,
+  },
+  sheetBodyContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    gap: 16,
+  },
+  formGroup: {
+    gap: 8,
+  },
+  formLabel: {
+    fontSize: 10,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    fontWeight: "600",
+  },
+  nameInput: {
+    fontSize: 15,
+    fontWeight: "500",
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
+  },
+  saveBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 18,
+    marginTop: 4,
+  },
+  saveBtnText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#fff",
+    letterSpacing: 0.2,
   },
 });

@@ -88,6 +88,20 @@ export async function apiJoinEvent(
   return res.json() as Promise<{ event: ApiEvent; guestToken?: string }>;
 }
 
+export async function apiUpdateEvent(
+  eventId: string,
+  hostToken: string,
+  updates: { name?: string; date?: string; startTime?: string | null }
+): Promise<ApiEvent> {
+  const res = await fetch(`${API_BASE}/events/${encodeURIComponent(eventId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ hostToken, ...updates }),
+  });
+  if (!res.ok) throw new Error(`Update event failed: ${res.status}`);
+  return res.json() as Promise<ApiEvent>;
+}
+
 export async function apiGetGuests(eventId: string, hostToken: string): Promise<ApiGuest[]> {
   const res = await fetch(
     `${API_BASE}/events/${encodeURIComponent(eventId)}/guests?hostToken=${encodeURIComponent(hostToken)}`
