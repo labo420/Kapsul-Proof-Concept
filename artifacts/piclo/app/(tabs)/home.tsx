@@ -1,5 +1,6 @@
 import { Calendar, Camera, Heart, MessageCircle, RefreshCw, User, Users } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { PicloLogo } from "@/components/PicloLogo";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -382,11 +383,7 @@ export default function HomeScreen() {
 
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 12 }]}>
-        <Image
-          source={require("../../assets/images/piclo-logo-white.png")}
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
+        <PicloLogo variant="white" width={100} height={32} />
         {token && (
           <TouchableOpacity onPress={() => fetchFeed(true)} style={{ padding: 4 }}>
             <RefreshCw size={20} color={colors.mutedForeground} />

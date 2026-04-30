@@ -2,9 +2,9 @@ import { AlertTriangle, Users, XCircle } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { PicloLogo } from "@/components/PicloLogo";
 import {
   ActivityIndicator,
-  Image,
   Platform,
   StatusBar,
   StyleSheet,
@@ -123,11 +123,7 @@ export default function JoinScreen() {
       />
 
       <View style={styles.logoRow}>
-        <Image
-          source={require("../../assets/images/piclo-logo-white.png")}
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
+        <PicloLogo variant="white" width={100} height={32} />
       </View>
 
       <View style={styles.center}>

@@ -1,6 +1,7 @@
 import { Camera, Plus, QrCode } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
+import { PicloLogo } from "@/components/PicloLogo";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -117,11 +118,7 @@ export default function HostScreen() {
       >
         <View style={styles.header}>
           <Animated.View style={logoStyle}>
-            <Image
-              source={require("../../assets/images/piclo-logo-white.png")}
-              style={styles.logoImage}
-              contentFit="contain"
-            />
+            <PicloLogo variant="white" width={100} height={32} />
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
               I tuoi eventi
             </Text>

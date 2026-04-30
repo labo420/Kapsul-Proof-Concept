@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { preventScreenCaptureAsync, allowScreenCaptureAsync } from "expo-screen-capture";
 import { Image } from "expo-image";
+import { PicloLogo } from "@/components/PicloLogo";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -425,11 +426,7 @@ export default function GuestScreen() {
         ) : null}
         <Animated.View style={[styles.header, enterStyle0]}>
           <View>
-            <Image
-              source={require("../../assets/images/piclo-logo-white.png")}
-              style={styles.logoImage}
-              contentFit="contain"
-            />
+            <PicloLogo variant="white" width={100} height={32} />
             <Text style={[styles.guestId, { color: colors.mutedForeground }]}>
               {guestId ?? "---"}
             </Text>

@@ -4,9 +4,9 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { PicloLogo } from "@/components/PicloLogo";
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -144,11 +144,7 @@ export default function RegisterScreen() {
             <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFill} />
             <View style={[styles.cardInner, { backgroundColor: colors.card + "E6", borderColor: colors.border }]}>
               <View style={styles.logoSection}>
-                <Image
-                  source={require("../assets/images/piclo-logo-white.png")}
-                  style={styles.logoImage}
-                  resizeMode="contain"
-                />
+                <PicloLogo variant="white" width={150} height={44} />
                 <Text style={[styles.logoSub, { color: colors.mutedForeground }]}>Crea il tuo account</Text>
               </View>
 
