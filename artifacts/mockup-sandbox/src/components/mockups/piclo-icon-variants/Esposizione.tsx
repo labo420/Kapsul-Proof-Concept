@@ -8,7 +8,7 @@ export function Esposizione() {
     <div style={{ width: "100%", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f0f1a" }}>
       <svg viewBox="0 0 400 400" style={{ width: "90%", maxWidth: 340 }}>
         {angles.map((a) => (
-          <path key={a} d={blade} fill="white" opacity={0.88} transform={`rotate(${a} ${cx} ${cy})`} />
+          <path key={a} d={blade} fill="white" transform={`rotate(${a} ${cx} ${cy})`} />
         ))}
         {rayAngles.map((a) => {
           const toRad = (d: number) => d * Math.PI / 180;

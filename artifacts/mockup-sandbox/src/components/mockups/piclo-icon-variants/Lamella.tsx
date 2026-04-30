@@ -7,7 +7,7 @@ export function Lamella() {
     <div style={{ width: "100%", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f0f1a" }}>
       <svg viewBox="0 0 400 400" style={{ width: "90%", maxWidth: 340 }}>
         {angles.map((a) => (
-          <path key={a} d={blade} fill="white" opacity={0.92} transform={`rotate(${a} ${cx} ${cy})`} />
+          <path key={a} d={blade} fill="white" transform={`rotate(${a} ${cx} ${cy})`} />
         ))}
         <circle cx={cx} cy={cy} r={62} fill="none" stroke="white" strokeWidth={1.5} opacity={0.2} />
       </svg>
