@@ -31,7 +31,7 @@ export function Capsule() {
           fill="white"
           opacity={0.6}
         />
-        <circle cx={cx} cy={cy} r={9} fill="rgba(255,255,255,0.25)" />
+        <circle cx={cx} cy={cy} r={9} fill="rgba(255,255,255,0.35)" />
         <circle cx={cx} cy={cy} r={4} fill="white" />
       </svg>
     </div>

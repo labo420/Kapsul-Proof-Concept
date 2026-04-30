@@ -39,7 +39,7 @@ export function Bloom() {
         ))}
         <circle cx={cx} cy={cy} r={11} fill="#0f0f1a" />
         <circle cx={cx} cy={cy} r={7} fill="white" opacity={0.95} />
-        <circle cx={cx} cy={cy} r={3.5} fill="rgba(255,255,255,0.4)" />
+        <circle cx={cx} cy={cy} r={3.5} fill="rgba(255,255,255,0.35)" />
       </svg>
     </div>
   );

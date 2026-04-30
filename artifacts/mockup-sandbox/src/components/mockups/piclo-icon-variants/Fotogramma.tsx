@@ -43,7 +43,7 @@ export function Fotogramma() {
 
         {/* Light dot — top-right inside frame */}
         <circle cx={fx + fw - 16} cy={fy + 18} r={7} fill="white" opacity={0.9} />
-        <circle cx={fx + fw - 16} cy={fy + 18} r={3.5} fill="rgba(255,255,255,0.4)" />
+        <circle cx={fx + fw - 16} cy={fy + 18} r={3.5} fill="rgba(255,255,255,0.35)" />
       </svg>
     </div>
   );
