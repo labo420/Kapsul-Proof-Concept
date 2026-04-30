@@ -1,7 +1,7 @@
 import { Camera as CameraIcon, Check, ChevronRight, Download, EyeOff, Film, Images, Lock, LogOut, QrCode } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
-import { usePreventScreenCapture } from "expo-screen-capture";
+import { preventScreenCaptureAsync, allowScreenCaptureAsync } from "expo-screen-capture";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
@@ -48,7 +48,6 @@ const SHEET_SPRING = { damping: 22, stiffness: 240, mass: 1, overshootClamping: 
 type UploadState = "idle" | "uploading" | "done";
 
 export default function GuestScreen() {
-  usePreventScreenCapture();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { setActiveGradient } = useTheme();
@@ -66,6 +65,15 @@ export default function GuestScreen() {
   const [termsChecked, setTermsChecked] = useState(false);
 
   const activeEvent = currentEventId ? getEvent(currentEventId) : null;
+
+  useFocusEffect(
+    useCallback(() => {
+      preventScreenCaptureAsync("guest").catch(() => {});
+      return () => {
+        allowScreenCaptureAsync("guest").catch(() => {});
+      };
+    }, [])
+  );
 
   useFocusEffect(
     useCallback(() => {
