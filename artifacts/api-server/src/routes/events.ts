@@ -458,7 +458,16 @@ router.get("/events/:id/photos", optionalAuth, async (req, res): Promise<void> =
           : and(eq(photosTable.eventId, id), eq(photosTable.isPublic, true))
       )
       .orderBy(photosTable.createdAt);
-    res.json(photos);
+
+    // For non-Pro events, expose the preview path so original files are not discoverable by guests
+    const isPro = event.plan === "pro";
+    const responsePhotos = isPro
+      ? photos
+      : photos.map((p) => ({
+          ...p,
+          objectPath: p.objectPath.replace(/\.[^.]+$/, "_preview.jpg"),
+        }));
+    res.json(responsePhotos);
   } catch {
     res.status(500).json({ error: "Server error" });
   }
@@ -550,7 +559,11 @@ router.delete("/events/:id/guests/:guestId", async (req, res): Promise<void> => 
     await Promise.all(
       photos.map((photo) => {
         const objectKey = photo.objectPath.replace(/^\/api\/photos\//, "");
-        return bucket.file(objectKey).delete().catch(() => {});
+        const previewKey = objectKey.replace(/\.[^.]+$/, "_preview.jpg");
+        return Promise.all([
+          bucket.file(objectKey).delete().catch(() => {}),
+          bucket.file(previewKey).delete().catch(() => {}),
+        ]);
       })
     );
 

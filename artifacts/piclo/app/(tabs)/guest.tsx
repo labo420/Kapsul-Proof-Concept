@@ -1,4 +1,4 @@
-import { Camera as CameraIcon, Check, ChevronRight, Film, Images, Lock, LogOut, QrCode } from "lucide-react-native";
+import { Camera as CameraIcon, Check, ChevronRight, Download, Film, Images, Lock, LogOut, QrCode } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
@@ -540,9 +540,15 @@ export default function GuestScreen() {
             activeOpacity={0.7}
           >
             <Film size={20} color={colors.foreground} />
-            <Text style={[styles.wallLinkText, { color: colors.foreground }]}>
-              Guarda il Guest Wall
-            </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.wallLinkText, { color: colors.foreground }]}>
+                Guarda il Guest Wall
+              </Text>
+              <Text style={[styles.wallLinkSub, { color: colors.mutedForeground }]}>
+                Visualizza e scarica le foto
+              </Text>
+            </View>
+            <Download size={15} color={colors.mutedForeground} style={{ marginRight: 4 }} />
             <ChevronRight size={16} color={colors.mutedForeground} />
           </TouchableOpacity>
         </Animated.View>
@@ -795,9 +801,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   wallLinkText: {
-    flex: 1,
     fontSize: 15,
     fontWeight: "600",
+  },
+  wallLinkSub: {
+    fontSize: 12,
+    fontWeight: "400",
+    marginTop: 2,
   },
   modalOverlay: {
     flex: 1,
